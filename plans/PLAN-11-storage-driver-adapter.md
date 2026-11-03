@@ -75,3 +75,4 @@ class LocalBoxStorageClient:
 1. **For the immediate Thursday MVC:** Retain the current running **MinIO daemon ("S3-in-a-Box")** as it is already running live on port 9000 with 100% passing tests and direct-to-S3 upload parity.
 2. **If external container/daemon management is undesirable:** Switch to the **Local Box Shared Directory (`./storage/box`)** adapter, eliminating the MinIO daemon entirely.
 3. **If targeting enterprise campus rollouts (e.g. UTS / university box accounts):** Schedule the **Box.com Cloud API** integration as an Epic in Sprint 2 post-MVC.
+

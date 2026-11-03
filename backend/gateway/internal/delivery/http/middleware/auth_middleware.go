@@ -17,21 +17,35 @@ const (
 
 func AuthMiddleware(authUsecase usecase.AuthUsecase) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Pass preflight OPTIONS requests without auth check
+		if c.Request.Method == "OPTIONS" {
+			c.Next()
+			return
+		}
+
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			response.Unauthorized(c, "Authorization header is required")
+		var tokenString string
+
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+				tokenString = parts[1]
+			} else {
+				response.Unauthorized(c, "Invalid Authorization header format. Expected 'Bearer <token>'")
+				c.Abort()
+				return
+			}
+		} else if qToken := c.Query("token"); qToken != "" {
+			tokenString = qToken
+		}
+
+		if tokenString == "" {
+			response.Unauthorized(c, "Authorization header is required. Please sign in or pass 'Authorization: Bearer <jwt>'")
 			c.Abort()
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			response.Unauthorized(c, "Invalid Authorization header format. Expected 'Bearer <token>'")
-			c.Abort()
-			return
-		}
-
-		claims, err := authUsecase.ValidateToken(parts[1])
+		claims, err := authUsecase.ValidateToken(tokenString)
 		if err != nil {
 			response.Unauthorized(c, "Invalid or expired token")
 			c.Abort()
