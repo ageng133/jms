@@ -110,3 +110,4 @@ export interface Manuscript {
   created_at: string;
   updated_at: string;
 }
+

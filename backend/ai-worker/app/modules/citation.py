@@ -118,3 +118,4 @@ class CitationAuditor(BaseAuditModule):
             uncited_references=uncited_references,
             missing_citations=missing_citations,
         ), annotations
+

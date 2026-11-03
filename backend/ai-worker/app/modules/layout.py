@@ -138,3 +138,4 @@ class LayoutAuditor(BaseAuditModule):
 
         is_passed = len(checks) == 0
         return GeometryModule(pass_=is_passed, checks=checks), annotations
+

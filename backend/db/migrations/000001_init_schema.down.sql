@@ -9,3 +9,4 @@ DROP TYPE IF EXISTS audit_status;
 DROP TYPE IF EXISTS file_type;
 DROP TYPE IF EXISTS manuscript_status;
 DROP TYPE IF EXISTS user_role;
+

@@ -157,3 +157,4 @@ class WorkerConsumer:
 if __name__ == "__main__":
     consumer = WorkerConsumer()
     consumer.start()
+

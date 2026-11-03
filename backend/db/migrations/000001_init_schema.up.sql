@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS manuscripts (
     author_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     abstract TEXT NOT NULL,
-    keywords TEXT[] NOT NULL DEFAULT '{}',
+    keywords JSONB NOT NULL DEFAULT '[]'::jsonb,
     status manuscript_status NOT NULL DEFAULT 'DRAFT',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -97,3 +97,4 @@ CREATE TABLE IF NOT EXISTS pre_submission_audits (
 
 CREATE INDEX IF NOT EXISTS idx_audits_file ON pre_submission_audits(manuscript_file_id);
 CREATE INDEX IF NOT EXISTS idx_audits_status ON pre_submission_audits(status);
+

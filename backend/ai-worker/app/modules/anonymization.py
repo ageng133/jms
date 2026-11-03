@@ -100,3 +100,4 @@ class AnonymizationAuditor(BaseAuditModule):
 
         is_passed = len(deduped_leaks) == 0
         return AnonymizationModule(pass_=is_passed, leaks_found=deduped_leaks), annotations
+

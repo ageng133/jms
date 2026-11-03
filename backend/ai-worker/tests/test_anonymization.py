@@ -40,3 +40,4 @@ def test_anonymization_clean_document_passes():
 
     assert result.pass_ is True
     assert len(result.leaks_found) == 0
+

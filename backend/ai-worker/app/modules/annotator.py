@@ -53,3 +53,4 @@ class VisualPDFAnnotator(BaseAuditModule):
         out_buf = io.BytesIO()
         doc.save(out_buf, garbage=4, deflate=True)
         return out_buf.getvalue()
+

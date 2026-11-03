@@ -8,3 +8,4 @@ class BaseAuditModule(ABC):
     def audit(self, doc: fitz.Document, **kwargs) -> Any:
         """Execute audit analysis on a PDF document."""
         pass
+

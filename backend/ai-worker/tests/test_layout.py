@@ -32,3 +32,4 @@ def test_layout_auditor_clean_margins_pass():
 
     assert result.pass_ is True
     assert len(result.checks) == 0
+

@@ -45,3 +45,4 @@ test-worker:
 
 test-gateway:
 	cd backend/gateway && go test -v ./...
+

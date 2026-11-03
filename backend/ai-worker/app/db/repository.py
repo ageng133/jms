@@ -78,3 +78,4 @@ class DBRepository:
                     (error_msg, now, audit_id)
                 )
             conn.commit()
+
