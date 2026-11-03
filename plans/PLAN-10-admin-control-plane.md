@@ -57,3 +57,4 @@ flowchart TD
 - [x] Admin dashboard displays all submitted manuscripts with preloaded author and audit score details.
 - [x] Editorial status changes (`PATCH /manuscripts/:id/status`) commit atomically to PostgreSQL.
 - [x] Next.js TypeScript build (`tsc --noEmit`) passes with 0 warnings.
+

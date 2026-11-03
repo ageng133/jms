@@ -22,6 +22,7 @@
 | **PLAN-08** | [`PLAN-08-frontend-audit-dashboard.md`](./PLAN-08-frontend-audit-dashboard.md) | Frontend: Live Pre-Submission Audit Inspection Dashboard | 4 SP | Completed / Verified |
 | **PLAN-09** | [`PLAN-09-quality-assurance-demo.md`](./PLAN-09-quality-assurance-demo.md) | QA Automation, Benchmark Papers & Thursday Demo Script | 2 SP | Active |
 | **PLAN-10** | [`PLAN-10-admin-control-plane.md`](./PLAN-10-admin-control-plane.md) | Editorial Admin Control Plane & Google OAuth Session Integration | 5 SP | Completed / Verified |
+| **PLAN-11** | [`PLAN-11-storage-driver-adapter.md`](./PLAN-11-storage-driver-adapter.md) | Storage Driver Adapter (Local Box vs S3 MinIO vs Box.com Feasibility) | 3 SP | Assessment / Ready |
 
 ---
 
