@@ -131,7 +131,7 @@ export default function NewSubmissionPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8">
       {/* Step Indicator */}
       <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <div className={`flex items-center gap-2 text-sm font-semibold ${step >= 1 ? "text-blue-600" : "text-slate-400"}`}>
@@ -228,114 +228,187 @@ export default function NewSubmissionPage() {
         </form>
       )}
 
-      {/* Step 2: Dual File Direct S3 Upload (Template + Draft) */}
+      {/* Step 2: Dual File Direct S3 Upload (Template + Draft) - Side by Side */}
       {step === 2 && (
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8">
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wide">
                 Dual Ingestion Pipeline
               </span>
+              <span className="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wide">
+                Side-by-Side Verification
+              </span>
             </div>
             <h2 className="text-xl font-bold text-slate-900">Upload Template & Manuscript Draft</h2>
             <p className="text-sm text-slate-500">
-              Upload the journal reference template alongside your draft. The AI Engine compares geometry, margins, and column layouts directly against the template guidelines.
+              Upload the journal reference template alongside your draft side-by-side. The AI Engine compares geometry, margins, and column layouts directly against the template guidelines.
             </p>
           </div>
 
-          {/* Upload Zone A: Journal Template */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                1. Journal Reference Template (.pdf)
-              </label>
-              <span className="text-xs text-slate-400">Optional: Falls back to UTS IEEE Standard if omitted</span>
-            </div>
-
-            <div className="border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-xl p-6 text-center transition cursor-pointer bg-slate-50/50">
-              <input
-                type="file"
-                accept=".pdf"
-                id="template-upload"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setTemplateFile(e.target.files[0]);
-                    setUseDefaultTemplate(false);
-                  }
-                }}
-              />
-              <label htmlFor="template-upload" className="cursor-pointer space-y-2 block">
-                <Layers className="w-10 h-10 text-indigo-400 mx-auto" />
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">
-                    {templateFile ? templateFile.name : "Select or drag & drop Journal Template PDF"}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-0.5">Defines target margins, column grid & page dimensions</p>
+          {/* Side-by-Side Dual Upload Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            {/* Upload Zone A: Journal Template (Left) */}
+            <div className="flex flex-col justify-between p-6 rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/20 hover:border-indigo-400 transition space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">
+                      A
+                    </span>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      Journal Template (.pdf)
+                    </label>
+                  </div>
+                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                    Optional Spec
+                  </span>
                 </div>
-              </label>
-            </div>
+                <p className="text-xs text-slate-500">
+                  Target style guide defining margins, page bounds, and multi-column grids.
+                </p>
 
-            {templateFile && (
-              <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between text-xs text-indigo-900">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-indigo-600" />
-                  <span className="font-semibold">{templateFile.name}</span>
-                  <span className="text-indigo-600">({(templateFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setTemplateFile(null)}
-                  className="text-xs text-rose-600 hover:underline"
+                {/* Dropzone Area */}
+                <input
+                  type="file"
+                  accept=".pdf"
+                  id="template-upload"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setTemplateFile(e.target.files[0]);
+                      setUseDefaultTemplate(false);
+                    }
+                  }}
+                />
+                <label
+                  htmlFor="template-upload"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      setTemplateFile(e.dataTransfer.files[0]);
+                      setUseDefaultTemplate(false);
+                    }
+                  }}
+                  className="border border-indigo-200 bg-white hover:bg-indigo-50/50 rounded-xl p-6 text-center transition cursor-pointer block space-y-3 group"
                 >
-                  Remove
-                </button>
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto group-hover:scale-105 transition">
+                    <Layers className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 group-hover:text-indigo-600 transition">
+                      {templateFile ? templateFile.name : "Select or drag Journal Template PDF"}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      PDF format &bull; Extracts layout & column grid
+                    </p>
+                  </div>
+                </label>
               </div>
-            )}
-          </div>
 
-          {/* Upload Zone B: Author Manuscript Draft */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                2. Author Manuscript Draft (.pdf) <span className="text-rose-500">*</span>
-              </label>
-              <span className="text-xs text-slate-400">Required: Direct-to-S3 upload</span>
+              {/* Status / Selected File Info */}
+              {templateFile ? (
+                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between text-xs text-indigo-900">
+                  <div className="flex items-center gap-2 truncate">
+                    <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span className="font-semibold truncate">{templateFile.name}</span>
+                    <span className="text-indigo-600 shrink-0">
+                      ({(templateFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setTemplateFile(null)}
+                    className="text-xs text-rose-600 hover:underline font-semibold ml-2 shrink-0"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-500">
+                  <span className="font-semibold text-slate-700">Notice:</span> If omitted, the audit automatically evaluates against UTS IEEE Standard formatting rules.
+                </div>
+              )}
             </div>
 
-            <div className="border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-6 text-center transition cursor-pointer bg-slate-50/50">
-              <input
-                type="file"
-                accept=".pdf"
-                id="draft-upload"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setDraftFile(e.target.files[0]);
-                  }
-                }}
-              />
-              <label htmlFor="draft-upload" className="cursor-pointer space-y-2 block">
-                <UploadCloud className="w-10 h-10 text-blue-500 mx-auto" />
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">
-                    {draftFile ? draftFile.name : "Select or drag & drop Author Manuscript PDF"}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-0.5">Maximum 50MB &bull; .PDF format</p>
+            {/* Upload Zone B: Author Manuscript Draft (Right) */}
+            <div className="flex flex-col justify-between p-6 rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50/20 hover:border-blue-500 transition space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                      B
+                    </span>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      Manuscript Draft (.pdf) <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                    Required Draft
+                  </span>
                 </div>
-              </label>
-            </div>
+                <p className="text-xs text-slate-500">
+                  Camera-ready draft evaluated for margin geometry, anonymization, and citations.
+                </p>
 
-            {draftFile && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-xs text-blue-900">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-blue-600" />
-                  <span className="font-semibold">{draftFile.name}</span>
-                  <span className="text-blue-600">({(draftFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
-                </div>
-                <span className="px-2 py-0.5 bg-blue-200 rounded font-semibold text-blue-800">Ready</span>
+                {/* Dropzone Area */}
+                <input
+                  type="file"
+                  accept=".pdf"
+                  id="draft-upload"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setDraftFile(e.target.files[0]);
+                    }
+                  }}
+                />
+                <label
+                  htmlFor="draft-upload"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      setDraftFile(e.dataTransfer.files[0]);
+                    }
+                  }}
+                  className="border border-blue-200 bg-white hover:bg-blue-50/50 rounded-xl p-6 text-center transition cursor-pointer block space-y-3 group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto group-hover:scale-105 transition">
+                    <UploadCloud className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition">
+                      {draftFile ? draftFile.name : "Select or drag Manuscript Draft PDF"}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Maximum 50MB &bull; Direct-to-S3 secure upload
+                    </p>
+                  </div>
+                </label>
               </div>
-            )}
+
+              {/* Status / Selected File Info */}
+              {draftFile ? (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-xs text-blue-900">
+                  <div className="flex items-center gap-2 truncate">
+                    <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span className="font-semibold truncate">{draftFile.name}</span>
+                    <span className="text-blue-600 shrink-0">
+                      ({(draftFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </span>
+                  </div>
+                  <span className="px-2 py-0.5 bg-blue-200 text-blue-800 rounded font-semibold shrink-0 ml-2">
+                    Ready
+                  </span>
+                </div>
+              ) : (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-700">
+                  <span className="font-semibold">Action required:</span> Please select a draft manuscript PDF to proceed with pre-submission inspection.
+                </div>
+              )}
+            </div>
           </div>
 
           {uploadProgress && (
