@@ -23,6 +23,8 @@ import {
   Cpu,
   LogIn,
   ExternalLink,
+  Plus,
+  Sparkles,
 } from "lucide-react";
 import {
   listManuscripts,
@@ -141,8 +143,16 @@ export default function AdminPanelPage() {
           </p>
         </div>
 
-        {/* User Identity / Google Sign-in Status */}
-        <div className="flex items-center gap-3">
+        {/* User Identity / Google Sign-in Status / Actions */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/submissions/new"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm transition active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Submit Journal & Template</span>
+          </Link>
+
           {currentUser ? (
             <div className="flex items-center gap-3 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
               {/* Google G Logo */}
@@ -319,9 +329,18 @@ export default function AdminPanelPage() {
         )}
 
         {!loading && filteredManuscripts.length === 0 && (
-          <div className="p-12 text-center text-slate-400 space-y-1">
-            <p className="text-sm font-bold text-slate-600">No manuscripts match your filter</p>
-            <p className="text-xs">Adjust your status filter or search parameters.</p>
+          <div className="p-12 text-center text-slate-400 space-y-3">
+            <p className="text-sm font-bold text-slate-600">No manuscripts found in editorial queue</p>
+            <p className="text-xs">Start a dual-file submission to audit draft layout against journal guidelines.</p>
+            <div>
+              <Link
+                href="/submissions/new"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-500 shadow-sm transition"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Submit Journal & Template Now</span>
+              </Link>
+            </div>
           </div>
         )}
 
