@@ -16,6 +16,8 @@ import {
   RefreshCw,
   Layers,
   Sparkles,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { PreSubmissionAuditReport } from "@/types/jms";
 import { getAuditReport } from "@/lib/api";
@@ -28,6 +30,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
   const [report, setReport] = useState<PreSubmissionAuditReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   async function fetchReport() {
     if (!auditId) {
@@ -91,15 +94,28 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
             Refresh
           </button>
           {report?.annotated_pdf_s3_key && (
-            <a
-              href={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "http://localhost:9000"}/jms-manuscripts/${report.annotated_pdf_s3_key}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Download Annotated PDF
-            </a>
+            <>
+              <button
+                onClick={() => setShowPdfPreview(!showPdfPreview)}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border text-xs font-semibold transition ${
+                  showPdfPreview
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-slate-300 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {showPdfPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                {showPdfPreview ? "Hide PDF Preview" : "Preview Annotated PDF"}
+              </button>
+              <a
+                href={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "http://localhost:9000"}/jms-manuscripts/${report.annotated_pdf_s3_key}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Download Annotated PDF
+              </a>
+            </>
           )}
         </div>
       </div>
@@ -120,6 +136,35 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
 
       {report && (
         <div className="space-y-8">
+          {/* Interactive Annotated PDF Visual Proof Viewer */}
+          {showPdfPreview && report.annotated_pdf_s3_key && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4 animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900">Interactive Visual Annotation Proof</h2>
+                    <p className="text-xs text-slate-500">
+                      Red bounding boxes indicate margin violations, double-blind identity leaks & citation gaps.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono text-slate-400">
+                  {report.annotated_pdf_s3_key}
+                </span>
+              </div>
+              <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-900/5 h-[700px]">
+                <iframe
+                  src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "http://localhost:9000"}/jms-manuscripts/${report.annotated_pdf_s3_key}#toolbar=1&navpanes=0`}
+                  className="w-full h-full"
+                  title="Annotated Manuscript PDF Preview"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Executive Summary Card */}
           <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
             <div className="flex items-center gap-4 md:border-r md:border-slate-200 pr-6">

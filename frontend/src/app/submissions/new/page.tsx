@@ -35,10 +35,20 @@ export default function NewSubmissionPage() {
   const [draftFile, setDraftFile] = useState<File | null>(null);
   const [templateFile, setTemplateFile] = useState<File | null>(null);
   const [useDefaultTemplate, setUseDefaultTemplate] = useState(false);
+  const [templateDragOver, setTemplateDragOver] = useState(false);
+  const [draftDragOver, setDraftDragOver] = useState(false);
 
   // Pipeline Tracking
   const [manuscriptId, setManuscriptId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>("");
+
+  function handlePrefillDemo() {
+    setTitle("High-Throughput Zero-Copy Deserialization in Distributed Microservices");
+    setAbstract(
+      "Distributed document ingestion architectures frequently bottleneck at the serialization boundary. We demonstrate a zero-copy Apache Arrow and PyMuPDF data plane achieving 180MB/s per-node throughput without deserialization tax."
+    );
+    setKeywordsInput("Distributed Systems, Zero-Copy IPC, PyMuPDF, Document Layout, Arrow");
+  }
 
   // Step 1: Create Draft
   async function handleMetadataSubmit(e: React.FormEvent) {
@@ -133,26 +143,26 @@ export default function NewSubmissionPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       {/* Step Indicator */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-        <div className={`flex items-center gap-2 text-sm font-semibold ${step >= 1 ? "text-blue-600" : "text-slate-400"}`}>
-          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${step >= 1 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
+      <div className="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div className={`flex items-center gap-2.5 text-sm font-semibold transition ${step >= 1 ? "text-blue-600" : "text-slate-400"}`}>
+          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition shadow-sm ${step >= 1 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
             1
           </span>
-          Metadata
+          <span>Metadata</span>
         </div>
-        <div className="h-0.5 w-12 bg-slate-200" />
-        <div className={`flex items-center gap-2 text-sm font-semibold ${step >= 2 ? "text-blue-600" : "text-slate-400"}`}>
-          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${step >= 2 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
+        <div className={`flex-1 h-0.5 mx-4 rounded-full transition-colors ${step >= 2 ? "bg-blue-600" : "bg-slate-200"}`} />
+        <div className={`flex items-center gap-2.5 text-sm font-semibold transition ${step >= 2 ? "text-blue-600" : "text-slate-400"}`}>
+          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition shadow-sm ${step >= 2 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
             2
           </span>
-          Upload Template & Draft
+          <span>Upload Template & Draft</span>
         </div>
-        <div className="h-0.5 w-12 bg-slate-200" />
-        <div className={`flex items-center gap-2 text-sm font-semibold ${step === 3 ? "text-blue-600" : "text-slate-400"}`}>
-          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${step === 3 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
+        <div className={`flex-1 h-0.5 mx-4 rounded-full transition-colors ${step === 3 ? "bg-blue-600" : "bg-slate-200"}`} />
+        <div className={`flex items-center gap-2.5 text-sm font-semibold transition ${step === 3 ? "text-blue-600" : "text-slate-400"}`}>
+          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition shadow-sm ${step === 3 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
             3
           </span>
-          AI Pre-Check
+          <span>AI Pre-Check</span>
         </div>
       </div>
 
@@ -166,9 +176,19 @@ export default function NewSubmissionPage() {
       {/* Step 1: Metadata Form */}
       {step === 1 && (
         <form onSubmit={handleMetadataSubmit} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold text-slate-900">Manuscript Metadata</h2>
-            <p className="text-sm text-slate-500">Enter article title, abstract, and research indexing keywords.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div className="space-y-0.5">
+              <h2 className="text-xl font-bold text-slate-900">Manuscript Metadata</h2>
+              <p className="text-sm text-slate-500">Enter article title, abstract, and research indexing keywords.</p>
+            </div>
+            <button
+              type="button"
+              onClick={handlePrefillDemo}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 text-xs font-semibold transition shadow-sm self-start sm:self-auto"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Auto-Fill Demo Data
+            </button>
           </div>
 
           <div className="space-y-4">
@@ -249,7 +269,7 @@ export default function NewSubmissionPage() {
           {/* Side-by-Side Dual Upload Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             {/* Upload Zone A: Journal Template (Left) */}
-            <div className="flex flex-col justify-between p-6 rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/20 hover:border-indigo-400 transition space-y-4">
+            <div className="flex flex-col justify-between p-6 rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/30 to-white shadow-xs space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -260,7 +280,7 @@ export default function NewSubmissionPage() {
                       Journal Template (.pdf)
                     </label>
                   </div>
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
                     Optional Spec
                   </span>
                 </div>
@@ -268,7 +288,7 @@ export default function NewSubmissionPage() {
                   Target style guide defining margins, page bounds, and multi-column grids.
                 </p>
 
-                {/* Dropzone Area */}
+                {/* Hidden File Input */}
                 <input
                   type="file"
                   accept=".pdf"
@@ -281,59 +301,87 @@ export default function NewSubmissionPage() {
                     }
                   }}
                 />
-                <label
-                  htmlFor="template-upload"
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                      setTemplateFile(e.dataTransfer.files[0]);
-                      setUseDefaultTemplate(false);
-                    }
-                  }}
-                  className="border border-indigo-200 bg-white hover:bg-indigo-50/50 rounded-xl p-6 text-center transition cursor-pointer block space-y-3 group"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto group-hover:scale-105 transition">
-                    <Layers className="w-6 h-6" />
+
+                {/* Dropzone or Loaded Card */}
+                {!templateFile ? (
+                  <label
+                    htmlFor="template-upload"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setTemplateDragOver(true);
+                    }}
+                    onDragLeave={() => setTemplateDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setTemplateDragOver(false);
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        setTemplateFile(e.dataTransfer.files[0]);
+                        setUseDefaultTemplate(false);
+                      }
+                    }}
+                    className={`border-2 border-dashed rounded-xl p-8 text-center transition cursor-pointer block space-y-3 bg-white hover:bg-indigo-50/40 ${
+                      templateDragOver ? "border-indigo-500 bg-indigo-50 scale-[1.01]" : "border-indigo-200"
+                    }`}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+                      <Layers className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        Drop Journal Template PDF here
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">or browse from your computer</p>
+                    </div>
+                    <span className="inline-block text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">
+                      Extracts target margins & column grid
+                    </span>
+                  </label>
+                ) : (
+                  <div className="bg-white rounded-xl border border-indigo-200 p-5 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">{templateFile.name}</p>
+                          <p className="text-xs text-slate-500 font-mono">
+                            {(templateFile.size / (1024 * 1024)).toFixed(2)} MB &bull; PDF Template
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 text-[11px] font-bold shrink-0">
+                        Template Loaded
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 text-xs">
+                      <label
+                        htmlFor="template-upload"
+                        className="font-semibold text-slate-600 hover:text-indigo-600 cursor-pointer"
+                      >
+                        Change File
+                      </label>
+                      <span className="text-slate-300">&bull;</span>
+                      <button
+                        type="button"
+                        onClick={() => setTemplateFile(null)}
+                        className="font-semibold text-rose-600 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-700 group-hover:text-indigo-600 transition">
-                      {templateFile ? templateFile.name : "Select or drag Journal Template PDF"}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      PDF format &bull; Extracts layout & column grid
-                    </p>
-                  </div>
-                </label>
+                )}
               </div>
 
               {/* Status / Selected File Info */}
-              {templateFile ? (
-                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between text-xs text-indigo-900">
-                  <div className="flex items-center gap-2 truncate">
-                    <FileText className="w-4 h-4 text-indigo-600 shrink-0" />
-                    <span className="font-semibold truncate">{templateFile.name}</span>
-                    <span className="text-indigo-600 shrink-0">
-                      ({(templateFile.size / (1024 * 1024)).toFixed(2)} MB)
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setTemplateFile(null)}
-                    className="text-xs text-rose-600 hover:underline font-semibold ml-2 shrink-0"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-500">
-                  <span className="font-semibold text-slate-700">Notice:</span> If omitted, the audit automatically evaluates against UTS IEEE Standard formatting rules.
-                </div>
-              )}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-500">
+                <span className="font-semibold text-slate-700">Fallback Notice:</span> If omitted, the audit automatically evaluates against UTS IEEE Standard formatting rules.
+              </div>
             </div>
 
             {/* Upload Zone B: Author Manuscript Draft (Right) */}
-            <div className="flex flex-col justify-between p-6 rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50/20 hover:border-blue-500 transition space-y-4">
+            <div className="flex flex-col justify-between p-6 rounded-2xl border border-blue-100 bg-gradient-to-b from-blue-50/30 to-white shadow-xs space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -344,7 +392,7 @@ export default function NewSubmissionPage() {
                       Manuscript Draft (.pdf) <span className="text-rose-500">*</span>
                     </label>
                   </div>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                  <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
                     Required Draft
                   </span>
                 </div>
@@ -352,7 +400,7 @@ export default function NewSubmissionPage() {
                   Camera-ready draft evaluated for margin geometry, anonymization, and citations.
                 </p>
 
-                {/* Dropzone Area */}
+                {/* Hidden File Input */}
                 <input
                   type="file"
                   accept=".pdf"
@@ -364,48 +412,87 @@ export default function NewSubmissionPage() {
                     }
                   }}
                 />
-                <label
-                  htmlFor="draft-upload"
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                      setDraftFile(e.dataTransfer.files[0]);
-                    }
-                  }}
-                  className="border border-blue-200 bg-white hover:bg-blue-50/50 rounded-xl p-6 text-center transition cursor-pointer block space-y-3 group"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto group-hover:scale-105 transition">
-                    <UploadCloud className="w-6 h-6" />
+
+                {/* Dropzone or Loaded Card */}
+                {!draftFile ? (
+                  <label
+                    htmlFor="draft-upload"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDraftDragOver(true);
+                    }}
+                    onDragLeave={() => setDraftDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDraftDragOver(false);
+                      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        setDraftFile(e.dataTransfer.files[0]);
+                      }
+                    }}
+                    className={`border-2 border-dashed rounded-xl p-8 text-center transition cursor-pointer block space-y-3 bg-white hover:bg-blue-50/40 ${
+                      draftDragOver ? "border-blue-500 bg-blue-50 scale-[1.01]" : "border-blue-300"
+                    }`}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                      <UploadCloud className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        Drop Author Manuscript PDF here
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">or browse from your computer (Max 50MB)</p>
+                    </div>
+                    <span className="inline-block text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
+                      Direct-to-S3 pre-signed upload
+                    </span>
+                  </label>
+                ) : (
+                  <div className="bg-white rounded-xl border border-blue-200 p-5 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">{draftFile.name}</p>
+                          <p className="text-xs text-slate-500 font-mono">
+                            {(draftFile.size / (1024 * 1024)).toFixed(2)} MB &bull; Author Manuscript
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold shrink-0 flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" /> Ready
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 text-xs">
+                      <label
+                        htmlFor="draft-upload"
+                        className="font-semibold text-slate-600 hover:text-blue-600 cursor-pointer"
+                      >
+                        Change File
+                      </label>
+                      <span className="text-slate-300">&bull;</span>
+                      <button
+                        type="button"
+                        onClick={() => setDraftFile(null)}
+                        className="font-semibold text-rose-600 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 transition">
-                      {draftFile ? draftFile.name : "Select or drag Manuscript Draft PDF"}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Maximum 50MB &bull; Direct-to-S3 secure upload
-                    </p>
-                  </div>
-                </label>
+                )}
               </div>
 
               {/* Status / Selected File Info */}
               {draftFile ? (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-xs text-blue-900">
-                  <div className="flex items-center gap-2 truncate">
-                    <FileText className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span className="font-semibold truncate">{draftFile.name}</span>
-                    <span className="text-blue-600 shrink-0">
-                      ({(draftFile.size / (1024 * 1024)).toFixed(2)} MB)
-                    </span>
-                  </div>
-                  <span className="px-2 py-0.5 bg-blue-200 text-blue-800 rounded font-semibold shrink-0 ml-2">
-                    Ready
-                  </span>
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-[11px] text-emerald-800 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Draft manuscript verified. Ready for asynchronous pre-submission audit.</span>
                 </div>
               ) : (
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-700">
-                  <span className="font-semibold">Action required:</span> Please select a draft manuscript PDF to proceed with pre-submission inspection.
+                  <span className="font-semibold">Action required:</span> Please select a draft manuscript PDF to proceed.
                 </div>
               )}
             </div>
