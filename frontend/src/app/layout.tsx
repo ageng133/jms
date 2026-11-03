@@ -29,15 +29,22 @@ export default function RootLayout({
               <nav className="hidden md:flex space-x-6 text-sm font-medium text-slate-300">
                 <Link href="/submissions" className="hover:text-white transition">Submissions</Link>
                 <Link href="/submissions/new" className="hover:text-white transition">New Submission</Link>
+                <Link href="/admin" className="hover:text-white transition flex items-center gap-1.5 text-indigo-300 font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                  Admin Panel
+                </Link>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-xs px-2.5 py-1 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">
+              <span className="hidden sm:inline-block text-xs px-2.5 py-1 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">
                 AI Pre-Check: Active
               </span>
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold">
-                AS
-              </div>
+              <Link
+                href="/admin"
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition"
+              >
+                Editorial Portal
+              </Link>
             </div>
           </div>
         </header>

@@ -7,3 +7,4 @@ ALTER TABLE manuscript_files
 DROP CONSTRAINT IF EXISTS uq_manuscript_file_role,
 ADD CONSTRAINT uq_manuscript_file_version UNIQUE (manuscript_id, version, file_type),
 DROP COLUMN IF EXISTS file_role;
+

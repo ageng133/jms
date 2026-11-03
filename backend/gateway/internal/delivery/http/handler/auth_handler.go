@@ -53,3 +53,19 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	response.Success(c, http.StatusOK, result)
 }
 
+func (h *AuthHandler) GoogleLogin(c *gin.Context) {
+	var req usecase.GoogleLoginDTO
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid Google sign-in payload", err.Error())
+		return
+	}
+
+	result, err := h.authUsecase.LoginWithGoogle(c.Request.Context(), req)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, result)
+}
+

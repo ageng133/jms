@@ -20,3 +20,4 @@ ALTER TABLE pre_submission_audits
 ADD COLUMN IF NOT EXISTS template_specs JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_audits_template_file ON pre_submission_audits(template_file_id);
+

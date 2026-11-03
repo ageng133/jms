@@ -16,7 +16,16 @@ import (
 type AuthUsecase interface {
 	Register(ctx context.Context, req RegisterDTO) (*domain.User, error)
 	Login(ctx context.Context, email, password string) (*AuthResult, error)
+	LoginWithGoogle(ctx context.Context, dto GoogleLoginDTO) (*AuthResult, error)
 	ValidateToken(tokenString string) (*Claims, error)
+}
+
+type GoogleLoginDTO struct {
+	Email       string      `json:"email" binding:"required,email"`
+	FullName    string      `json:"full_name" binding:"required"`
+	GoogleID    string      `json:"google_id"`
+	Role        domain.Role `json:"role"`
+	Affiliation string      `json:"affiliation"`
 }
 
 type RegisterDTO struct {
@@ -92,6 +101,57 @@ func (a *authUsecase) Login(ctx context.Context, email, password string) (*AuthR
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return nil, errors.New("invalid email or password")
+	}
+
+	expiresAt := time.Now().Add(time.Duration(a.jwtCfg.ExpiryHours) * time.Hour)
+	claims := &Claims{
+		UserID: user.ID,
+		Email:  user.Email,
+		Role:   user.Role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Subject:   user.ID.String(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(a.jwtCfg.Secret))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return &AuthResult{
+		Token:     tokenString,
+		ExpiresAt: expiresAt,
+		User:      user,
+	}, nil
+}
+
+func (a *authUsecase) LoginWithGoogle(ctx context.Context, dto GoogleLoginDTO) (*AuthResult, error) {
+	user, err := a.userRepo.GetByEmail(ctx, dto.Email)
+	if err != nil {
+		// User does not exist, provision new user
+		targetRole := dto.Role
+		if targetRole == "" {
+			targetRole = domain.RoleAuthor
+		}
+
+		now := time.Now().UTC()
+		user = &domain.User{
+			ID:           uuid.New(),
+			Email:        dto.Email,
+			PasswordHash: "OAUTH2_GOOGLE_MANAGED",
+			FullName:     dto.FullName,
+			Affiliation:  dto.Affiliation,
+			Role:         targetRole,
+			CreatedAt:    now,
+			UpdatedAt:    now,
+		}
+
+		if err := a.userRepo.Create(ctx, user); err != nil {
+			return nil, fmt.Errorf("failed to provision Google user: %w", err)
+		}
 	}
 
 	expiresAt := time.Now().Add(time.Duration(a.jwtCfg.ExpiryHours) * time.Hour)

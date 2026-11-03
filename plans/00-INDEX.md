@@ -21,6 +21,7 @@
 | **PLAN-07** | [`PLAN-07-frontend-submission-wizard.md`](./PLAN-07-frontend-submission-wizard.md) | Frontend: 3-Step Author Submission Wizard & Direct S3 PUT | 5 SP | Completed / Verified |
 | **PLAN-08** | [`PLAN-08-frontend-audit-dashboard.md`](./PLAN-08-frontend-audit-dashboard.md) | Frontend: Live Pre-Submission Audit Inspection Dashboard | 4 SP | Completed / Verified |
 | **PLAN-09** | [`PLAN-09-quality-assurance-demo.md`](./PLAN-09-quality-assurance-demo.md) | QA Automation, Benchmark Papers & Thursday Demo Script | 2 SP | Active |
+| **PLAN-10** | [`PLAN-10-admin-control-plane.md`](./PLAN-10-admin-control-plane.md) | Editorial Admin Control Plane & Google OAuth Session Integration | 5 SP | Completed / Verified |
 
 ---
 
@@ -30,11 +31,12 @@
 flowchart TD
     P02[PLAN-02: Postgres & Redis Broker] --> P01[PLAN-01: Go API Gateway]
     P01 --> P07[PLAN-07: Next.js Submission Wizard]
+    P01 --> P10[PLAN-10: Next.js Admin Panel & Google Auth]
     P02 --> P03[PLAN-03: Layout Geometry]
     P02 --> P04[PLAN-04: Anonymization NER]
     P02 --> P05[PLAN-05: Citation Crosscheck]
     P03 & P04 & P05 --> P06[PLAN-06: Visual PDF Annotator]
     P06 & P01 --> P08[PLAN-08: Next.js Audit Dashboard]
-    P07 & P08 --> P09[PLAN-09: Integration Smoke & Demo]
+    P07 & P08 & P10 --> P09[PLAN-09: Integration Smoke & Demo]
 ```
 

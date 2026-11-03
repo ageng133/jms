@@ -76,6 +76,8 @@ func (r *ManuscriptRepository) ListAll(ctx context.Context) ([]domain.Manuscript
 	var list []domain.Manuscript
 	if err := r.db.WithContext(ctx).
 		Preload("Author").
+		Preload("Files").
+		Preload("Files.Audits").
 		Order("created_at DESC").
 		Find(&list).Error; err != nil {
 		return nil, err

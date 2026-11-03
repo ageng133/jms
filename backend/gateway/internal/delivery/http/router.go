@@ -40,6 +40,7 @@ func NewRouter(
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
+			auth.POST("/google", authHandler.GoogleLogin)
 		}
 
 		// Protected routes
@@ -52,6 +53,7 @@ func NewRouter(
 				manuscripts.POST("", submissionHandler.CreateDraft)
 				manuscripts.GET("", submissionHandler.ListManuscripts)
 				manuscripts.GET("/:id", submissionHandler.GetManuscript)
+				manuscripts.PATCH("/:id/status", submissionHandler.UpdateStatus)
 
 				// Ingestion 3-step pipeline
 				manuscripts.POST("/:id/files/presign", submissionHandler.RequestUploadURL)

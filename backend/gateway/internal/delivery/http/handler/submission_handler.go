@@ -205,3 +205,29 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 	response.Success(c, http.StatusOK, audit)
 }
 
+type UpdateStatusRequest struct {
+	Status domain.ManuscriptStatus `json:"status" binding:"required"`
+}
+
+func (h *SubmissionHandler) UpdateStatus(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		response.BadRequest(c, "Invalid manuscript UUID", err.Error())
+		return
+	}
+
+	var req UpdateStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid status payload", err.Error())
+		return
+	}
+
+	if err := h.usecase.UpdateManuscriptStatus(c.Request.Context(), id, req.Status); err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, gin.H{"id": id, "status": req.Status})
+}
+
