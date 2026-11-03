@@ -10,7 +10,7 @@
 ---
 
 ## 1. Plan Objective
-Design and implement an intuitive 3-step submission wizard in Next.js 15 App Router that guides authors through metadata input, direct-to-S3 drag-and-drop file upload, and automated pre-check audit dispatching with real-time feedback.
+Design and implement an intuitive 3-step submission wizard in Next.js 15 App Router that guides authors through metadata input, dual direct-to-S3 drag-and-drop file upload (Journal Reference Template + Author Manuscript Draft), and automated comparative pre-check audit dispatching with real-time feedback.
 
 ---
 
@@ -19,9 +19,10 @@ Design and implement an intuitive 3-step submission wizard in Next.js 15 App Rou
 ```mermaid
 stateDiagram-v2
     [*] --> Step1_Metadata : Author enters Title, Abstract, Keywords
-    Step1_Metadata --> Step2_DirectUpload : Calls POST /api/v1/manuscripts (Draft created)
-    Step2_DirectUpload --> Direct_S3_Stream : Obtains Presigned PUT URL & Streams PDF
-    Direct_S3_Stream --> Step3_Dispatch : Calls POST /api/v1/manuscripts/:id/files/confirm
+    Step1_Metadata --> Step2_DualUpload : Calls POST /api/v1/manuscripts (Draft created)
+    Step2_DualUpload --> Direct_S3_Template : Presigns & Streams Journal Template to S3
+    Step2_DualUpload --> Direct_S3_Draft : Presigns & Streams Manuscript Draft to S3
+    Direct_S3_Template & Direct_S3_Draft --> Step3_Dispatch : Calls POST /api/v1/manuscripts/:id/files/confirm (Dual Meta)
     Step3_Dispatch --> Audit_Inspection : Redirects to /submissions/:id/audit?audit_id=...
 ```
 
@@ -34,18 +35,21 @@ stateDiagram-v2
   - Inputs: Manuscript Title, Abstract (multi-line textarea), comma-separated Keywords.
   - Client-side validation: Ensures minimum length requirements before enabling transition.
 
-* **TSK-401.2: Step 2 Drag-and-Drop S3 Direct Upload**
-  - Interactive dropzone supporting `.pdf` files up to 50MB.
-  - Integrates `requestUploadPresign(manuscriptId, filename, "PDF")` to fetch S3 presigned PUT URL.
-  - Executes raw binary upload via `uploadDirectToS3(uploadUrl, file)`.
+* **TSK-401.2: Step 2 Dual-Dropzone S3 Direct Upload**
+  - Dropzone A: Journal Reference Template (`.pdf`) — defines target geometry, column layout, and margins.
+  - Dropzone B: Author Manuscript Draft (`.pdf`) — the submission to be audited.
+  - Presigns both files individually via `requestUploadPresign(manuscriptId, filename, "PDF", role)`.
+  - Executes raw direct-to-S3 binary streams via `uploadDirectToS3(uploadUrl, file)`.
 
 * **TSK-401.3: Step 3 Confirmation & Automated Routing**
-  - Invokes `confirmSubmission(manuscriptId, payload)` to update gateway and trigger Redis worker.
+  - Invokes `confirmSubmission(manuscriptId, { draft_file, template_file })` to update gateway and trigger Redis worker.
   - Displays progress spinner and transitions seamlessly to `/submissions/[id]/audit`.
 
 ---
 
 ## 4. Definition of Done (DoD)
 - [x] Zero payload bytes proxied through the Next.js server runtime (direct browser-to-S3 upload).
+- [x] Dual-dropzone UI cleanly accommodates both Template and Draft uploads.
 - [x] Responsive layout with graceful error toasts for network drops or invalid file formats.
-- [x] Next.js 15 static build (`pnpm build`) succeeds without warnings.
+- [x] Next.js 15 static build (`tsc --noEmit` and `pnpm build`) succeeds without warnings.
+

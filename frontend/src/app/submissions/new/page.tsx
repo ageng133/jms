@@ -2,12 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UploadCloud, CheckCircle, ArrowRight, Loader2, FileText, AlertCircle } from "lucide-react";
+import {
+  UploadCloud,
+  CheckCircle,
+  ArrowRight,
+  Loader2,
+  FileText,
+  AlertCircle,
+  Layers,
+  Sparkles,
+} from "lucide-react";
 import {
   createDraftManuscript,
   requestUploadPresign,
   uploadDirectToS3,
   confirmSubmission,
+  FileMetadataInput,
 } from "@/lib/api";
 
 export default function NewSubmissionPage() {
@@ -20,7 +30,11 @@ export default function NewSubmissionPage() {
   const [title, setTitle] = useState("");
   const [abstract, setAbstract] = useState("");
   const [keywordsInput, setKeywordsInput] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+
+  // Dual File State
+  const [draftFile, setDraftFile] = useState<File | null>(null);
+  const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [useDefaultTemplate, setUseDefaultTemplate] = useState(false);
 
   // Pipeline Tracking
   const [manuscriptId, setManuscriptId] = useState<string | null>(null);
@@ -48,10 +62,10 @@ export default function NewSubmissionPage() {
     }
   }
 
-  // Step 2 & 3: Direct S3 Upload and Enqueue AI Pre-Check
+  // Step 2 & 3: Dual File Direct S3 Upload and Enqueue AI Pre-Check
   async function handleFileUploadAndDispatch() {
-    if (!file || !manuscriptId) {
-      setError("Please select a PDF file first");
+    if (!draftFile || !manuscriptId) {
+      setError("Please select the author manuscript draft PDF");
       return;
     }
 
@@ -59,21 +73,49 @@ export default function NewSubmissionPage() {
     setLoading(true);
 
     try {
-      // Step A: Get Presigned PUT URL
-      setUploadProgress("Generating secure upload URL...");
-      const presign = await requestUploadPresign(manuscriptId, file.name, "PDF");
+      let templateMeta: FileMetadataInput | undefined = undefined;
 
-      // Step B: Upload file directly to S3/MinIO
-      setUploadProgress("Uploading manuscript directly to S3 storage...");
-      await uploadDirectToS3(presign.upload_url, file);
+      // 1. Upload Template if provided
+      if (templateFile) {
+        setUploadProgress("Presigning & uploading Journal Reference Template to S3...");
+        const templatePresign = await requestUploadPresign(
+          manuscriptId,
+          templateFile.name,
+          "PDF",
+          "TEMPLATE"
+        );
+        await uploadDirectToS3(templatePresign.upload_url, templateFile);
+        templateMeta = {
+          s3_key: templatePresign.s3_key,
+          file_type: "PDF",
+          original_filename: templateFile.name,
+          file_size_bytes: templateFile.size,
+          file_role: "TEMPLATE",
+        };
+      }
 
-      // Step C: Confirm submission in Gateway & Dispatch Redis event
-      setUploadProgress("Enqueuing AI Pre-Submission Audit...");
-      const confirmResult = await confirmSubmission(manuscriptId, {
-        s3_key: presign.s3_key,
+      // 2. Upload Manuscript Draft
+      setUploadProgress("Presigning & uploading Manuscript Draft to S3...");
+      const draftPresign = await requestUploadPresign(
+        manuscriptId,
+        draftFile.name,
+        "PDF",
+        "MANUSCRIPT"
+      );
+      await uploadDirectToS3(draftPresign.upload_url, draftFile);
+      const draftMeta: FileMetadataInput = {
+        s3_key: draftPresign.s3_key,
         file_type: "PDF",
-        original_filename: file.name,
-        file_size_bytes: file.size,
+        original_filename: draftFile.name,
+        file_size_bytes: draftFile.size,
+        file_role: "MANUSCRIPT",
+      };
+
+      // 3. Confirm submission in Gateway & Dispatch Redis event
+      setUploadProgress("Enqueuing comparative AI Pre-Submission Audit...");
+      const confirmResult = await confirmSubmission(manuscriptId, {
+        draft_file: draftMeta,
+        template_file: templateMeta,
       });
 
       setStep(3);
@@ -103,7 +145,7 @@ export default function NewSubmissionPage() {
           <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${step >= 2 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
             2
           </span>
-          Direct S3 Upload
+          Upload Template & Draft
         </div>
         <div className="h-0.5 w-12 bg-slate-200" />
         <div className={`flex items-center gap-2 text-sm font-semibold ${step === 3 ? "text-blue-600" : "text-slate-400"}`}>
@@ -179,65 +221,131 @@ export default function NewSubmissionPage() {
               disabled={loading}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition shadow-sm disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Next: Upload File"}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Next: Upload Files"}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </form>
       )}
 
-      {/* Step 2: Direct S3 Upload */}
+      {/* Step 2: Dual File Direct S3 Upload (Template + Draft) */}
       {step === 2 && (
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8">
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-slate-900">Upload Manuscript File</h2>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wide">
+                Dual Ingestion Pipeline
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Upload Template & Manuscript Draft</h2>
             <p className="text-sm text-slate-500">
-              Upload PDF manuscript. Direct-to-S3 upload ensures zero gateway memory pressure.
+              Upload the journal reference template alongside your draft. The AI Engine compares geometry, margins, and column layouts directly against the template guidelines.
             </p>
           </div>
 
-          <div className="border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-8 text-center transition cursor-pointer bg-slate-50/50">
-            <input
-              type="file"
-              accept=".pdf"
-              id="file-upload"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setFile(e.target.files[0]);
-                }
-              }}
-            />
-            <label htmlFor="file-upload" className="cursor-pointer space-y-3 block">
-              <UploadCloud className="w-12 h-12 text-slate-400 mx-auto" />
-              <div>
-                <p className="text-sm font-semibold text-slate-700">
-                  {file ? file.name : "Click to select or drag and drop manuscript PDF"}
-                </p>
-                <p className="text-xs text-slate-400 mt-1">Maximum 50MB &bull; .PDF format</p>
+          {/* Upload Zone A: Journal Template */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                1. Journal Reference Template (.pdf)
+              </label>
+              <span className="text-xs text-slate-400">Optional: Falls back to UTS IEEE Standard if omitted</span>
+            </div>
+
+            <div className="border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-xl p-6 text-center transition cursor-pointer bg-slate-50/50">
+              <input
+                type="file"
+                accept=".pdf"
+                id="template-upload"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setTemplateFile(e.target.files[0]);
+                    setUseDefaultTemplate(false);
+                  }
+                }}
+              />
+              <label htmlFor="template-upload" className="cursor-pointer space-y-2 block">
+                <Layers className="w-10 h-10 text-indigo-400 mx-auto" />
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">
+                    {templateFile ? templateFile.name : "Select or drag & drop Journal Template PDF"}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">Defines target margins, column grid & page dimensions</p>
+                </div>
+              </label>
+            </div>
+
+            {templateFile && (
+              <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between text-xs text-indigo-900">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-indigo-600" />
+                  <span className="font-semibold">{templateFile.name}</span>
+                  <span className="text-indigo-600">({(templateFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTemplateFile(null)}
+                  className="text-xs text-rose-600 hover:underline"
+                >
+                  Remove
+                </button>
               </div>
-            </label>
+            )}
           </div>
 
-          {file && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-sm text-blue-900">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <span className="font-medium">{file.name}</span>
-                <span className="text-xs text-blue-600">({(file.size / (1024 * 1024)).toFixed(2)} MB)</span>
-              </div>
-              <span className="text-xs font-semibold px-2 py-0.5 bg-blue-200 rounded text-blue-800">Ready</span>
+          {/* Upload Zone B: Author Manuscript Draft */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                2. Author Manuscript Draft (.pdf) <span className="text-rose-500">*</span>
+              </label>
+              <span className="text-xs text-slate-400">Required: Direct-to-S3 upload</span>
             </div>
-          )}
+
+            <div className="border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-6 text-center transition cursor-pointer bg-slate-50/50">
+              <input
+                type="file"
+                accept=".pdf"
+                id="draft-upload"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setDraftFile(e.target.files[0]);
+                  }
+                }}
+              />
+              <label htmlFor="draft-upload" className="cursor-pointer space-y-2 block">
+                <UploadCloud className="w-10 h-10 text-blue-500 mx-auto" />
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">
+                    {draftFile ? draftFile.name : "Select or drag & drop Author Manuscript PDF"}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">Maximum 50MB &bull; .PDF format</p>
+                </div>
+              </label>
+            </div>
+
+            {draftFile && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-xs text-blue-900">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span className="font-semibold">{draftFile.name}</span>
+                  <span className="text-blue-600">({(draftFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                </div>
+                <span className="px-2 py-0.5 bg-blue-200 rounded font-semibold text-blue-800">Ready</span>
+              </div>
+            )}
+          </div>
 
           {uploadProgress && (
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 animate-pulse">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-2 text-xs font-medium text-slate-700 animate-pulse">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
               <span>{uploadProgress}</span>
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setStep(1)}
@@ -248,11 +356,21 @@ export default function NewSubmissionPage() {
             <button
               type="button"
               onClick={handleFileUploadAndDispatch}
-              disabled={!file || loading}
+              disabled={!draftFile || loading}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition shadow-sm disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit & Launch AI Pre-Check"}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Submit & Compare Against Template
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -264,17 +382,16 @@ export default function NewSubmissionPage() {
           <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
             <CheckCircle className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Manuscript Submitted Successfully</h2>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Manuscript & Template Submitted</h2>
           <p className="text-sm text-slate-500 max-w-md mx-auto">
-            Your file is safely persisted in S3 and queued in Redis for async pre-submission audit. Redirecting to live inspection...
+            Both files are securely uploaded to S3. AI Worker is comparing draft layout against template guidelines. Redirecting to live audit report...
           </p>
           <div className="flex items-center justify-center gap-2 text-xs text-blue-600 font-medium">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Connecting to AI Audit report...</span>
+            <span>Connecting to comparative audit report...</span>
           </div>
         </div>
       )}
     </div>
   );
 }
-

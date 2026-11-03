@@ -24,15 +24,16 @@ WBS 1.0 JMS Pre-Submission Engine (MVC)
 │   └── 1.2.3 BRPOP Consumer Loop & Error Recovery
 │
 ├── 1.3 AI Worker Parsing Engine (Python 3.11)
-│   ├── 1.3.1 PyMuPDF Geometry & Margin Inspector (pt/mm)
-│   ├── 1.3.2 spaCy NER & Regex Double-Blind Leak Detector
-│   ├── 1.3.3 Bidirectional Citation Graph Cross-Checker
-│   └── 1.3.4 Visual PDF Annotator (Red BBoxes & Sticky Notes)
+│   ├── 1.3.1 PyMuPDF Dynamic Template Extractor (A4/Letter, Margins, 2-Col Grid)
+│   ├── 1.3.2 Comparative Geometry & Margin Inspector (Draft vs Template pt/mm)
+│   ├── 1.3.3 spaCy NER & Regex Double-Blind Leak Detector
+│   ├── 1.3.4 Bidirectional Citation Graph Cross-Checker
+│   └── 1.3.5 Visual PDF Annotator (Red BBoxes & Sticky Notes)
 │
 ├── 1.4 Frontend Control Plane (Next.js 15 App Router)
-│   ├── 1.4.1 3-Step Manuscript Submission Wizard
-│   ├── 1.4.2 Direct S3 Browser Upload Client
-│   ├── 1.4.3 Real-Time Audit Inspection Dashboard
+│   ├── 1.4.1 3-Step Manuscript Submission Wizard with Dual Dropzones
+│   ├── 1.4.2 Direct S3 Browser Upload Client for Template & Draft
+│   ├── 1.4.3 Real-Time Audit Inspection Dashboard with Template Specs Card
 │   └── 1.4.4 Annotated PDF Download & Review Interface
 │
 └── 1.5 Quality Engineering & Demo Suite
@@ -50,9 +51,9 @@ WBS 1.0 JMS Pre-Submission Engine (MVC)
 | Task ID | Task Title | Sub-Tasks & Implementation Drilldown | Effort | Dep | Verification & DoD |
 |---|---|---|:---:|:---:|---|
 | **TSK-101** | IAM & JWT Auth | Implement `auth_usecase.go`, password hashing with bcrypt, JWT token issuing (HS256, 72h expiry), and `RequireRoles` RBAC middleware. | 4h | None | Unit test authenticates `AUTHOR`, rejects tampered tokens with `401 Unauthorized`. |
-| **TSK-102** | Presigned S3 Generator | Implement MinIO S3 SDK wrapper (`GeneratePresignedPutURL`) generating authenticated PUT URLs with 15-min expiry and MIME type constraints. | 3h | None | `curl -X PUT --upload-file` to presigned URL succeeds with `200 OK`. |
-| **TSK-103** | Submission Transaction | Implement atomic GORM transaction writing `manuscript_files` (version tracking), updating manuscript state to `PRE_CHECK_PENDING`, and queuing audit record. | 4h | TSK-101 | SQL rollback on failure; atomic commit verified under concurrent submissions. |
-| **TSK-104** | Audit Query API | Implement `GET /api/v1/audits/:id` fetching JSONB layout, anonymization, and citation issues, and mapped `annotated_pdf_s3_key`. | 2h | TSK-103 | Returns Step 4 strict JSON contract with `200 OK`. |
+| **TSK-102** | Dual Presigned S3 Generator | Implement MinIO S3 SDK wrapper (`GeneratePresignedPutURL`) generating authenticated PUT URLs with 15-min expiry for both `file_role: TEMPLATE` and `file_role: MANUSCRIPT`. | 3h | None | `curl -X PUT --upload-file` to presigned URLs succeeds for both template and draft. |
+| **TSK-103** | Dual Submission Transaction | Implement atomic GORM transaction writing both `MANUSCRIPT` and `TEMPLATE` into `manuscript_files`, updating state to `PRE_CHECK_PENDING`, and queuing audit record linked to `template_file_id`. | 4h | TSK-101 | SQL rollback on failure; atomic commit verified under concurrent dual submissions. |
+| **TSK-104** | Audit Query API | Implement `GET /api/v1/audits/:id` fetching JSONB layout, anonymization, and citation issues, extracted template specs, and mapped `annotated_pdf_s3_key`. | 2h | TSK-103 | Returns Step 4 strict JSON contract with `200 OK`. |
 
 ---
 
@@ -60,8 +61,8 @@ WBS 1.0 JMS Pre-Submission Engine (MVC)
 
 | Task ID | Task Title | Sub-Tasks & Implementation Drilldown | Effort | Dep | Verification & DoD |
 |---|---|---|:---:|:---:|---|
-| **TSK-201** | Schema DDL & Seeds | DDL migrations for `users`, `manuscripts`, `manuscript_files`, `pre_submission_audits`. Add JSONB defaults and seed test personas (`author@jms.org`). | 3h | None | `psql -c "\dt"` displays 4 tables; seed data returns 4 users and 1 draft. |
-| **TSK-202** | Redis Queue Publisher | Wire `EventPublisher` in Go gateway using `go-redis/v8` to `LPUSH` payload `{ audit_id, file_id, manuscript_id, s3_key, file_type }` to `queue:ai_audit`. | 2h | TSK-103 | Redis `RPOP` inspects valid JSON payload matching Go domain struct. |
+| **TSK-201** | Schema DDL & Seeds | DDL migrations for `users`, `manuscripts`, `manuscript_files` (with `file_role` and unique constraint), `pre_submission_audits` (with `template_file_id` and `template_specs`). Add JSONB defaults and seed test personas. | 3h | None | `psql -c "\dt"` displays 4 tables; seed data returns 4 users and 1 draft. |
+| **TSK-202** | Redis Queue Publisher | Wire `EventPublisher` in Go gateway using `go-redis/v8` to `LPUSH` payload `{ audit_id, file_id, template_file_id, manuscript_id, s3_key, template_s3_key, file_type }` to `queue:ai_audit`. | 2h | TSK-103 | Redis `RPOP` inspects valid JSON payload matching Go domain struct with both S3 keys. |
 | **TSK-203** | Worker Consumer Loop | Python `WorkerConsumer` listening via `BRPOP queue:ai_audit` with exponential backoff on connection failure and signal trapping for SIGINT/SIGTERM. | 3h | TSK-202 | Graceful shutdown terminates loop without message loss; re-queues on unhandled failure. |
 
 ---
@@ -70,7 +71,7 @@ WBS 1.0 JMS Pre-Submission Engine (MVC)
 
 | Task ID | Task Title | Sub-Tasks & Implementation Drilldown | Effort | Dep | Verification & DoD |
 |---|---|---|:---:|:---:|---|
-| **TSK-301** | Margin & Layout Auditor | PyMuPDF text block extraction (`page.get_text("blocks")`). Coordinate math ($1\text{ mm} = 2.83465\text{ pt}$). Flag top, bottom, left, right breaches with `[x0, y0, x1, y1]`. | 5h | None | `test_layout.py` catches simulated top/bottom margin breaches with 100% precision. |
+| **TSK-301** | Template Spec Extractor & Layout Auditor | PyMuPDF template analysis (`TemplateExtractor`) detecting dimensions, margins, and 2-column layout. Audit draft manuscript against extracted template constraints ($1\text{ mm} = 2.83465\text{ pt}$). Flag breaches with `[x0, y0, x1, y1]`. | 5h | None | `test_template.py` & `test_layout.py` verify template extraction and comparative margin audit. |
 | **TSK-302** | Double-Blind Anonymizer | Integrate `spaCy` (`en_core_web_sm`) for `PERSON` and `ORG` recognition on title pages. Regex sweep for emails, ORCID (`\d{4}-\d{4}-\d{4}-\d{3}[\dX]`), and grants. | 5h | None | `test_anonymization.py` flags author email, ORCID ID, and PDF `/Author` metadata. |
 | **TSK-303** | Citation Graph Crosscheck | Regex parser for numeric inline citations (`[1]`, `[1-3]`) and bibliography entries. Bidirectional difference analysis identifying missing citations and uncited references. | 4h | None | `test_citation.py` catches missing citation `[3]` and uncited bibliography `[2]`. |
 | **TSK-304** | Visual PDF Redactor | PyMuPDF annotation engine. Draw dashed red rectangles (`fitz.Rect`) and sticky popups (`page.add_text_annot`) over all violation bounding boxes. Upload to S3. | 4h | TSK-301 | Output PDF opened in Acrobat/browser displays visible red highlight boxes and comments. |
@@ -136,3 +137,4 @@ gantt
 | **RSK-02** | spaCy Model Memory in Container | Medium | OOM kill during concurrent document processing | Pre-download `en_core_web_sm` during image build; reuse single singleton instance across worker loops. |
 | **RSK-03** | Rotated / Scanned PDF Margins | Medium | Incorrect coordinate math on non-standard page rotations | Inspect `page.rotation` in PyMuPDF and apply transform matrix before computing millimeter margins. |
 | **RSK-04** | Missing Bibliography Header | Low | Regex fails to split body from references | Fallback heuristic scanning for lines starting with `[1]` in the final 25% of document pages. |
+

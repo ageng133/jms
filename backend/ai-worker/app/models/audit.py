@@ -49,18 +49,34 @@ class AuditSummary(BaseModel):
     status: Literal["PASS", "FAIL"]
 
 
+class TemplateSpecs(BaseModel):
+    page_format: str = "A4"
+    page_width_mm: float = 210.0
+    page_height_mm: float = 297.0
+    margin_top_mm: float = 25.4
+    margin_bottom_mm: float = 25.4
+    margin_left_mm: float = 25.4
+    margin_right_mm: float = 25.4
+    column_count: int = 1
+    column_gap_mm: Optional[float] = None
+    is_custom_template: bool = False
+
+
 class AuditReport(BaseModel):
     audit_id: str
     manuscript_id: str
     overall_score: int
     summary: AuditSummary
     modules: AuditModules
+    template_specs: Optional[TemplateSpecs] = None
     annotated_pdf_s3_key: Optional[str] = None
 
 
 class WorkerJobPayload(BaseModel):
     audit_id: str
     file_id: str
+    template_file_id: Optional[str] = None
     manuscript_id: str
     s3_key: str
+    template_s3_key: Optional[str] = None
     file_type: str

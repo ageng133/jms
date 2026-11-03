@@ -7,7 +7,7 @@
 bin/
 dist/
 build/
-gateway
+backend/gateway/gateway
 
 # Go
 vendor/
@@ -48,6 +48,7 @@ venv.bak/
 node_modules/
 .next/
 out/
+*.tsbuildinfo
 .pnpm-debug.log*
 
 # Environment & Secrets

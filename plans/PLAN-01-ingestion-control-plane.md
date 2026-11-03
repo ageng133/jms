@@ -27,14 +27,15 @@ sequenceDiagram
 
     Author->>Gateway: POST /api/v1/auth/login
     Gateway-->>Author: JWT Bearer Token (HS256)
-    Author->>Gateway: POST /api/v1/manuscripts/:id/files/presign
-    Gateway->>S3: PresignedPutObject(key, 15m)
-    Gateway-->>Author: { upload_url, s3_key }
-    Author->>S3: PUT /raw/... (Direct Stream)
-    S3-->>Author: 200 OK
-    Author->>Gateway: POST /api/v1/manuscripts/:id/files/confirm
-    Gateway->>DB: Atomic Tx (manuscript_files, audit QUEUED, status PRE_CHECK_PENDING)
-    Gateway->>Redis: LPUSH queue:ai_audit
+    Author->>Gateway: POST /api/v1/manuscripts/:id/files/presign (file_role: TEMPLATE)
+    Gateway-->>Author: { upload_url, s3_key, file_role: "TEMPLATE" }
+    Author->>S3: PUT /raw/.../template_xxx.pdf (Direct Stream)
+    Author->>Gateway: POST /api/v1/manuscripts/:id/files/presign (file_role: MANUSCRIPT)
+    Gateway-->>Author: { upload_url, s3_key, file_role: "MANUSCRIPT" }
+    Author->>S3: PUT /raw/.../draft_xxx.pdf (Direct Stream)
+    Author->>Gateway: POST /api/v1/manuscripts/:id/files/confirm { draft_file, template_file }
+    Gateway->>DB: Atomic Tx (manuscript_files [MANUSCRIPT & TEMPLATE], audit QUEUED with template_file_id)
+    Gateway->>Redis: LPUSH queue:ai_audit { s3_key, template_s3_key }
     Gateway-->>Author: 202 Accepted { audit_id }
 ```
 
@@ -47,22 +48,28 @@ sequenceDiagram
   - Implementation: bcrypt password hashing (cost 10), HMAC-SHA256 JWT claims (`user_id`, `email`, `role`, `exp`).
   - Middleware: `RequireRoles(roles ...domain.Role)` enforcing author/editor boundaries.
 
-* **TSK-102: Direct-to-S3 Presigned URL Provider**
+* **TSK-102: Dual Direct-to-S3 Presigned URL Provider (Template & Draft)**
   - Path: `backend/gateway/internal/infrastructure/storage/minio_storage.go`
   - Implementation: MinIO Go SDK v7 client calling `PresignedPutObject` with 15-minute TTL.
-  - S3 Key Partitioning: `raw/{manuscript_id}/{uuid}.{ext}`.
+  - S3 Key Partitioning:
+    - Template: `raw/{manuscript_id}/template_{uuid}.{ext}`
+    - Draft: `raw/{manuscript_id}/draft_{uuid}.{ext}`
+  - Role differentiation: `file_role: "TEMPLATE"` vs `file_role: "MANUSCRIPT"`.
 
-* **TSK-103: Transactional Metadata Submission Handler**
+* **TSK-103: Transactional Dual Metadata Submission Handler**
   - Path: `backend/gateway/internal/usecase/submission_usecase.go`
-  - Implementation: GORM transactional block computing next manuscript file version, inserting `manuscript_files` record, inserting `pre_submission_audits` in state `QUEUED`, and transitioning manuscript to `PRE_CHECK_PENDING`.
+  - Implementation: GORM transactional block computing next manuscript file version, inserting both `MANUSCRIPT` and `TEMPLATE` records into `manuscript_files`, inserting `pre_submission_audits` linked to `template_file_id` in state `QUEUED`, and transitioning manuscript to `PRE_CHECK_PENDING`.
+  - Event Dispatch: Dispatches Redis payload containing both `s3_key` (draft) and `template_s3_key` (reference template).
 
 * **TSK-104: Audit Outcome Query Endpoint**
   - Path: `backend/gateway/internal/delivery/http/handler/submission_handler.go`
-  - Implementation: `GET /api/v1/audits/:id` fetching JSONB audit records, overall score, and S3 annotated key.
+  - Implementation: `GET /api/v1/audits/:id` fetching JSONB audit records, overall score, extracted template specs, and S3 annotated key.
 
 ---
 
 ## 4. Definition of Done (DoD)
 - [x] Zero payload buffering on Go gateway during 50MB PDF upload tests.
+- [x] Dual-file presigning & confirmation operational (Template & Manuscript Draft).
 - [x] All endpoints output unified `{ "success": true, "data": ..., "error": null }` envelope.
 - [x] Unit test `TestRequestUploadURL` passes in `submission_usecase_test.go`.
+

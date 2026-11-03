@@ -70,3 +70,4 @@ flowchart LR
 - [x] Correctly expands hyphenated ranges (`[2-5]`) into individual integers.
 - [x] Flags missing citations and uncited references with informative truncated descriptions.
 - [x] `tests/test_citation.py` passes all positive and negative assertion fixtures.
+

@@ -89,3 +89,4 @@ erDiagram
 - [x] PostgreSQL 16 container successfully initialises and runs migrations from `/docker-entrypoint-initdb.d`.
 - [x] Redis responds with `PONG` and holds jobs across network reconnects.
 - [x] End-to-end event dispatch and consumer acknowledgement confirmed under 1.0 second.
+

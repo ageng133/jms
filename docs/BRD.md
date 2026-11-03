@@ -33,13 +33,13 @@ Current scholarly journal workflows suffer from high operational drag during the
 ## 3. Product Scope (MoSCoW Prioritization for Thursday Sprint)
 
 ### In-Scope (Must Have - Thursday MVC)
-* **[FR-1] Direct S3 Ingestion Wizard:** 3-step author workflow in Next.js 15. The browser streams `.pdf` directly to MinIO/S3 via presigned PUT URLs without passing payload bytes through the API gateway.
-* **[FR-2] Event-Driven Dispatcher:** Go API Gateway saves metadata in `manuscript_files`, sets status `PRE_CHECK_PENDING`, and publishes job to Redis `queue:ai_audit`.
-* **[FR-3] Layout & Geometry Audit Module:** Python worker measures top, bottom, left, and right margins in millimeters and points ($1\text{ mm} \approx 2.83465\text{ pt}$). Captures violation coordinates `[x0, y0, x1, y1]`.
+* **[FR-1] Dual-File Direct S3 Ingestion Wizard:** 3-step author workflow in Next.js 15. The author uploads **both** the **Journal Reference Template** (`.pdf`) and the **Manuscript Draft** (`.pdf`). The browser streams files directly to MinIO/S3 via presigned PUT URLs without passing payload bytes through the API gateway.
+* **[FR-2] Event-Driven Dispatcher:** Go API Gateway saves metadata for both files in `manuscript_files` (`MANUSCRIPT` vs `TEMPLATE`), creates an audit record linked to `template_file_id`, sets status `PRE_CHECK_PENDING`, and publishes job payload with `s3_key` and `template_s3_key` to Redis `queue:ai_audit`.
+* **[FR-3] Dynamic Template Extraction & Comparative Layout Audit:** Python worker extracts target geometry specs from the uploaded template (A4/Letter dimensions, target margins, column grid) and audits the manuscript draft directly against the template guidelines ($1\text{ mm} \approx 2.83465\text{ pt}$). Captures violation coordinates `[x0, y0, x1, y1]`.
 * **[FR-4] Double-Blind Anonymization Module:** Combines `spaCy` NER (`PERSON`, `ORG`) and regex to detect author names, affiliations, email addresses, ORCIDs, grant numbers, and embedded PDF metadata.
 * **[FR-5] Bidirectional Citation Integrity Module:** Extracts inline citations (`[1]`, `[1-3]`) and bibliography entries. Flags uncited references and missing text citations.
 * **[FR-6] Visual PDF Annotation:** PyMuPDF renders red dashed bounding boxes and sticky comment notes over violation coordinates, saving `annotated_v1.pdf` to S3.
-* **[FR-7] Interactive AI Audit Report Viewer:** Displays compliance score (0–100), PASS/FAIL indicator, breakdown of checks, and a direct download link for the annotated PDF.
+* **[FR-7] Interactive AI Audit Report Viewer:** Displays compliance score (0–100), PASS/FAIL indicator, extracted reference template specs card, breakdown of comparative checks, and a direct download link for the annotated PDF.
 
 ### Out-of-Scope (Deferred to Post-Thursday Sprints)
 * Reviewer matching and bidding algorithms.
@@ -66,3 +66,4 @@ Current scholarly journal workflows suffer from high operational drag during the
 2. Redis worker receives the event, executes all 3 modules, and finishes within 10 seconds.
 3. Audit report correctly flags simulated margin breaches and test email leaks.
 4. Author can inspect the report in Next.js 15 and download the red-annotated PDF.
+

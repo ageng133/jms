@@ -38,26 +38,34 @@ flowchart TD
 
 ## 2. Sprint Backlog & User Stories (MVC Scope)
 
-### Story 1: Author Direct S3 Ingestion Pipeline (5 SP)
-* **As an** author,
-* **I want to** upload my PDF manuscript directly to object storage via a presigned URL,
-* **So that** my file is safely stored without consuming API gateway memory.
+### Story 1: Author Dual Direct S3 Ingestion Pipeline (5 SP)
+* **As an** author or managing editor,
+* **I want to** upload both the reference journal template and the author manuscript draft directly to object storage via presigned URLs,
+* **So that** both files are safely stored without consuming API gateway memory, enabling comparative layout audit.
 * **Acceptance Criteria:**
-  - `POST /api/v1/manuscripts/:id/files/presign` returns valid S3 PUT URL (15-min expiry).
-  - Client uploads binary stream to S3 with status `200 OK`.
-  - `POST /api/v1/manuscripts/:id/files/confirm` creates `manuscript_files` record (version incremented), sets manuscript status to `PRE_CHECK_PENDING`, and creates `pre_submission_audits` in state `QUEUED`.
-* **Status:** Implemented & Verified in Go gateway tests.
+  - `POST /api/v1/manuscripts/:id/files/presign` returns valid S3 PUT URLs distinguishing `file_role: "TEMPLATE"` and `file_role: "MANUSCRIPT"`.
+  - Client uploads binary streams directly to S3 with status `200 OK`.
+  - `POST /api/v1/manuscripts/:id/files/confirm` creates both `manuscript_files` records (`MANUSCRIPT` and `TEMPLATE`), links `template_file_id` on `pre_submission_audits` in state `QUEUED`, and updates status to `PRE_CHECK_PENDING`.
+* **Status:** Implemented & Verified across Go Gateway and S3 MinIO.
 
 ### Story 2: Asynchronous Redis Event Broker & Choreography (3 SP)
 * **As a** system architect,
 * **I want to** decouple submission HTTP requests from heavy AI processing via Redis,
 * **So that** the gateway can handle concurrent submission traffic without timeouts.
 * **Acceptance Criteria:**
-  - Gateway pushes `{ audit_id, file_id, manuscript_id, s3_key, file_type }` to Redis list `queue:ai_audit`.
+  - Gateway pushes `{ audit_id, file_id, template_file_id, manuscript_id, s3_key, template_s3_key, file_type }` to Redis list `queue:ai_audit`.
   - Worker process consumes messages via `BRPOP` with error handling and exponential backoff.
 * **Status:** Implemented in `backend/gateway/internal/infrastructure/redis` and `backend/ai-worker/app/worker.py`.
 
-### Story 3: Multi-Module AI Manuscript Audit Engine (8 SP)
+### Story 3: Multi-Module AI Manuscript Audit Engine with Template Comparison (8 SP)
+* **As a** managing editor,
+* **I want** the AI engine to extract layout guidelines from the uploaded template and audit the author's draft against them,
+* **So that** desk review triage is automated with millimeter-level accuracy and strict double-blind standards.
+* **Acceptance Criteria:**
+  - Extracts target page format, dimensions, margins, and 1-column vs 2-column layout from reference template.
+  - Geometry auditor flags breaches with expected template value vs actual draft measurement and bounding box coordinates.
+  - spaCy NER detects names/emails/ORCIDs; citation engine cross-checks text citations against bibliography items.
+* **Status:** Implemented in `app/modules/template.py`, `app/modules/layout.py`, `anonymization.py`, `citation.py`.
 * **As an** editor and author,
 * **I want** the system to automatically inspect page margins, double-blind anonymization, and citation graphs,
 * **So that** formatting violations and identity leaks are caught before human review.
@@ -95,3 +103,4 @@ flowchart TD
 2. **Clean Code & Decoupling:** Backend (Go Gateway + Python Worker) and Frontend (Next.js 15) remain strictly decoupled.
 3. **Smoke Test Passing:** Synthetic manuscript run triggers Redis event, generates JSON report, and creates annotated PDF in under 15 seconds.
 4. **Zero-Error Build:** Go binary compiles without warnings, Next.js passes `next build` static export check.
+

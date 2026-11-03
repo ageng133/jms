@@ -56,3 +56,4 @@ flowchart LR
 - [x] Integration smoke runner passes cleanly in under 15 seconds.
 - [ ] Live demo rehearsals executed with zero manual intervention required.
 - [ ] Thursday sprint sign-off achieved across all 16 MBTI personas.
+

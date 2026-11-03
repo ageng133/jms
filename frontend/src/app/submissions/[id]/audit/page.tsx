@@ -14,6 +14,8 @@ import {
   ArrowLeft,
   Loader2,
   RefreshCw,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 import { PreSubmissionAuditReport } from "@/types/jms";
 import { getAuditReport } from "@/lib/api";
@@ -69,7 +71,12 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to Submissions
           </Link>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">AI Pre-Submission Audit Report</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">AI Pre-Submission Audit Report</h1>
+            <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200">
+              Template-Driven Audit
+            </span>
+          </div>
           <p className="text-xs text-slate-500 font-mono">
             Manuscript: {resolvedParams.id} &bull; Audit: {auditId || "N/A"}
           </p>
@@ -100,8 +107,8 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
       {loading && !report && (
         <div className="p-16 text-center bg-white rounded-2xl border border-slate-200 space-y-4">
           <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-700">Executing Multi-Module AI Audit...</p>
-          <p className="text-xs text-slate-400">Inspecting geometry coordinates, double-blind NER, and citation graphs.</p>
+          <p className="text-sm font-semibold text-slate-700">Executing Comparative Multi-Module AI Audit...</p>
+          <p className="text-xs text-slate-400">Comparing draft geometry against template guidelines, double-blind NER & citation graphs.</p>
         </div>
       )}
 
@@ -166,6 +173,57 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
+          {/* Reference Journal Template Specifications Card */}
+          {report.template_specs && (
+            <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-900/60 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-white flex items-center gap-2">
+                      Reference Journal Template Specifications
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                    </h2>
+                    <p className="text-xs text-indigo-200">
+                      {report.template_specs.is_custom_template
+                        ? "Extracted dynamically from uploaded Journal Template PDF"
+                        : "Using Standard Baseline Academic Template"}
+                    </p>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 text-xs font-semibold self-start sm:self-auto">
+                  Format: {report.template_specs.page_format} ({report.template_specs.page_width_mm} &times; {report.template_specs.page_height_mm} mm)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs pt-1">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
+                  <span className="text-indigo-300 font-semibold uppercase tracking-wider">Top Margin</span>
+                  <p className="text-lg font-black text-white">{report.template_specs.margin_top_mm} mm</p>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
+                  <span className="text-indigo-300 font-semibold uppercase tracking-wider">Bottom Margin</span>
+                  <p className="text-lg font-black text-white">{report.template_specs.margin_bottom_mm} mm</p>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
+                  <span className="text-indigo-300 font-semibold uppercase tracking-wider">Left & Right Margins</span>
+                  <p className="text-lg font-black text-white">
+                    {report.template_specs.margin_left_mm} / {report.template_specs.margin_right_mm} mm
+                  </p>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
+                  <span className="text-indigo-300 font-semibold uppercase tracking-wider">Column Grid</span>
+                  <p className="text-lg font-black text-white">
+                    {report.template_specs.column_count === 2 ? "2 Columns" : "1 Column"}
+                    {report.template_specs.column_gap_mm ? ` (${report.template_specs.column_gap_mm}mm gap)` : ""}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Module 1: Geometry & Layout */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -175,7 +233,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-900">Module 1: Geometry & Layout Inspection</h2>
-                  <p className="text-xs text-slate-500">PyMuPDF margin measurement & bounding box coordinate capture</p>
+                  <p className="text-xs text-slate-500">
+                    Draft layout compared against {report.template_specs ? "uploaded template specifications" : "standard margins"}
+                  </p>
                 </div>
               </div>
               <span
@@ -192,18 +252,18 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
             {report.modules.geometry_and_layout.checks.length === 0 ? (
               <div className="p-6 text-xs text-emerald-700 bg-emerald-50/50 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                All margin and layout dimensions conform with journal specifications (25.4mm standard).
+                All margins, page dimensions, and column grids strictly conform to the target Journal Template.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
                     <tr>
-                      <th className="px-6 py-3">Rule</th>
+                      <th className="px-6 py-3">Rule / Constraint</th>
                       <th className="px-6 py-3">Page</th>
-                      <th className="px-6 py-3">Expected</th>
-                      <th className="px-6 py-3">Actual</th>
-                      <th className="px-6 py-3">Bounding Box [x0, y0, x1, y1]</th>
+                      <th className="px-6 py-3">Template Expected</th>
+                      <th className="px-6 py-3">Draft Actual</th>
+                      <th className="px-6 py-3">Violation Bounding Box [x0, y0, x1, y1]</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -343,4 +403,3 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
     </div>
   );
 }
-

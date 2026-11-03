@@ -54,3 +54,4 @@ flowchart TD
 - [x] Correctly detects test email address (`author@mit.edu`) and ORCID identifier (`0000-0002-1825-0097`).
 - [x] Zero crashes when encountering PDFs with empty or missing metadata streams.
 - [x] Unit test `tests/test_anonymization.py` passes all test cases with 100% success rate.
+

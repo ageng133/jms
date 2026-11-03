@@ -18,6 +18,7 @@ from app.modules.annotator import VisualPDFAnnotator
 from app.modules.anonymization import AnonymizationAuditor
 from app.modules.citation import CitationAuditor
 from app.modules.layout import LayoutAuditor
+from app.modules.template import TemplateExtractor
 from app.storage.s3 import S3Client
 
 logging.basicConfig(
@@ -31,34 +32,50 @@ class PreSubmissionAuditEngine:
     def __init__(self):
         self.s3 = S3Client()
         self.db = DBRepository()
+        self.template_extractor = TemplateExtractor()
         self.layout_auditor = LayoutAuditor()
         self.anonymization_auditor = AnonymizationAuditor()
         self.citation_auditor = CitationAuditor()
         self.annotator = VisualPDFAnnotator()
 
     def execute_audit(self, payload: WorkerJobPayload) -> AuditReport:
-        logger.info(f"Starting audit job: audit_id={payload.audit_id}, manuscript_id={payload.manuscript_id}")
+        logger.info(
+            f"Starting audit job: audit_id={payload.audit_id}, manuscript_id={payload.manuscript_id}, "
+            f"template_s3_key={payload.template_s3_key}"
+        )
         self.db.mark_audit_processing(payload.audit_id)
 
-        # 1. Fetch file from S3
+        # 1. Extract specs from reference journal template if provided
+        template_specs = None
+        if payload.template_s3_key:
+            try:
+                logger.info(f"Downloading reference template: {payload.template_s3_key}")
+                template_bytes = self.s3.download_file_bytes(payload.template_s3_key)
+                template_doc = fitz.open(stream=template_bytes, filetype="pdf")
+                template_specs = self.template_extractor.extract_specs(template_doc)
+                template_doc.close()
+            except Exception as e:
+                logger.warning(f"Could not parse template PDF: {e}. Falling back to default layout specs.")
+
+        # 2. Fetch draft manuscript from S3
         file_bytes = self.s3.download_file_bytes(payload.s3_key)
         doc = fitz.open(stream=file_bytes, filetype="pdf")
 
         all_annotations = []
 
-        # 2. Run Module 1: Layout & Geometry
-        layout_res, layout_annots = self.layout_auditor.audit(doc)
+        # 3. Run Module 1: Layout & Geometry against Template Specs
+        layout_res, layout_annots = self.layout_auditor.audit(doc, template_specs=template_specs)
         all_annotations.extend(layout_annots)
 
-        # 3. Run Module 2: Anonymization Double-Blind
+        # 4. Run Module 2: Anonymization Double-Blind
         anon_res, anon_annots = self.anonymization_auditor.audit(doc)
         all_annotations.extend(anon_annots)
 
-        # 4. Run Module 3: Citation Integrity
+        # 5. Run Module 3: Citation Integrity
         cite_res, cite_annots = self.citation_auditor.audit(doc)
         all_annotations.extend(cite_annots)
 
-        # 5. Run Module 4: Visual PDF Annotations
+        # 6. Run Module 4: Visual PDF Annotations
         annotated_pdf_s3_key = None
         if len(all_annotations) > 0:
             annotated_bytes = self.annotator.annotate_document(doc, all_annotations)
@@ -68,7 +85,7 @@ class PreSubmissionAuditEngine:
 
         doc.close()
 
-        # 6. Score & Summary Computation
+        # 7. Score & Summary Computation
         critical_errors = len([c for c in layout_res.checks if not c.passed])
         warnings = (
             len(anon_res.leaks_found)
@@ -97,10 +114,11 @@ class PreSubmissionAuditEngine:
             overall_score=overall_score,
             summary=summary,
             modules=modules,
+            template_specs=template_specs,
             annotated_pdf_s3_key=annotated_pdf_s3_key,
         )
 
-        # 7. Persist to DB
+        # 8. Persist to DB
         self.db.save_audit_report(report, payload.manuscript_id)
         logger.info(f"Audit completed: audit_id={payload.audit_id}, score={overall_score}, status={status}")
         return report

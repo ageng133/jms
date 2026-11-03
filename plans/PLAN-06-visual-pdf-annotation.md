@@ -58,3 +58,4 @@ flowchart TD
 - [x] Generated PDF opens cleanly in Adobe Acrobat, Apple Preview, and Chrome PDF Viewer.
 - [x] Sticky note popups open with detailed remediation advice upon clicking.
 - [x] Total PDF file size increases by less than 10% after annotation injection.
+

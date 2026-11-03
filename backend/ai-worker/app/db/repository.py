@@ -28,6 +28,11 @@ class DBRepository:
         with self.get_connection() as conn:
             with conn.cursor() as cur:
                 # 1. Update pre_submission_audits
+                template_specs_json = (
+                    json.dumps(report.template_specs.model_dump())
+                    if report.template_specs
+                    else "{}"
+                )
                 cur.execute(
                     """
                     UPDATE pre_submission_audits
@@ -36,6 +41,7 @@ class DBRepository:
                         layout_issues = %s::jsonb,
                         citation_issues = %s::jsonb,
                         anonymization_flags = %s::jsonb,
+                        template_specs = %s::jsonb,
                         annotated_pdf_s3_key = %s,
                         completed_at = %s
                     WHERE id = %s
@@ -45,6 +51,7 @@ class DBRepository:
                         json.dumps([c.model_dump() for c in report.modules.geometry_and_layout.checks]),
                         json.dumps(report.modules.citation_crosscheck.model_dump()),
                         json.dumps([l.model_dump() for l in report.modules.anonymization.leaks_found]),
+                        template_specs_json,
                         report.annotated_pdf_s3_key,
                         now,
                         report.audit_id,

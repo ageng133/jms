@@ -39,6 +39,19 @@ export interface AnonymizationLeak {
   page: number;
 }
 
+export interface TemplateSpecs {
+  page_format: string;
+  page_width_mm: number;
+  page_height_mm: number;
+  margin_top_mm: number;
+  margin_bottom_mm: number;
+  margin_left_mm: number;
+  margin_right_mm: number;
+  column_count: number;
+  column_gap_mm?: number;
+  is_custom_template?: boolean;
+}
+
 export interface PreSubmissionAuditReport {
   audit_id: string;
   manuscript_id: string;
@@ -64,6 +77,7 @@ export interface PreSubmissionAuditReport {
       missing_citations: string[];
     };
   };
+  template_specs?: TemplateSpecs;
   annotated_pdf_s3_key?: string;
 }
 
@@ -72,6 +86,7 @@ export interface ManuscriptFile {
   manuscript_id: string;
   version: number;
   file_type: FileType;
+  file_role?: "MANUSCRIPT" | "TEMPLATE";
   s3_key: string;
   original_filename: string;
   file_size_bytes: number;
@@ -82,6 +97,7 @@ export interface ManuscriptFile {
 export interface PreSubmissionAudit {
   id: string;
   manuscript_file_id: string;
+  template_file_id?: string;
   status: AuditStatus;
   score_overall?: number;
   layout_issues?: GeometryCheckItem[];
@@ -92,6 +108,7 @@ export interface PreSubmissionAudit {
     missing_citations: string[];
   };
   anonymization_flags?: AnonymizationLeak[];
+  template_specs?: TemplateSpecs;
   annotated_pdf_s3_key?: string;
   error_message?: string;
   created_at: string;
