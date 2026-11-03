@@ -35,9 +35,11 @@ stateDiagram-v2
   - Inputs: Manuscript Title, Abstract (multi-line textarea), comma-separated Keywords.
   - Client-side validation: Ensures minimum length requirements before enabling transition.
 
-* **TSK-401.2: Step 2 Dual-Dropzone S3 Direct Upload**
-  - Dropzone A: Journal Reference Template (`.pdf`) — defines target geometry, column layout, and margins.
-  - Dropzone B: Author Manuscript Draft (`.pdf`) — the submission to be audited.
+* **TSK-401.2: Step 2 Dual-Dropzone S3 Direct Upload (Side-by-Side Responsive Layout)**
+  - Two-Column Grid: `grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch` replacing vertical stacking ("downside").
+  - Dropzone A (Left): Journal Reference Template (`.pdf`) — defines target geometry, column layout, and margins with optional fallback indicator.
+  - Dropzone B (Right): Author Manuscript Draft (`.pdf`) — the mandatory submission to be audited.
+  - Integrated Drag-and-Drop: HTML5 `onDragOver` and `onDrop` events on both dropzone labels for instant file attachment.
   - Presigns both files individually via `requestUploadPresign(manuscriptId, filename, "PDF", role)`.
   - Executes raw direct-to-S3 binary streams via `uploadDirectToS3(uploadUrl, file)`.
 
