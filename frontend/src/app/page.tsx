@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -12,6 +14,13 @@ import {
   ChevronRight,
   Box,
   Compass,
+  Zap,
+  Clock,
+  Scan,
+  XCircle,
+  HelpCircle,
+  UploadCloud,
+  FileCheck2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { GoogleLogo } from "@/components/GoogleAuthModal";
@@ -22,101 +31,442 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardContent,
 } from "@/components/ui/card";
 
 export default function HomePage() {
   const router = useRouter();
   const { user, openGoogleModal } = useAuth();
 
+  // Interactive Live Scorecard Simulator State
+  const [simEmailLeak, setSimEmailLeak] = useState(true);
+  const [simSingleColumn, setSimSingleColumn] = useState(true);
+  const [simMissingRef, setSimMissingRef] = useState(false);
+
+  // Compute live simulated score
+  let simScore = 100;
+  if (simEmailLeak) simScore -= 15;
+  if (simSingleColumn) simScore -= 12;
+  if (simMissingRef) simScore -= 8;
+
+  const simStatus = simScore >= 90 ? "PASS" : simScore >= 75 ? "WARNING" : "REVISE";
+
   return (
-    <div className="space-y-16 sm:space-y-24 pb-16">
-      {/* 1. HERO SECTION (APPLE HIG LIGHT MODE) */}
-      <section className="relative overflow-hidden rounded-3xl bg-white p-6 sm:p-12 lg:p-16 border border-black/[0.06] shadow-apple-card text-[#1d1d1f]">
-        <div className="max-w-3xl space-y-6">
-          {/* Status pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/[0.04] text-[#1d1d1f] text-xs font-medium">
-            <span className="w-2 h-2 rounded-full bg-[#34c759] shadow-xs" />
-            <span>Academic Paper Pre-Submission Review System</span>
-          </div>
+    <div className="space-y-20 sm:space-y-28 pb-20">
+      {/* =====================================================================
+          1. HERO SECTION WITH VECTOR INFOGRAPHIC
+         ===================================================================== */}
+      <section className="relative overflow-hidden rounded-3xl bg-white p-6 sm:p-10 lg:p-14 border border-black/[0.06] shadow-apple-card text-[#1d1d1f]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          {/* Left Column: Headline & Action Buttons */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Status Pill */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/[0.04] text-[#1d1d1f] text-xs font-medium">
+              <span className="w-2 h-2 rounded-full bg-[#34c759] shadow-xs animate-pulse" />
+              <span>⚡ Format Kilat — AI Pre-Submission Compliance Engine</span>
+            </div>
 
-          {/* Headline */}
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] text-[#1d1d1f]">
-              Check your journal paper format{" "}
-              <span className="text-[#0071e3]">before you submit.</span>
-            </h1>
-            <p className="text-base sm:text-lg text-[#86868b] leading-relaxed max-w-2xl">
-              Eliminate desk rejections caused by small layout errors. Upload your draft PDF alongside the journal template to automatically verify margins, columns, double-blind anonymization, and references.
-            </p>
-          </div>
+            {/* Headline */}
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] text-[#1d1d1f]">
+                Zero Desk Rejections. <br />
+                <span className="text-[#0071e3]">Format check in ~0.8s.</span>
+              </h1>
+              <p className="text-sm sm:text-base lg:text-lg text-[#86868b] leading-relaxed max-w-xl">
+                Eliminate formatting desk rejections before you submit. Format Kilat compares your draft PDF against IEEE, ACM, or institutional journal style guides in seconds—highlighting margin mismatches, author identity leaks, and orphaned citations with visual red bounding boxes.
+              </p>
+            </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            {user ? (
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              {user ? (
+                <Button
+                  size="lg"
+                  onClick={() => router.push("/admin")}
+                  className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full gap-2 shadow-xs text-xs sm:text-sm h-11 px-6 active:scale-[0.98] transition-all"
+                >
+                  <span>Open Submission Studio</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  onClick={openGoogleModal}
+                  className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full gap-2.5 shadow-xs text-xs sm:text-sm h-11 px-6 active:scale-[0.98] transition-all"
+                >
+                  <GoogleLogo className="w-4 h-4" />
+                  <span>Sign in with Google to Submit</span>
+                </Button>
+              )}
+
               <Button
+                variant="outline"
                 size="lg"
-                onClick={() => router.push("/admin")}
-                className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full gap-2 shadow-xs text-sm h-11 px-6 active:scale-[0.98] transition-all"
+                onClick={() => {
+                  const el = document.getElementById("how-it-works");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="gap-2 text-xs sm:text-sm rounded-full border-black/[0.12] hover:bg-black/[0.04] text-[#1d1d1f] h-11 px-6 active:scale-[0.98] transition-all"
               >
-                <span>Open Submission Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Explore Infographic Pipeline</span>
+                <ChevronRight className="w-4 h-4 text-[#86868b]" />
               </Button>
-            ) : (
-              <Button
-                size="lg"
-                onClick={openGoogleModal}
-                className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full gap-2.5 shadow-xs text-sm h-11 px-6 active:scale-[0.98] transition-all"
-              >
-                <GoogleLogo className="w-4 h-4" />
-                <span>Sign in with Google to Submit</span>
-              </Button>
-            )}
+            </div>
 
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => {
-                const el = document.getElementById("demo-preview");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="gap-2 text-sm rounded-full border-black/[0.12] hover:bg-black/[0.04] text-[#1d1d1f] h-11 px-6 active:scale-[0.98] transition-all"
-            >
-              <span>See Sample Review</span>
-              <ChevronRight className="w-4 h-4 text-[#86868b]" />
-            </Button>
+            {/* Quick Metrics */}
+            <div className="pt-6 border-t border-black/[0.06] grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-[#86868b]">
+              <div>
+                <div className="text-base font-bold text-[#1d1d1f]">~0.8 Second</div>
+                <div>Laser Audit Latency</div>
+              </div>
+              <div>
+                <div className="text-base font-bold text-[#1d1d1f]">Box Cloud</div>
+                <div>Direct S3 Ingestion</div>
+              </div>
+              <div>
+                <div className="text-base font-bold text-[#1d1d1f]">Double-Blind</div>
+                <div>spaCy NER Sanitization</div>
+              </div>
+              <div>
+                <div className="text-base font-bold text-[#1d1d1f]">IEEE &amp; ACM</div>
+                <div>Built-in SOTA Templates</div>
+              </div>
+            </div>
           </div>
 
-          {/* Highlights */}
-          <div className="pt-6 border-t border-black/[0.06] grid grid-cols-2 sm:grid-cols-4 gap-4 text-[#86868b] text-xs">
-            <div>
-              <div className="text-base font-bold text-[#1d1d1f]">~1 Second</div>
-              <div>Fast Format Check</div>
-            </div>
-            <div>
-              <div className="text-base font-bold text-[#1d1d1f]">Box Cloud</div>
-              <div>Secure Cloud Storage</div>
-            </div>
-            <div>
-              <div className="text-base font-bold text-[#1d1d1f]">Google Gemini</div>
-              <div>Visual Layout AI</div>
-            </div>
-            <div>
-              <div className="text-base font-bold text-[#1d1d1f]">Double-Blind</div>
-              <div>Author Info Leak Check</div>
+          {/* Right Column: Hero Infographic Showcase */}
+          <div className="lg:col-span-5 relative">
+            <div className="relative rounded-3xl border border-black/[0.06] bg-[#f5f5f7] p-2 shadow-apple-card overflow-hidden group">
+              <div className="relative rounded-2xl overflow-hidden bg-white aspect-[4/3] flex items-center justify-center">
+                <img
+                  src="/illustrations/hero-infographic.jpg"
+                  alt="Format Kilat AI Academic Paper Scanner Infographic"
+                  className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                />
+
+                {/* Floating Apple HIG Micro-Badges */}
+                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-black/[0.06] shadow-apple-card flex items-center gap-1.5 text-[11px] font-semibold text-[#1d1d1f]">
+                  <span className="w-2 h-2 rounded-full bg-[#0071e3] animate-ping" />
+                  <span>Real-Time Laser Beam</span>
+                </div>
+
+                <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-black/[0.06] shadow-apple-card flex items-center gap-1.5 text-[11px] font-semibold text-[#34c759]">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Compliance: 98 / 100 PASS</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. DEMO PREVIEW (macOS WINDOW CHROME CARD) */}
-      <section id="demo-preview" className="space-y-6">
-        <div className="text-center max-w-xl mx-auto space-y-2">
-          <Badge variant="default">Sample Audit Report</Badge>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1d1d1f]">
-            How the automated review works
+      {/* =====================================================================
+          2. HOW IT WORKS — 3-STEP PIPELINE INFOGRAPHIC
+         ===================================================================== */}
+      <section id="how-it-works" className="space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <Badge variant="default" className="text-xs">
+            Interactive Infographic
+          </Badge>
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#1d1d1f]">
+            How Format Kilat Works
           </h2>
           <p className="text-[#86868b] text-xs sm:text-sm">
-            Here is what the system detects when checking a manuscript against an IEEE template:
+            From raw draft manuscript to camera-ready verification in three streamlined stages.
+          </p>
+        </div>
+
+        {/* Infographic Pipeline Visual Card */}
+        <div className="rounded-3xl border border-black/[0.06] bg-white p-4 sm:p-6 shadow-apple-card overflow-hidden space-y-6">
+          <div className="rounded-2xl overflow-hidden border border-black/[0.04] bg-[#f5f5f7]">
+            <img
+              src="/illustrations/how-it-works-pipeline.jpg"
+              alt="Format Kilat 3-Stage Pipeline Infographic: Ingest, Analyze, Report"
+              className="w-full h-auto object-cover max-h-[480px] mx-auto"
+            />
+          </div>
+
+          {/* 3 Interactive Pipeline Explanation Nodes */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+            <div className="p-5 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="w-8 h-8 rounded-full bg-[#0071e3] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  01
+                </span>
+                <Badge variant="secondary" className="text-[10px]">
+                  Cloud Box / S3
+                </Badge>
+              </div>
+              <h3 className="font-bold text-sm text-[#1d1d1f]">1. Ingest &amp; Style Extraction</h3>
+              <p className="text-xs text-[#86868b] leading-relaxed">
+                Upload your draft manuscript PDF alongside the journal&apos;s styling template. The ingestion engine parses page bounding coordinates and column structures.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="w-8 h-8 rounded-full bg-[#0071e3] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  02
+                </span>
+                <Badge variant="default" className="text-[10px]">
+                  PyMuPDF &amp; NLP
+                </Badge>
+              </div>
+              <h3 className="font-bold text-sm text-[#1d1d1f]">2. Comparative Multi-Engine Sweep</h3>
+              <p className="text-xs text-[#86868b] leading-relaxed">
+                PyMuPDF checks millimeter margin geometry. spaCy scans for author affiliation leaks. The citation engine maps text citations directly to bibliography entries.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="w-8 h-8 rounded-full bg-[#34c759] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  03
+                </span>
+                <Badge variant="success" className="text-[10px]">
+                  Visual Proof PDF
+                </Badge>
+              </div>
+              <h3 className="font-bold text-sm text-[#1d1d1f]">3. Report &amp; Bounding Box Proof</h3>
+              <p className="text-xs text-[#86868b] leading-relaxed">
+                Receive an immediate compliance score (0–100) and download an annotated PDF with high-contrast red bounding boxes identifying exact fixes needed.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
+          3. INTERACTIVE SIMULATOR: TRY THE FORMAT KILAT AUDITOR
+         ===================================================================== */}
+      <section className="space-y-6">
+        <div className="text-center max-w-xl mx-auto space-y-2">
+          <Badge variant="secondary" className="text-xs">
+            Interactive Simulator
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1d1d1f]">
+            Test the Compliance Calculation
+          </h2>
+          <p className="text-[#86868b] text-xs sm:text-sm">
+            Toggle common layout violations below to see how Format Kilat calculates your paper&apos;s camera-ready status in real-time:
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-black/[0.06] bg-white p-6 sm:p-8 shadow-apple-card grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Controls */}
+          <div className="lg:col-span-7 space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[#86868b]">
+              Simulate Layout Conditions:
+            </h3>
+
+            <div className="space-y-3 text-xs">
+              <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] cursor-pointer hover:bg-black/[0.03] transition">
+                <input
+                  type="checkbox"
+                  checked={simEmailLeak}
+                  onChange={(e) => setSimEmailLeak(e.target.checked)}
+                  className="mt-0.5 rounded text-[#0071e3] focus:ring-[#0071e3] w-4 h-4 cursor-pointer"
+                />
+                <div className="space-y-0.5">
+                  <div className="font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+                    <span>Double-Blind Violation: Author Email Detected</span>
+                    <span className="text-[10px] text-[#ff3b30] font-mono">(-15 pts)</span>
+                  </div>
+                  <p className="text-[#86868b]">
+                    Author names and university emails leaked in the header, invalidating blind review.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] cursor-pointer hover:bg-black/[0.03] transition">
+                <input
+                  type="checkbox"
+                  checked={simSingleColumn}
+                  onChange={(e) => setSimSingleColumn(e.target.checked)}
+                  className="mt-0.5 rounded text-[#0071e3] focus:ring-[#0071e3] w-4 h-4 cursor-pointer"
+                />
+                <div className="space-y-0.5">
+                  <div className="font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+                    <span>Column Violation: Single Column on IEEE Template</span>
+                    <span className="text-[10px] text-[#ff9500] font-mono">(-12 pts)</span>
+                  </div>
+                  <p className="text-[#86868b]">
+                    Manuscript text is single-column, but target IEEE template requires standard 2 columns.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] cursor-pointer hover:bg-black/[0.03] transition">
+                <input
+                  type="checkbox"
+                  checked={simMissingRef}
+                  onChange={(e) => setSimMissingRef(e.target.checked)}
+                  className="mt-0.5 rounded text-[#0071e3] focus:ring-[#0071e3] w-4 h-4 cursor-pointer"
+                />
+                <div className="space-y-0.5">
+                  <div className="font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+                    <span>Citation Discrepancy: Uncited Bibliography Items</span>
+                    <span className="text-[10px] text-[#86868b] font-mono">(-8 pts)</span>
+                  </div>
+                  <p className="text-[#86868b]">
+                    Bibliography contains reference entries never cited in the body text.
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Real-time Dynamic Gauge Output */}
+          <div className="lg:col-span-5 flex flex-col items-center justify-center p-6 rounded-2xl bg-[#f5f5f7] border border-black/[0.06] text-center space-y-4">
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-[#86868b] uppercase tracking-wider">
+                Simulated Format Score
+              </span>
+              <div
+                className={`text-5xl font-extrabold tracking-tight transition-colors duration-300 ${
+                  simScore >= 90
+                    ? "text-[#34c759]"
+                    : simScore >= 75
+                    ? "text-[#ff9500]"
+                    : "text-[#ff3b30]"
+                }`}
+              >
+                {simScore} <span className="text-2xl text-[#86868b]">/ 100</span>
+              </div>
+            </div>
+
+            <div>
+              <Badge
+                variant={
+                  simStatus === "PASS"
+                    ? "success"
+                    : simStatus === "WARNING"
+                    ? "warning"
+                    : "destructive"
+                }
+                className="text-xs px-3 py-1 font-semibold transition-all"
+              >
+                {simStatus === "PASS"
+                  ? "✓ Camera Ready (Pass)"
+                  : simStatus === "WARNING"
+                  ? "⚠️ Advisory Warnings Detected"
+                  : "✗ Revisions Required Before Review"}
+              </Badge>
+            </div>
+
+            <p className="text-xs text-[#86868b] max-w-xs leading-relaxed">
+              {simScore === 100
+                ? "Perfect paper geometry! All double-blind, column, and reference checks passed."
+                : `Format Kilat detected ${
+                    (simEmailLeak ? 1 : 0) + (simSingleColumn ? 1 : 0) + (simMissingRef ? 1 : 0)
+                  } issue(s) that would trigger desk rejection.`}
+            </p>
+
+            <Button
+              size="sm"
+              onClick={openGoogleModal}
+              className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium rounded-full text-xs shadow-xs px-5 h-9"
+            >
+              Audit Your Real Manuscript &rarr;
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
+          4. COMPARISON INFOGRAPHIC: TRADITIONAL VS FORMAT KILAT
+         ===================================================================== */}
+      <section className="space-y-6">
+        <div className="text-center max-w-xl mx-auto space-y-2">
+          <Badge variant="default" className="text-xs">
+            Comparison Infographic
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1d1d1f]">
+            Traditional Review vs. Format Kilat
+          </h2>
+          <p className="text-[#86868b] text-xs sm:text-sm">
+            Why leading research labs and universities adopt automated pre-screening:
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+          {/* Traditional Card */}
+          <div className="rounded-3xl border border-black/[0.06] bg-white p-6 sm:p-8 space-y-4 shadow-apple-card">
+            <div className="flex items-center justify-between border-b border-black/[0.06] pb-3">
+              <span className="font-bold text-sm text-[#ff3b30] flex items-center gap-1.5">
+                <XCircle className="w-4 h-4 text-[#ff3b30]" />
+                Traditional Journal Process
+              </span>
+              <Badge variant="destructive" className="text-[10px]">
+                Slow &amp; Manual
+              </Badge>
+            </div>
+
+            <ul className="space-y-3 text-xs text-[#86868b]">
+              <li className="flex items-start gap-2.5">
+                <span className="text-[#ff3b30] font-bold">&times;</span>
+                <span><strong>3–6 Weeks Waiting Period</strong> for initial editorial triage and format approval.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-[#ff3b30] font-bold">&times;</span>
+                <span><strong>Instant Desk Rejection</strong> for minor margin, column, or font specification slips.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-[#ff3b30] font-bold">&times;</span>
+                <span><strong>Accidental Identity Leaks</strong> compromise double-blind peer review integrity.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-[#ff3b30] font-bold">&times;</span>
+                <span><strong>Vague Editorial Feedback</strong> without bounding coordinates or actionable PDF markers.</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Format Kilat Card */}
+          <div className="rounded-3xl border border-[#0071e3]/20 bg-[#0071e3]/5 p-6 sm:p-8 space-y-4 shadow-apple-card">
+            <div className="flex items-center justify-between border-b border-[#0071e3]/20 pb-3">
+              <span className="font-bold text-sm text-[#0071e3] flex items-center gap-1.5">
+                <Zap className="w-4 h-4 text-[#0071e3]" />
+                Format Kilat Automated Pipeline
+              </span>
+              <Badge variant="default" className="text-[10px]">
+                Instant Verification
+              </Badge>
+            </div>
+
+            <ul className="space-y-3 text-xs text-[#1d1d1f]">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#34c759] shrink-0 mt-0.5" />
+                <span><strong>~0.8 Second Turnaround</strong> with high-performance zero-copy deserialization.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#34c759] shrink-0 mt-0.5" />
+                <span><strong>Precise Millimeter Validation</strong> against IEEE, ACM, or custom uploaded templates.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#34c759] shrink-0 mt-0.5" />
+                <span><strong>NLP Double-Blind Shield</strong> detects leaked author names, affiliations, and ORCID tags.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#34c759] shrink-0 mt-0.5" />
+                <span><strong>Red Bounding Box Proof</strong> downloaded directly with visual coordinate markers.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
+          5. SAMPLE AUDIT REPORT (macOS WINDOW CHROME CARD)
+         ===================================================================== */}
+      <section id="demo-preview" className="space-y-6">
+        <div className="text-center max-w-xl mx-auto space-y-2">
+          <Badge variant="default">Live Sample Audit</Badge>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1d1d1f]">
+            Inside the Automated Report
+          </h2>
+          <p className="text-[#86868b] text-xs sm:text-sm">
+            Here is what the system outputs when evaluating an IEEE Transactions paper:
           </p>
         </div>
 
@@ -134,7 +484,7 @@ export default function HomePage() {
             </div>
             <span className="text-[11px] font-medium text-[#34c759] flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#34c759]" />
-              Review Completed
+              Audit Complete (~0.8s)
             </span>
           </div>
 
@@ -147,7 +497,7 @@ export default function HomePage() {
                 Journal Guidelines
               </div>
               <p className="text-[11px] text-[#86868b]">
-                Requirements extracted from the reference template:
+                Requirements extracted from IEEE reference template:
               </p>
               <div className="space-y-2">
                 <div className="p-3 rounded-2xl bg-white border border-black/[0.06]">
@@ -256,128 +606,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. CORE FEATURES */}
-      <section className="space-y-6">
-        <div className="text-center max-w-xl mx-auto space-y-2">
-          <Badge variant="default">Features</Badge>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1d1d1f]">
-            Built for authors and journal editors
+      {/* =====================================================================
+          6. BOTTOM CTA BANNER
+         ===================================================================== */}
+      <section className="rounded-3xl bg-[#0071e3] p-8 sm:p-14 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-apple-card">
+        <div className="space-y-2 text-center sm:text-left">
+          <Badge variant="secondary" className="text-[10px] bg-white/20 text-white border-white/30">
+            Instant Camera-Ready Verification
+          </Badge>
+          <h2 className="text-xl sm:text-3xl font-bold">
+            Ready to format check your manuscript?
           </h2>
-          <p className="text-[#86868b] text-xs sm:text-sm">
-            Everything you need to verify paper compliance in one place.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="rounded-3xl border border-black/[0.06] shadow-apple-card hover:shadow-apple-hover transition-all">
-            <CardHeader className="space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
-                <Box className="w-5 h-5" />
-              </div>
-              <CardTitle className="text-base text-[#1d1d1f]">Box Cloud Storage</CardTitle>
-              <CardDescription className="text-xs text-[#86868b]">
-                Direct file streaming to Box cloud storage, keeping documents secure and organized.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="rounded-3xl border border-black/[0.06] shadow-apple-card hover:shadow-apple-hover transition-all">
-            <CardHeader className="space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <CardTitle className="text-base text-[#1d1d1f]">Google Gemini AI</CardTitle>
-              <CardDescription className="text-xs text-[#86868b]">
-                Fast layout comparison that checks margins, columns, and fonts in about 1 second.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="rounded-3xl border border-black/[0.06] shadow-apple-card hover:shadow-apple-hover transition-all">
-            <CardHeader className="space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#af52de]/10 flex items-center justify-center text-[#af52de]">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <CardTitle className="text-base text-[#1d1d1f]">Double-Blind Privacy</CardTitle>
-              <CardDescription className="text-xs text-[#86868b]">
-                Detects accidental author names, university affiliations, or email leaks before review.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="rounded-3xl border border-black/[0.06] shadow-apple-card hover:shadow-apple-hover transition-all">
-            <CardHeader className="space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#34c759]/10 flex items-center justify-center text-[#34c759]">
-                <Compass className="w-5 h-5" />
-              </div>
-              <CardTitle className="text-base text-[#1d1d1f]">Citation Validation</CardTitle>
-              <CardDescription className="text-xs text-[#86868b]">
-                Ensures every citation in the text connects to a valid entry in the references.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </section>
-
-      {/* 4. HOW IT WORKS (3 SIMPLE STEPS) */}
-      <section id="how-it-works" className="rounded-3xl border border-black/[0.06] bg-white p-8 sm:p-12 space-y-8 shadow-apple-card">
-        <div className="text-center max-w-lg mx-auto space-y-2">
-          <Badge variant="secondary">Step-by-Step</Badge>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#1d1d1f]">
-            How It Works
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div className="p-4 space-y-2.5">
-            <div className="w-10 h-10 rounded-full bg-[#0071e3]/10 text-[#0071e3] font-bold flex items-center justify-center mx-auto text-sm">
-              1
-            </div>
-            <h3 className="font-semibold text-[#1d1d1f] text-sm">Sign in with Google</h3>
-            <p className="text-xs text-[#86868b]">
-              Log in with your university account to open the submission workspace.
-            </p>
-          </div>
-
-          <div className="p-4 space-y-2.5">
-            <div className="w-10 h-10 rounded-full bg-[#0071e3]/10 text-[#0071e3] font-bold flex items-center justify-center mx-auto text-sm">
-              2
-            </div>
-            <h3 className="font-semibold text-[#1d1d1f] text-sm">Upload Draft &amp; Template</h3>
-            <p className="text-xs text-[#86868b]">
-              Attach your manuscript draft and the journal&apos;s official styling template.
-            </p>
-          </div>
-
-          <div className="p-4 space-y-2.5">
-            <div className="w-10 h-10 rounded-full bg-[#0071e3]/10 text-[#0071e3] font-bold flex items-center justify-center mx-auto text-sm">
-              3
-            </div>
-            <h3 className="font-semibold text-[#1d1d1f] text-sm">Instant Review Report</h3>
-            <p className="text-xs text-[#86868b]">
-              Get an instant visual scorecard highlighting any formatting issues before submission.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. BOTTOM CTA */}
-      <section className="rounded-3xl bg-[#0071e3] p-8 sm:p-12 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-apple-card">
-        <div className="space-y-1.5 text-center sm:text-left">
-          <h2 className="text-xl sm:text-2xl font-bold">
-            Ready to check your research paper?
-          </h2>
-          <p className="text-xs sm:text-sm text-white/80">
-            Sign in with Google to enter the submission dashboard and run your format check.
+          <p className="text-xs sm:text-sm text-white/85 max-w-lg">
+            Sign in with Google to enter Format Kilat. Upload your paper and template to receive your automated compliance audit in seconds.
           </p>
         </div>
         <Button
           size="lg"
           onClick={openGoogleModal}
-          className="bg-white hover:bg-white/95 text-[#0071e3] font-medium text-xs px-6 rounded-full shrink-0 shadow-xs gap-2 h-11 active:scale-[0.98] transition-all"
+          className="bg-white hover:bg-white/95 text-[#0071e3] font-semibold text-xs sm:text-sm px-7 rounded-full shrink-0 shadow-md gap-2.5 h-12 active:scale-[0.98] transition-all"
         >
           <GoogleLogo className="w-4 h-4" />
-          <span>Sign In with Google</span>
+          <span>Get Started with Google</span>
         </Button>
       </section>
     </div>
