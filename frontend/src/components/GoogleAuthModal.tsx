@@ -46,7 +46,6 @@ export function GoogleAuthModal() {
   // Custom Google Login Form State
   const [customEmail, setCustomEmail] = useState("");
   const [customName, setCustomName] = useState("");
-  const [customRole, setCustomRole] = useState<"AUTHOR" | "ADMIN">("AUTHOR");
 
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -137,7 +136,7 @@ export function GoogleAuthModal() {
       await signInWithGoogle({
         email: customEmail.trim(),
         full_name: customName.trim(),
-        role: customRole,
+        role: "AUTHOR",
         affiliation: customEmail.includes("uts.edu.au")
           ? "University of Technology Sydney (UTS)"
           : "Academic Research Institution",
@@ -286,32 +285,14 @@ export function GoogleAuthModal() {
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-[#1d1d1f]">Select Role</Label>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setCustomRole("AUTHOR")}
-                  className={`p-2 rounded-xl border text-center font-medium transition-all ${
-                    customRole === "AUTHOR"
-                      ? "bg-[#0071e3]/10 border-[#0071e3] text-[#0071e3] font-semibold"
-                      : "bg-white border-black/[0.08] text-[#86868b] hover:bg-black/[0.02]"
-                  }`}
-                >
-                  Author (Submit & Audit)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCustomRole("ADMIN")}
-                  className={`p-2 rounded-xl border text-center font-medium transition-all ${
-                    customRole === "ADMIN"
-                      ? "bg-[#0071e3]/10 border-[#0071e3] text-[#0071e3] font-semibold"
-                      : "bg-white border-black/[0.08] text-[#86868b] hover:bg-black/[0.02]"
-                  }`}
-                >
-                  Editor (Review Desk)
-                </button>
+            <div className="p-3.5 rounded-2xl bg-black/[0.03] border border-black/[0.06] flex items-center justify-between text-xs">
+              <div className="space-y-0.5">
+                <div className="font-semibold text-[#1d1d1f]">Registered Role</div>
+                <div className="text-[11px] text-[#86868b]">Author (Academic Submissions &amp; Pre-checks)</div>
               </div>
+              <Badge variant="default" className="text-[10px]">
+                Author
+              </Badge>
             </div>
 
             <Button

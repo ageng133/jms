@@ -209,9 +209,13 @@ func (a *authUsecase) LoginWithGoogle(ctx context.Context, dto GoogleLoginDTO) (
 	user, err := a.userRepo.GetByEmail(ctx, dto.Email)
 	if err != nil {
 		// User does not exist, provision new user
-		targetRole := dto.Role
-		if targetRole == "" {
-			targetRole = domain.RoleAuthor
+		// Invariant: All people registered via Google SSO default strictly to AUTHOR first.
+		// Only pre-configured editorial management accounts are assigned ADMIN/EDITOR.
+		targetRole := domain.RoleAuthor
+		if dto.Email == "editor.google@uts.edu.au" {
+			targetRole = domain.RoleAdmin
+		} else if dto.Role == domain.RoleEditor {
+			targetRole = domain.RoleEditor
 		}
 
 		now := time.Now().UTC()
