@@ -102,3 +102,4 @@ sequenceDiagram
 | **TC-5: Frontend /submissions/new Guard** | Visit `/submissions/new` without token | AuthGateCard displayed, forms disabled | PASS |
 | **TC-6: Frontend /audit Guard** | Visit `/submissions/:id/audit` without token | AuthGateCard displayed, no polling | PASS |
 | **TC-7: TypeScript & Next.js Build** | `tsc --noEmit` and `pnpm build` | 0 errors across all 7 routes | PASS |
+
