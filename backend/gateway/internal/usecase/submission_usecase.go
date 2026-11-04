@@ -70,6 +70,7 @@ type submissionUsecase struct {
 	auditRepo      domain.AuditRepository
 	eventPublisher domain.EventPublisher
 	storageClient  domain.StorageClient
+	aiAuditor      domain.AIAuditor
 }
 
 func NewSubmissionUsecase(
@@ -79,6 +80,7 @@ func NewSubmissionUsecase(
 	auditRepo domain.AuditRepository,
 	eventPublisher domain.EventPublisher,
 	storageClient domain.StorageClient,
+	aiAuditor domain.AIAuditor,
 ) SubmissionUsecase {
 	return &submissionUsecase{
 		db:             db,
@@ -87,6 +89,7 @@ func NewSubmissionUsecase(
 		auditRepo:      auditRepo,
 		eventPublisher: eventPublisher,
 		storageClient:  storageClient,
+		aiAuditor:      aiAuditor,
 	}
 }
 
@@ -276,9 +279,17 @@ func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, req ConfirmSu
 		FileType:       string(draftFileType),
 	}
 
-	if err := u.eventPublisher.PublishAuditJob(ctx, eventPayload); err != nil {
-		// Log error but the DB state is preserved for retries
-		return nil, fmt.Errorf("persisted metadata but failed to publish event: %w", err)
+	// 5. Trigger Google AI audit directly in Go goroutine (Eliminates Redis dependency!)
+	if u.aiAuditor != nil {
+		go func() {
+			bgCtx := context.Background()
+			_ = u.aiAuditor.AuditManuscript(bgCtx, auditID, req.ManuscriptID, draftS3Key, templateS3Key)
+		}()
+	}
+
+	// 6. Optional publish to Redis queue if eventPublisher is present
+	if u.eventPublisher != nil {
+		_ = u.eventPublisher.PublishAuditJob(ctx, eventPayload)
 	}
 
 	return &ConfirmSubmissionResult{

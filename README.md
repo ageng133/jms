@@ -1,96 +1,119 @@
-# Journal Management System (JMS) with AI Pre-Submission Engine
+# Journal Management System (JMS) • Automated Pre-Submission Review
 
-A decoupled, asynchronous journal management control plane and AI pre-submission compliance engine designed to eliminate desk-review drag by automating manuscript layout checks, double-blind anonymization auditing, and citation integrity cross-checks.
-
-```
-jms-uts/
-├── backend/
-│   ├── gateway/                  # Go 1.23 API Gateway (Clean Architecture: Domain, Usecase, HTTP, Infra)
-│   │   ├── cmd/api/main.go       # Composition Root & Graceful Shutdown
-│   │   ├── config/               # Strongly typed configuration
-│   │   ├── internal/
-│   │   │   ├── domain/           # Core Entities & Interfaces (Zero 3rd party framework dependencies)
-│   │   │   ├── usecase/          # Business logic (3-step submission pipeline, Auth)
-│   │   │   ├── delivery/http/    # Gin Handlers, JWT/RBAC Middleware, Router
-│   │   │   └── infrastructure/   # GORM Postgres, Redis Event Publisher, MinIO S3 Client
-│   │   └── pkg/response/         # Standardized API response envelopes
-│   ├── ai-worker/                # Python 3.11 Async Audit Engine (PyMuPDF + spaCy)
-│   │   ├── app/
-│   │   │   ├── config.py         # Pydantic v2 Settings
-│   │   │   ├── models/           # Strict JSON Audit Contract Pydantic schemas
-│   │   │   ├── modules/          # Clean Single-Responsibility Audit Parsers:
-│   │   │   │   ├── layout.py     # PyMuPDF geometry, margins (pt/mm) & bbox capture
-│   │   │   │   ├── anonymization.py # spaCy NER + regex double-blind leak checker
-│   │   │   │   ├── citation.py   # Regex inline-to-bibliography graph cross-checker
-│   │   │   │   └── annotator.py  # PyMuPDF visual bounding box & sticky note drawer
-│   │   │   ├── storage/          # S3 / MinIO client
-│   │   │   ├── db/               # PostgreSQL audit outcome persistence
-│   │   │   └── worker.py         # Redis BRPOP consumer loop
-│   │   └── tests/                # Pytest unit tests for all audit modules
-│   ├── db/
-│   │   ├── migrations/           # PostgreSQL 16 schema DDL
-│   │   └── seeds/                # Development demo users (Author, Editor, Reviewer, Admin)
-│   ├── docker-compose.yml        # PostgreSQL 16, Redis 7, MinIO S3 + init container
-│   ├── .env.example
-│   └── .env
-├── frontend/                     # Next.js 15 App Router Frontend Control Plane
-│   ├── src/
-│   │   ├── app/                  # App Router Pages
-│   │   │   ├── page.tsx          # System Overview & Metrics Dashboard
-│   │   │   ├── submissions/      # Manuscripts List
-│   │   │   ├── submissions/new/  # 3-Step Submission Wizard (Presign -> Direct S3 -> AI Pre-Check)
-│   │   │   └── submissions/[id]/audit/ # Interactive AI Audit Report Viewer
-│   │   ├── lib/api.ts            # Typed API Client with Direct S3 Upload
-│   │   └── types/jms.ts          # TypeScript interfaces matching Go & Python contracts
-│   ├── package.json
-│   └── tsconfig.json
-├── scripts/
-│   └── test_audit_flow.sh        # Integration smoke test script
-├── Makefile                      # Monorepo command runner
-└── README.md
-```
+A web-based platform that helps academic authors and journal editors check research paper formatting before submission. It automatically verifies page margins, column layouts, double-blind privacy (checking for author name or email leaks), and citation validity.
 
 ---
 
-## 3-Step Ingestion & Pre-Submission Workflow
+## 📌 Problem & Solution (In Plain English)
 
-1. **Direct Upload (Zero Gateway Pressure):** Author requests a presigned S3/MinIO upload URL from `POST /api/v1/manuscripts/:id/files/presign`.
-2. **Metadata Commitment:** Gateway commits file metadata in `manuscript_files`, sets manuscript status to `PRE_CHECK_PENDING`, and queues `pre_submission_audits`.
-3. **Async Event Dispatch:** Gateway pushes `{ "audit_id": "...", "file_id": "...", "s3_key": "...", "file_type": "PDF" }` to Redis list `queue:ai_audit`.
-4. **AI Parsing:** Python worker pops task, parses margins ($1\text{ mm} \approx 2.83465\text{ pt}$), checks double-blind NER, executes bidirectional citation cross-checks, burns red bounding boxes to `annotated_v1.pdf`, and saves structured JSON report to PostgreSQL.
+### The Problem
+When authors submit academic manuscripts, editors spend hours manually reviewing formatting:
+- Is the paper 2 columns or 1 column?
+- Are the margins 19mm as required by the journal, or did the author use standard Word margins?
+- For double-blind reviews, did the author accidentally leave their name, email, or university in the text?
+- Are the references in the bibliography cited properly, or are links broken?
+
+When papers fail these basic formatting rules, they get rejected or sent back for revisions, delaying publication by weeks.
+
+### The Solution
+JMS automates this pre-check:
+1. **The author logs in with Google** and opens the **Submission Portal**.
+2. **The author uploads two PDFs side-by-side:**
+   - Their manuscript draft (`.pdf`).
+   - The official journal reference template (`.pdf`), or selects a standard template like IEEE Transactions.
+3. **The files stream directly to Box Cloud Storage** (or save locally for testing).
+4. **An automated AI check (Google Gemini)** inspects the draft against the template in roughly 1 second.
+5. **The author and editor receive an instant visual report** showing a score out of 100 with highlighted bounding boxes around any issues found.
 
 ---
 
-## Quickstart (Phase 0)
+## 🏗️ System Architecture
 
-### 1. Launch Infrastructure
-```bash
-make up
 ```
-Starts PostgreSQL 16 on port 5432, Redis 7 on port 6379, and MinIO S3 on port 9000 (Console: 9001).
-
-### 2. Run Database Migrations & Seeds
-```bash
-make migrate
-make seed
-```
-
-### 3. Start Services
-```bash
-# Terminal 1: Go Gateway
-make run-gateway
-
-# Terminal 2: Python AI Worker
-make run-worker
-
-# Terminal 3: Next.js 15 Frontend
-make run-frontend
-```
-The Frontend is available at `http://localhost:3000` and the Gateway at `http://localhost:8080`.
-
-### 4. Run Test Suites
-```bash
-make test-worker
-make test-gateway
+                               ┌────────────────────────────────┐
+                               │       Next.js 15 Frontend      │
+                               │   (Port 3000 • React/Tailwind) │
+                               └──────────────┬─────────────────┘
+                                              │ REST API / JWT
+                                              ▼
+                               ┌────────────────────────────────┐
+                               │         Go API Gateway         │
+                               │          (Port 8080)           │
+                               └───────┬──────────────┬─────────┘
+                                       │              │
+                   Direct File Uploads │              │ AI Inspection
+                                       ▼              ▼
+                    ┌─────────────────────┐   ┌────────────────────────┐
+                    │  Box Cloud Storage  │   │  Google AI (Gemini)    │
+                    │ (Local ./storage/box│   │ (Multimodal PDF Vision)│
+                    └─────────────────────┘   └────────────────────────┘
+                                       │
+                                       ▼
+                            ┌─────────────────────┐
+                            │     PostgreSQL      │
+                            │ (Database on :5432) │
+                            └─────────────────────┘
 ```
 
+### Components
+1. **Frontend (`frontend/`):**
+   - Built with **Next.js 15 App Router**, **Tailwind CSS**, and **shadcn/ui** components.
+   - **Landing Page (`/`):** Public introduction explaining the features, with an interactive visual preview of what the report looks like and a "Sign in with Google" button.
+   - **Admin & Submission Portal (`/admin`):** Protected by Google SSO. Authors and editors can submit new papers, browse all submissions, filter by review status, and see instant format scores.
+   - **Audit Report Inspector (`/submissions/:id/audit`):** Shows the full visual scorecard with red bounding box highlights for layout issues and privacy warnings.
+
+2. **Backend API Gateway (`backend/gateway/`):**
+   - Written in **Go 1.23** using clean hexagonal architecture (Domain &rarr; Usecase &rarr; Delivery &rarr; Infrastructure).
+   - Handles Google SSO user login, manuscript tracking, and presigned upload URLs.
+   - Triggers the pre-check audit in a lightweight background Goroutine.
+
+3. **Storage Tier (`BoxStorage`):**
+   - Uploads are sent directly to **Box.com Cloud Storage** using the Box API v2.
+   - For local development and testing without API keys, it automatically falls back to saving files in `./storage/box/`.
+
+4. **AI Pre-Submission Engine (`GoogleAIService`):**
+   - Uses **Google Gemini** multimodal vision to analyze the PDF layout, compare it against the reference template, and return structured JSON with page numbers, bounding boxes, and compliance scores.
+
+---
+
+## 🚀 How to Run the Project Locally
+
+### Prerequisites
+- Node.js 18+ and `pnpm`
+- Go 1.23+
+- Docker (for PostgreSQL)
+
+### Step 1: Start PostgreSQL
+```bash
+docker run -d --name jms-postgres -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=jms_db postgres:16-alpine
+```
+
+### Step 2: Start the Go Backend Gateway
+```bash
+cd backend/gateway
+go run ./cmd/api
+```
+The backend starts at `http://localhost:8080`.
+
+### Step 3: Start the Next.js Frontend
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+The frontend starts at `http://localhost:3000`.
+
+---
+
+## 🧪 Testing the Entire Workflow
+
+1. Open `http://localhost:3000` in your browser.
+2. Click **"Sign in with Google to Submit"**.
+3. Choose either **Author** (`Dr. Alexander Wright`) or **Editor** (`Prof. Sarah Connor`).
+4. You will arrive at the **Admin & Submission Portal** (`http://localhost:3000/admin`).
+5. Click **"Submit New Paper"**:
+   - Click **"Auto-fill Sample Paper"** to populate sample title and abstract.
+   - Click **"Continue to File Upload"**.
+   - Attach your manuscript PDF and template PDF.
+   - Click **"Upload to Box & Check Format"**.
+6. The file is uploaded and checked with AI. Click **"View Detailed Report"** to inspect the live visual audit scorecard.

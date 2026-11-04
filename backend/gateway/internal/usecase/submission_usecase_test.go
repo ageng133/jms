@@ -20,6 +20,14 @@ func (m *mockStorageClient) GeneratePresignedGetURL(ctx context.Context, key str
 	return "http://localhost:9000/jms-manuscripts/" + key, nil
 }
 
+func (m *mockStorageClient) SaveFile(ctx context.Context, key string, data []byte) error {
+	return nil
+}
+
+func (m *mockStorageClient) GetFile(ctx context.Context, key string) ([]byte, error) {
+	return []byte("%PDF-1.4 Mock PDF"), nil
+}
+
 type mockManuscriptRepo struct{}
 
 func (m *mockManuscriptRepo) Create(ctx context.Context, manuscript *domain.Manuscript) error {
@@ -46,6 +54,7 @@ func TestRequestUploadURL(t *testing.T) {
 		nil,
 		nil,
 		&mockStorageClient{},
+		nil,
 	)
 
 	mID := uuid.New()

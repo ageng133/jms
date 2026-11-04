@@ -14,6 +14,8 @@ import (
 	"github.com/jms-uts/backend/gateway/config"
 	httpDelivery "github.com/jms-uts/backend/gateway/internal/delivery/http"
 	"github.com/jms-uts/backend/gateway/internal/delivery/http/handler"
+	"github.com/jms-uts/backend/gateway/internal/domain"
+	"github.com/jms-uts/backend/gateway/internal/infrastructure/ai"
 	"github.com/jms-uts/backend/gateway/internal/infrastructure/postgres"
 	"github.com/jms-uts/backend/gateway/internal/infrastructure/redis"
 	"github.com/jms-uts/backend/gateway/internal/infrastructure/storage"
@@ -34,16 +36,29 @@ func main() {
 		log.Fatalf("[Gateway] Failed to initialize DB: %v", err)
 	}
 
-	// 2. Initialize Redis Event Publisher
-	eventPublisher, err := redis.NewEventPublisher(&cfg.Redis)
-	if err != nil {
-		log.Fatalf("[Gateway] Failed to initialize Redis publisher: %v", err)
+	// 2. Initialize Storage Client (Default: Box.com Cloud / Local Storage for Lean POC)
+	var storageClient domain.StorageClient
+	if cfg.StorageDriver == "minio" {
+		storageClient, err = storage.NewMinIOStorage(&cfg.S3)
+		if err != nil {
+			log.Fatalf("[Gateway] Failed to initialize S3 storage client: %v", err)
+		}
+	} else {
+		storageClient, err = storage.NewBoxStorage(&cfg.Box, cfg.App.Port)
+		if err != nil {
+			log.Fatalf("[Gateway] Failed to initialize Box storage client: %v", err)
+		}
 	}
 
-	// 3. Initialize MinIO / S3 Storage Client
-	storageClient, err := storage.NewMinIOStorage(&cfg.S3)
-	if err != nil {
-		log.Fatalf("[Gateway] Failed to initialize S3 storage client: %v", err)
+	// 3. Initialize Redis Event Publisher (Optional for Lean POC)
+	var eventPublisher domain.EventPublisher
+	if cfg.EnableRedis {
+		eventPublisher, err = redis.NewEventPublisher(&cfg.Redis)
+		if err != nil {
+			log.Printf("[Gateway] Warning: Redis disabled or failed: %v", err)
+		}
+	} else {
+		log.Println("[Gateway] Lean POC Mode: Redis disabled. Direct Google AI engine active.")
 	}
 
 	// 4. Initialize Repositories
@@ -52,7 +67,10 @@ func main() {
 	fileRepo := postgres.NewManuscriptFileRepository(db)
 	auditRepo := postgres.NewAuditRepository(db)
 
-	// 5. Initialize Usecases
+	// 5. Initialize Direct Google AI Service
+	googleAIService := ai.NewGoogleAIService(&cfg.GoogleAI, db, storageClient)
+
+	// 6. Initialize Usecases
 	authUsecase := usecase.NewAuthUsecase(userRepo, cfg.JWT)
 	submissionUsecase := usecase.NewSubmissionUsecase(
 		db,
@@ -61,12 +79,13 @@ func main() {
 		auditRepo,
 		eventPublisher,
 		storageClient,
+		googleAIService,
 	)
 
-	// 6. Initialize HTTP Handlers
+	// 7. Initialize HTTP Handlers
 	healthHandler := handler.NewHealthHandler(cfg.App.Name)
 	authHandler := handler.NewAuthHandler(authUsecase)
-	submissionHandler := handler.NewSubmissionHandler(submissionUsecase)
+	submissionHandler := handler.NewSubmissionHandler(submissionUsecase, storageClient)
 
 	// 7. Initialize Gin Router
 	router := httpDelivery.NewRouter(healthHandler, authHandler, submissionHandler, authUsecase)

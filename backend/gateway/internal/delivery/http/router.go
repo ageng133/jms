@@ -43,6 +43,14 @@ func NewRouter(
 			auth.POST("/google", authHandler.GoogleLogin)
 		}
 
+		// Direct Box.com Storage File Upload & Download
+		files := api.Group("/files")
+		{
+			files.PUT("/upload", submissionHandler.DirectFileUpload)
+			files.POST("/upload", submissionHandler.DirectFileUpload)
+			files.GET("/download", submissionHandler.DirectFileDownload)
+		}
+
 		// Protected routes
 		protected := api.Group("/")
 		protected.Use(middleware.AuthMiddleware(authUsecase))

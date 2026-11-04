@@ -62,3 +62,7 @@ out/
 .DS_Store
 Thumbs.db
 
+# Storage Local Fallback
+backend/gateway/storage/
+
+

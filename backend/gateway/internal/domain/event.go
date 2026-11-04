@@ -2,6 +2,8 @@ package domain
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type AuditEventPayload struct {
@@ -16,5 +18,9 @@ type AuditEventPayload struct {
 
 type EventPublisher interface {
 	PublishAuditJob(ctx context.Context, payload AuditEventPayload) error
+}
+
+type AIAuditor interface {
+	AuditManuscript(ctx context.Context, auditID, manuscriptID uuid.UUID, draftKey, templateKey string) error
 }
 

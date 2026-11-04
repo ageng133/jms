@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/url"
 	"time"
@@ -50,5 +52,20 @@ func (s *MinIOStorage) GeneratePresignedGetURL(ctx context.Context, key string, 
 		return "", fmt.Errorf("failed to generate presigned GET url: %w", err)
 	}
 	return u.String(), nil
+}
+
+func (s *MinIOStorage) SaveFile(ctx context.Context, key string, data []byte) error {
+	reader := bytes.NewReader(data)
+	_, err := s.client.PutObject(ctx, s.bucketName, key, reader, int64(len(data)), minio.PutObjectOptions{})
+	return err
+}
+
+func (s *MinIOStorage) GetFile(ctx context.Context, key string) ([]byte, error) {
+	obj, err := s.client.GetObject(ctx, s.bucketName, key, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer obj.Close()
+	return io.ReadAll(obj)
 }
 

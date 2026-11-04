@@ -9,11 +9,31 @@ import (
 )
 
 type Config struct {
-	App      AppConfig
-	Postgres PostgresConfig
-	Redis    RedisConfig
-	S3       S3Config
-	JWT      JWTConfig
+	App           AppConfig
+	Postgres      PostgresConfig
+	Redis         RedisConfig
+	S3            S3Config
+	Box           BoxConfig
+	GoogleAI      GoogleAIConfig
+	JWT           JWTConfig
+	StorageDriver string // "box" or "minio" or "local"
+	EnableRedis   bool
+}
+
+type BoxConfig struct {
+	ClientID         string
+	ClientSecret     string
+	DeveloperToken   string
+	FolderID         string
+	UploadURL        string
+	BaseURL          string
+	LocalFallbackDir string
+}
+
+type GoogleAIConfig struct {
+	APIKey  string
+	Model   string
+	BaseURL string
 }
 
 type AppConfig struct {
@@ -73,6 +93,7 @@ func LoadConfig() (*Config, error) {
 
 	redisDB, _ := strconv.Atoi(getEnv("REDIS_DB", "0"))
 	s3UseSSL, _ := strconv.ParseBool(getEnv("S3_USE_SSL", "false"))
+	enableRedis, _ := strconv.ParseBool(getEnv("ENABLE_REDIS", "false"))
 
 	return &Config{
 		App: AppConfig{
@@ -103,10 +124,26 @@ func LoadConfig() (*Config, error) {
 			SecretKey:  getEnv("S3_SECRET_KEY", "minioadmin"),
 			UseSSL:     s3UseSSL,
 		},
+		Box: BoxConfig{
+			ClientID:         getEnv("BOX_CLIENT_ID", ""),
+			ClientSecret:     getEnv("BOX_CLIENT_SECRET", ""),
+			DeveloperToken:   getEnv("BOX_DEVELOPER_TOKEN", ""),
+			FolderID:         getEnv("BOX_FOLDER_ID", "0"),
+			UploadURL:        getEnv("BOX_UPLOAD_URL", "https://upload.box.com/api/2.0/files/content"),
+			BaseURL:          getEnv("BOX_BASE_URL", "https://api.box.com/2.0"),
+			LocalFallbackDir: getEnv("BOX_LOCAL_FALLBACK_DIR", "./storage/box"),
+		},
+		GoogleAI: GoogleAIConfig{
+			APIKey:  getEnv("GEMINI_API_KEY", getEnv("GOOGLE_API_KEY", "")),
+			Model:   getEnv("GEMINI_MODEL", "gemini-1.5-flash"),
+			BaseURL: getEnv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta"),
+		},
 		JWT: JWTConfig{
 			Secret:      getEnv("JWT_SECRET", "super-secret-jwt-key-for-development-change-in-production"),
 			ExpiryHours: expiryHours,
 		},
+		StorageDriver: getEnv("STORAGE_DRIVER", "box"),
+		EnableRedis:   enableRedis,
 	}, nil
 }
 

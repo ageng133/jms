@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"io"
 	"net/http"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -12,11 +14,12 @@ import (
 )
 
 type SubmissionHandler struct {
-	usecase usecase.SubmissionUsecase
+	usecase       usecase.SubmissionUsecase
+	storageClient domain.StorageClient
 }
 
-func NewSubmissionHandler(usecase usecase.SubmissionUsecase) *SubmissionHandler {
-	return &SubmissionHandler{usecase: usecase}
+func NewSubmissionHandler(usecase usecase.SubmissionUsecase, storageClient domain.StorageClient) *SubmissionHandler {
+	return &SubmissionHandler{usecase: usecase, storageClient: storageClient}
 }
 
 type CreateDraftRequest struct {
@@ -229,5 +232,73 @@ func (h *SubmissionHandler) UpdateStatus(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, gin.H{"id": id, "status": req.Status})
+}
+
+// Direct upload to Box.com (or local Box cache)
+func (h *SubmissionHandler) DirectFileUpload(c *gin.Context) {
+	key := c.Query("key")
+	if key == "" {
+		key = c.PostForm("key")
+	}
+	if key == "" {
+		response.BadRequest(c, "Missing file key query parameter", "")
+		return
+	}
+
+	var fileData []byte
+	var err error
+
+	// 1. Try reading from multipart file
+	fileHeader, fileErr := c.FormFile("file")
+	if fileErr == nil && fileHeader != nil {
+		src, err := fileHeader.Open()
+		if err == nil {
+			defer src.Close()
+			fileData, _ = io.ReadAll(src)
+		}
+	}
+
+	// 2. Otherwise read raw request body (PUT direct stream)
+	if len(fileData) == 0 {
+		fileData, err = io.ReadAll(c.Request.Body)
+		if err != nil {
+			response.BadRequest(c, "Failed to read upload body", err.Error())
+			return
+		}
+	}
+
+	if len(fileData) == 0 {
+		response.BadRequest(c, "Empty file payload", "")
+		return
+	}
+
+	if err := h.storageClient.SaveFile(c.Request.Context(), key, fileData); err != nil {
+		response.InternalError(c, "Failed to save file to Box storage: "+err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, gin.H{
+		"message": "File uploaded successfully to Box storage",
+		"key":     key,
+		"bytes":   len(fileData),
+	})
+}
+
+// Direct file download from Box storage
+func (h *SubmissionHandler) DirectFileDownload(c *gin.Context) {
+	key := c.Query("key")
+	if key == "" {
+		response.BadRequest(c, "Missing file key query parameter", "")
+		return
+	}
+
+	data, err := h.storageClient.GetFile(c.Request.Context(), key)
+	if err != nil {
+		response.NotFound(c, "File not found in Box storage")
+		return
+	}
+
+	c.Header("Content-Disposition", "inline; filename="+filepath.Base(key))
+	c.Data(http.StatusOK, "application/pdf", data)
 }
 

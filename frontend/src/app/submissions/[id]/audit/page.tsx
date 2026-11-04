@@ -68,11 +68,11 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div className="space-y-1">
           <Link
-            href="/submissions"
+            href="/admin"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 mb-2 transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Submissions
+            Back to Admin Portal
           </Link>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">AI Pre-Submission Audit Report</h1>
@@ -107,10 +107,10 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 {showPdfPreview ? "Hide PDF Preview" : "Preview Annotated PDF"}
               </button>
               <a
-                href={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "http://localhost:9000"}/jms-manuscripts/${report.annotated_pdf_s3_key}`}
+                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/files/download?key=${encodeURIComponent(report.annotated_pdf_s3_key)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition"
               >
                 <Download className="w-3.5 h-3.5" />
                 Download Annotated PDF

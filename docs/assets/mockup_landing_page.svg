@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" width="100%" height="100%" style="background:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <filter id="shadow-sm" x="-2%" y="-2%" width="104%" height="108%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.06"/>
+    </filter>
+    <filter id="shadow-md" x="-3%" y="-3%" width="106%" height="110%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <rect x="0" y="0" width="1200" height="64" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  
+  <!-- Logo -->
+  <rect x="48" y="16" width="32" height="32" rx="8" fill="#4f46e5"/>
+  <text x="56" y="38" fill="#ffffff" font-size="14" font-weight="800">JMS</text>
+  <text x="92" y="37" fill="#0f172a" font-size="16" font-weight="700">Journal Submission Platform</text>
+  
+  <rect x="330" y="22" width="82" height="20" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="340" y="36" fill="#64748b" font-size="11" font-weight="600">UTS Edition</text>
+
+  <!-- Nav links -->
+  <text x="450" y="37" fill="#334155" font-size="13" font-weight="500">Overview</text>
+  <text x="540" y="37" fill="#64748b" font-size="13" font-weight="500">How It Works</text>
+
+  <!-- CTA on Top Right -->
+  <rect x="1000" y="14" width="152" height="36" rx="8" fill="#4f46e5"/>
+  <text x="1024" y="37" fill="#ffffff" font-size="13" font-weight="600">Sign In with Google</text>
+
+  <!-- ================= HERO SECTION ================= -->
+  <g transform="translate(48, 88)">
+    <rect x="0" y="0" width="1104" height="230" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow-sm)"/>
+    
+    <!-- Status Pill -->
+    <rect x="32" y="24" width="280" height="24" rx="12" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+    <circle cx="44" cy="36" r="4" fill="#10b981"/>
+    <text x="56" y="40" fill="#475569" font-size="11" font-weight="600">Academic Paper Pre-Submission Review System</text>
+
+    <!-- Main Title -->
+    <text x="32" y="85" fill="#0f172a" font-size="32" font-weight="800" letter-spacing="-0.5">
+      Check your journal paper format <tspan fill="#4f46e5">before you submit.</tspan>
+    </text>
+
+    <!-- Subtitle -->
+    <text x="32" y="118" fill="#64748b" font-size="14" font-weight="400">
+      Eliminate desk rejections caused by formatting errors. Upload your draft PDF alongside the journal template
+    </text>
+    <text x="32" y="138" fill="#64748b" font-size="14" font-weight="400">
+      to automatically verify margins, columns, double-blind anonymization, and references in ~1 second.
+    </text>
+
+    <!-- Hero Buttons -->
+    <rect x="32" y="164" width="220" height="42" rx="10" fill="#4f46e5"/>
+    <text x="54" y="190" fill="#ffffff" font-size="13" font-weight="600">Sign in with Google to Submit</text>
+
+    <rect x="264" y="164" width="160" height="42" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="286" y="190" fill="#334155" font-size="13" font-weight="600">See Sample Review ↓</text>
+
+    <!-- Quick Highlights -->
+    <g transform="translate(680, 40)">
+      <line x1="0" y1="0" x2="0" y2="150" stroke="#e2e8f0" stroke-width="1"/>
+      
+      <g transform="translate(30, 10)">
+        <text x="0" y="18" fill="#0f172a" font-size="18" font-weight="800">~1 Second</text>
+        <text x="0" y="34" fill="#64748b" font-size="11">Fast Format Pre-Check</text>
+      </g>
+      <g transform="translate(200, 10)">
+        <text x="0" y="18" fill="#0f172a" font-size="18" font-weight="800">Box Cloud</text>
+        <text x="0" y="34" fill="#64748b" font-size="11">Direct Storage Ingestion</text>
+      </g>
+      <g transform="translate(30, 85)">
+        <text x="0" y="18" fill="#0f172a" font-size="18" font-weight="800">Google Gemini</text>
+        <text x="0" y="34" fill="#64748b" font-size="11">Multimodal Vision Check</text>
+      </g>
+      <g transform="translate(200, 85)">
+        <text x="0" y="18" fill="#0f172a" font-size="18" font-weight="800">Double-Blind</text>
+        <text x="0" y="34" fill="#64748b" font-size="11">Author Info Leak Scrubbing</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ================= 3-COLUMN SAMPLE PREVIEW ================= -->
+  <g transform="translate(48, 340)">
+    <!-- Header bar -->
+    <rect x="0" y="0" width="1104" height="380" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow-md)"/>
+    
+    <rect x="0" y="0" width="1104" height="42" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+    <!-- Fake window controls -->
+    <circle cx="24" cy="21" r="5" fill="#f87171"/>
+    <circle cx="40" cy="21" r="5" fill="#fbbf24"/>
+    <circle cx="56" cy="21" r="5" fill="#34d399"/>
+    
+    <text x="80" y="26" fill="#475569" font-size="12" font-weight="600">Sample Live Review: IEEE Transactions Format Check</text>
+    
+    <rect x="970" y="11" width="114" height="20" rx="10" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1"/>
+    <text x="984" y="25" fill="#059669" font-size="10" font-weight="700">✓ Review Completed</text>
+
+    <!-- COLUMN 1: TEMPLATE GUIDELINES -->
+    <g transform="translate(24, 60)">
+      <text x="0" y="16" fill="#0f172a" font-size="13" font-weight="700">1. Journal Template Specs</text>
+      <text x="0" y="32" fill="#64748b" font-size="11">Extracted from IEEE-Transactions.pdf</text>
+
+      <rect x="0" y="46" width="260" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="12" y="65" fill="#64748b" font-size="10">Page Format &amp; Columns</text>
+      <text x="12" y="82" fill="#0f172a" font-size="12" font-weight="700">2 Columns (Double Column)</text>
+
+      <rect x="0" y="104" width="260" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="12" y="123" fill="#64748b" font-size="10">Typography</text>
+      <text x="12" y="140" fill="#0f172a" font-size="12" font-weight="700">Times New Roman • 10pt</text>
+
+      <rect x="0" y="162" width="260" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="12" y="181" fill="#64748b" font-size="10">Margins</text>
+      <text x="12" y="198" fill="#0f172a" font-size="12" font-weight="700">19mm Top • 14.3mm Side</text>
+
+      <rect x="0" y="220" width="260" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="12" y="239" fill="#64748b" font-size="10">Citations</text>
+      <text x="12" y="256" fill="#0f172a" font-size="12" font-weight="700">IEEE Numbered [1], [2]</text>
+    </g>
+
+    <!-- COLUMN 2: AUTHOR DRAFT WITH OVERLAYS -->
+    <g transform="translate(310, 60)">
+      <text x="0" y="16" fill="#0f172a" font-size="13" font-weight="700">2. Manuscript Draft PDF</text>
+      <text x="320" y="16" fill="#e11d48" font-size="11" font-weight="700">⚠ 2 Violations Spotted</text>
+
+      <!-- Paper Canvas -->
+      <rect x="0" y="36" width="460" height="260" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+      
+      <!-- Paper Title -->
+      <text x="230" y="66" fill="#0f172a" font-size="13" font-weight="800" text-anchor="middle">
+        High-Throughput Zero-Copy Deserialization in Microservices
+      </text>
+
+      <!-- VIOLATION 1: EMAIL LEAK BOX -->
+      <rect x="40" y="78" width="380" height="36" rx="6" fill="#fff1f2" stroke="#f43f5e" stroke-width="2" stroke-dasharray="4 4"/>
+      <text x="230" y="94" fill="#9f1239" font-size="11" font-weight="700" text-anchor="middle">
+        Dr. Alexander Wright • wright@uts.edu.au
+      </text>
+      <text x="230" y="107" fill="#e11d48" font-size="9" font-weight="700" text-anchor="middle">
+        [FLAG: Author Email Present in Double-Blind Submission]
+      </text>
+
+      <!-- Abstract Text -->
+      <text x="40" y="132" fill="#475569" font-size="10" font-style="italic">
+        Abstract—Distributed document ingestion pipelines bottleneck at the serialization boundary...
+      </text>
+
+      <!-- VIOLATION 2: SINGLE COLUMN MISMATCH BOX -->
+      <rect x="40" y="152" width="380" height="110" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 4"/>
+      <text x="52" y="174" fill="#78350f" font-size="11" font-weight="700">
+        1. INTRODUCTION
+      </text>
+      <text x="52" y="194" fill="#475569" font-size="10">
+        Traditional message broker serialization incurs significant compute taxes when passing binary
+      </text>
+      <text x="52" y="210" fill="#475569" font-size="10">
+        payloads between gateway microservices and downstream document parsing workers...
+      </text>
+      <rect x="52" y="224" width="356" height="22" rx="4" fill="#fef3c7"/>
+      <text x="62" y="239" fill="#92400e" font-size="10" font-weight="700">
+        [FLAG: Layout is single-column; Target journal requires 2-column format]
+      </text>
+    </g>
+
+    <!-- COLUMN 3: SCORECARD -->
+    <g transform="translate(800, 60)">
+      <text x="0" y="16" fill="#0f172a" font-size="13" font-weight="700">3. Pre-Check Scorecard</text>
+      <text x="200" y="16" fill="#d97706" font-size="14" font-weight="800">78 / 100</text>
+
+      <!-- Progress bar -->
+      <rect x="0" y="32" width="280" height="8" rx="4" fill="#e2e8f0"/>
+      <rect x="0" y="32" width="218" height="8" rx="4" fill="#f59e0b"/>
+
+      <!-- Checklist -->
+      <g transform="translate(0, 52)">
+        <rect x="0" y="0" width="280" height="54" rx="8" fill="#fff1f2" stroke="#fecdd3" stroke-width="1"/>
+        <text x="12" y="22" fill="#9f1239" font-size="11" font-weight="700">✕ Author Affiliation Leak</text>
+        <text x="12" y="38" fill="#e11d48" font-size="10">Remove email and university affiliation</text>
+
+        <rect x="0" y="64" width="280" height="54" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="1"/>
+        <text x="12" y="86" fill="#92400e" font-size="11" font-weight="700">⚠ Column Format Mismatch</text>
+        <text x="12" y="102" fill="#b45309" font-size="10">Format draft into 2 columns</text>
+
+        <rect x="0" y="128" width="280" height="54" rx="8" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1"/>
+        <text x="12" y="150" fill="#065f46" font-size="11" font-weight="700">✓ Citation Integrity</text>
+        <text x="12" y="166" fill="#059669" font-size="10">All 24 citations verified with DOIs</text>
+      </g>
+
+      <!-- Sign In Button inside card -->
+      <rect x="0" y="250" width="280" height="38" rx="8" fill="#4f46e5"/>
+      <text x="45" y="274" fill="#ffffff" font-size="12" font-weight="600">Sign In with Google to Test</text>
+    </g>
+  </g>
+
+  <!-- ================= BOTTOM FEATURES STRIP ================= -->
+  <g transform="translate(48, 740)">
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="260" height="60" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="16" y="26" fill="#0f172a" font-size="12" font-weight="700">📦 Box Cloud Storage</text>
+      <text x="16" y="44" fill="#64748b" font-size="10">Direct multipart file upload</text>
+    </g>
+    <g transform="translate(280, 0)">
+      <rect x="0" y="0" width="260" height="60" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="16" y="26" fill="#0f172a" font-size="12" font-weight="700">✨ Google Gemini AI</text>
+      <text x="16" y="44" fill="#64748b" font-size="10">Multimodal vision review in 1.05s</text>
+    </g>
+    <g transform="translate(560, 0)">
+      <rect x="0" y="0" width="260" height="60" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="16" y="26" fill="#0f172a" font-size="12" font-weight="700">🛡️ Double-Blind Scrub</text>
+      <text x="16" y="44" fill="#64748b" font-size="10">Detects author name &amp; email leaks</text>
+    </g>
+    <g transform="translate(840, 0)">
+      <rect x="0" y="0" width="260" height="60" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="16" y="26" fill="#0f172a" font-size="12" font-weight="700">🔍 Citation Crosscheck</text>
+      <text x="16" y="44" fill="#64748b" font-size="10">Matches text citations to bibliography</text>
+    </g>
+  </g>
+</svg>
+
