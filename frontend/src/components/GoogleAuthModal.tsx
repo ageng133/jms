@@ -157,7 +157,7 @@ export function GoogleAuthModal() {
               <GoogleLogo className="w-6 h-6" />
             </div>
             <Badge variant="secondary" className="text-[11px] font-semibold bg-[#0071e3]/10 text-[#0071e3] border-[#0071e3]/20 rounded-full">
-              UTS Google SSO
+              Format Kilat SSO
             </Badge>
           </div>
           <div>

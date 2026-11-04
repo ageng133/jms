@@ -3,8 +3,8 @@ import { AppProviders } from "@/components/AppProviders";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Journal Submission Platform (JMS) - UTS Edition",
-  description: "Academic Paper Pre-Submission Review System",
+  title: "Format Kilat - AI Academic Paper Review Platform",
+  description: "Fast Automated Academic Paper Formatting & Compliance Pre-Check",
 };
 
 export default function RootLayout({

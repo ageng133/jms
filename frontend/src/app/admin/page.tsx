@@ -308,14 +308,14 @@ export default function AdminPortalPage() {
           <div className="p-4 sm:p-5 border-b border-black/[0.06] flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2.5 group">
               <span className="w-7 h-7 rounded-lg bg-[#0071e3] flex items-center justify-center text-xs font-bold text-white shadow-xs group-hover:scale-105 transition-transform">
-                JMS
+                ⚡
               </span>
               <div>
                 <div className="text-sm font-semibold tracking-tight text-[#1d1d1f] leading-tight">
-                  Journal Portal
+                  Format Kilat
                 </div>
                 <div className="text-[10px] text-[#86868b] font-medium">
-                  UTS Editorial Space
+                  Workspace &amp; Review Desk
                 </div>
               </div>
             </Link>

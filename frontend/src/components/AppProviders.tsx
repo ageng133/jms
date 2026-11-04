@@ -23,12 +23,12 @@ function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center space-x-6">
               <Link href="/" className="flex items-center space-x-2.5 group">
                 <span className="w-7 h-7 rounded-lg bg-[#0071e3] flex items-center justify-center text-xs font-bold text-white shadow-xs group-hover:scale-105 transition-transform">
-                  JMS
+                  ⚡
                 </span>
                 <span className="text-sm font-semibold tracking-tight text-[#1d1d1f] flex items-center gap-2">
-                  <span>Journal Submission Platform</span>
+                  <span>Format Kilat</span>
                   <span className="hidden sm:inline-block text-[11px] font-medium px-2 py-0.5 rounded-full bg-black/[0.04] text-[#86868b] border border-black/[0.04]">
-                    UTS Edition
+                    Academic Review
                   </span>
                 </span>
               </Link>
