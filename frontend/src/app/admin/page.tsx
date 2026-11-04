@@ -28,15 +28,15 @@ import {
 import {
   listManuscripts,
   updateManuscriptStatus,
-  getCurrentUser,
-  loginWithGoogle,
-  logout,
   createDraftManuscript,
   requestUploadPresign,
   uploadDirectToS3,
   confirmSubmission,
   FileMetadataInput,
 } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { AuthGateCard } from "@/components/AuthGateCard";
+import { GoogleLogo } from "@/components/GoogleAuthModal";
 import { Manuscript } from "@/types/jms";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +59,7 @@ import { Input, Textarea, Label } from "@/components/ui/input";
 
 export default function AdminPortalPage() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { user, signOut, signInWithGoogle, openGoogleModal, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<"overview" | "submissions" | "new-submission" | "templates">("overview");
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +96,7 @@ export default function AdminPortalPage() {
   async function handleGoogleSignIn(role: "ADMIN" | "AUTHOR") {
     try {
       setLoading(true);
-      const res = await loginWithGoogle({
+      await signInWithGoogle({
         email:
           role === "ADMIN"
             ? "editor.google@uts.edu.au"
@@ -106,7 +106,6 @@ export default function AdminPortalPage() {
         role: role,
         affiliation: "UTS Faculty of Engineering & IT",
       });
-      setCurrentUser(res.user);
       await fetchSubmissions();
     } catch (err: any) {
       alert("Sign-in error: " + err.message);
@@ -116,20 +115,17 @@ export default function AdminPortalPage() {
   }
 
   function handleSignOut() {
-    logout();
-    setCurrentUser(null);
+    signOut();
     router.push("/");
   }
 
   useEffect(() => {
-    const user = getCurrentUser();
     if (user) {
-      setCurrentUser(user);
       fetchSubmissions();
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   async function handleStatusChange(id: string, newStatus: string) {
     setActionLoading(id);
@@ -279,40 +275,23 @@ export default function AdminPortalPage() {
       : 92;
 
   // 1. UNAUTHENTICATED STATE GUARD
-  if (!currentUser) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <Card className="max-w-md w-full border-slate-200 shadow-md">
-          <CardHeader className="text-center space-y-2 pb-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 mx-auto">
-              <UserCheck className="w-6 h-6" />
-            </div>
-            <CardTitle className="text-lg">Sign In to Continue</CardTitle>
-            <CardDescription className="text-xs">
-              Access to the Journal Management Portal requires authentication. Please sign in with your university Google account:
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-sm"
-              onClick={() => handleGoogleSignIn("AUTHOR")}
-            >
-              Sign in as Author (Dr. Alexander Wright)
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full text-xs font-semibold"
-              onClick={() => handleGoogleSignIn("ADMIN")}
-            >
-              Sign in as Editor (Prof. Sarah Connor)
-            </Button>
-            <div className="pt-2 text-center">
-              <Link href="/" className="text-xs text-slate-500 hover:text-slate-800">
-                &larr; Back to Public Overview
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-3" />
+        <p className="text-xs text-slate-500 font-medium">Authenticating UTS session...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+        <AuthGateCard
+          title="Admin Dashboard Authentication Required"
+          description="Access to manuscript triage, peer review queues, Box storage tickets, and live format audits requires an authenticated UTS Google session."
+          actionText="Sign In with Google"
+        />
       </div>
     );
   }
@@ -432,14 +411,16 @@ export default function AdminPortalPage() {
         <div className="p-3 border-t border-slate-200 bg-slate-50/50">
           <div className="flex items-center space-x-3 p-2 rounded-lg">
             <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
-              {currentUser.full_name?.charAt(0) || "U"}
+              {user.full_name?.charAt(0) || "U"}
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-semibold text-slate-900 truncate">
-                {currentUser.full_name}
+                {user.full_name}
               </div>
-              <div className="text-[10px] text-slate-500 truncate">
-                {currentUser.role === "ADMIN" ? "Managing Editor" : "Author"}
+              <div className="text-[10px] text-slate-500 truncate flex items-center gap-1">
+                <span>{user.role === "ADMIN" ? "Managing Editor" : "Author"}</span>
+                <span className="text-slate-300">&bull;</span>
+                <span className="text-indigo-600 font-medium">Google SSO</span>
               </div>
             </div>
           </div>
@@ -448,12 +429,12 @@ export default function AdminPortalPage() {
             <button
               onClick={() =>
                 handleGoogleSignIn(
-                  currentUser.role === "ADMIN" ? "AUTHOR" : "ADMIN"
+                  user.role === "ADMIN" ? "AUTHOR" : "ADMIN"
                 )
               }
               className="text-[11px] text-indigo-600 hover:underline font-medium"
             >
-              Switch to {currentUser.role === "ADMIN" ? "Author" : "Editor"}
+              Switch to {user.role === "ADMIN" ? "Author" : "Editor"}
             </button>
 
             <button
@@ -500,7 +481,7 @@ export default function AdminPortalPage() {
             <div className="space-y-6">
               <div>
                 <h1 className="text-xl font-bold tracking-tight text-slate-900">
-                  Welcome back, {currentUser.full_name}
+                  Welcome back, {user?.full_name}
                 </h1>
                 <p className="text-xs text-slate-500">
                   Review recent submissions and inspect automated formatting pre-checks.
@@ -799,7 +780,7 @@ export default function AdminPortalPage() {
                                   </Button>
                                 </Link>
 
-                                {currentUser.role === "ADMIN" && (
+                                {user?.role === "ADMIN" && (
                                   <div className="flex items-center gap-1">
                                     <Button
                                       variant="ghost"

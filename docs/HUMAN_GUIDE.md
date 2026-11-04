@@ -22,8 +22,11 @@ Usually, editorial assistants check these by hand. **JMS automates this pre-chec
    - Includes a sample visual report so visitors can see what issues look like.
    - Has a **"Sign in with Google"** button. (There are no public upload forms on the landing page).
 
-2. **Google Single Sign-On (SSO):**
-   - The user selects whether they are logging in as an **Author** (`Dr. Alexander Wright`) or an **Editor** (`Prof. Sarah Connor`).
+2. **Google Single Sign-On (SSO) & Mandatory Audit Gate:**
+   - **Zero-Bypass Policy:** Visitors cannot submit papers, upload files to Box, or view/run pre-submission audits without signing in first.
+   - The user selects whether they are logging in as an **Author** (`Dr. Alexander Wright`), an **Editor** (`Prof. Sarah Connor`), or enters any custom Google Workspace email (`yourname@uts.edu.au`).
+   - Also supports real **Google Identity Services (GSI)** when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is defined.
+   - If an unauthenticated user navigates directly to `/submissions/new`, `/submissions/:id/audit`, or `/admin`, they are presented with a clean light-mode **Auth Gate Card** (`AuthGateCard.tsx`) explaining why sign-in is required.
    - The backend creates or updates their account and returns a standard JWT token.
 
 3. **Admin & Submission Portal (`/admin`):**

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -10,13 +9,13 @@ import {
   Layers,
   ShieldCheck,
   AlertTriangle,
-  UserCheck,
   LogIn,
   ChevronRight,
   Box,
   Compass,
 } from "lucide-react";
-import { getCurrentUser, loginWithGoogle } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { GoogleLogo } from "@/components/GoogleAuthModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -25,50 +24,10 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 
 export default function HomePage() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [googleModalOpen, setGoogleModalOpen] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
-
-  useEffect(() => {
-    setCurrentUser(getCurrentUser());
-  }, []);
-
-  async function handleGoogleSignIn(role: "AUTHOR" | "ADMIN") {
-    setAuthLoading(true);
-    try {
-      const email =
-        role === "ADMIN"
-          ? "editor.google@uts.edu.au"
-          : "author.google@uts.edu.au";
-      const fullName =
-        role === "ADMIN" ? "Prof. Dr. Sarah Connor" : "Dr. Alexander Wright";
-
-      const res = await loginWithGoogle({
-        email,
-        full_name: fullName,
-        role: role,
-        affiliation: "UTS Faculty of Engineering and IT",
-      });
-
-      setCurrentUser(res.user);
-      setGoogleModalOpen(false);
-      router.push("/admin");
-    } catch (err: any) {
-      alert("Sign-in failed: " + err.message);
-    } finally {
-      setAuthLoading(false);
-    }
-  }
+  const { user, openGoogleModal } = useAuth();
 
   return (
     <div className="space-y-20 pb-16">
@@ -94,7 +53,7 @@ export default function HomePage() {
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
-            {currentUser ? (
+            {user ? (
               <Button
                 size="lg"
                 onClick={() => router.push("/admin")}
@@ -106,10 +65,10 @@ export default function HomePage() {
             ) : (
               <Button
                 size="lg"
-                onClick={() => setGoogleModalOpen(true)}
+                onClick={openGoogleModal}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-2.5 shadow-sm text-sm"
               >
-                <LogIn className="w-4 h-4" />
+                <GoogleLogo className="w-4 h-4" />
                 <span>Sign in with Google to Submit</span>
               </Button>
             )}
@@ -285,7 +244,7 @@ export default function HomePage() {
 
               <Button
                 size="sm"
-                onClick={() => setGoogleModalOpen(true)}
+                onClick={openGoogleModal}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold mt-2"
               >
                 Sign in to check your manuscript &rarr;
@@ -412,76 +371,13 @@ export default function HomePage() {
         </div>
         <Button
           size="lg"
-          onClick={() => setGoogleModalOpen(true)}
-          className="bg-white hover:bg-slate-100 text-indigo-600 font-bold text-xs px-6 shrink-0 shadow-sm"
+          onClick={openGoogleModal}
+          className="bg-white hover:bg-slate-100 text-indigo-600 font-bold text-xs px-6 shrink-0 shadow-sm gap-2"
         >
-          <LogIn className="w-4 h-4 mr-1.5" />
+          <GoogleLogo className="w-4 h-4" />
           <span>Sign In with Google</span>
         </Button>
       </section>
-
-      {/* 6. GOOGLE SIGN-IN DIALOG */}
-      <Dialog open={googleModalOpen} onOpenChange={setGoogleModalOpen}>
-        <DialogContent onClose={() => setGoogleModalOpen(false)}>
-          <DialogHeader>
-            <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 mb-2">
-              <UserCheck className="w-5 h-5" />
-            </div>
-            <DialogTitle>Sign In with Google</DialogTitle>
-            <DialogDescription>
-              Choose your role to enter the submission portal:
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2.5 my-2">
-            <button
-              onClick={() => handleGoogleSignIn("AUTHOR")}
-              disabled={authLoading}
-              className="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-300 transition flex items-center justify-between group"
-            >
-              <div>
-                <div className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                  <span>Author Account</span>
-                  <Badge variant="secondary" className="text-[10px]">
-                    Submit Papers
-                  </Badge>
-                </div>
-                <div className="text-xs text-slate-500">
-                  Dr. Alexander Wright &bull; author.google@uts.edu.au
-                </div>
-              </div>
-              <span className="text-xs font-semibold text-indigo-600 group-hover:translate-x-0.5 transition-transform">
-                Sign in &rarr;
-              </span>
-            </button>
-
-            <button
-              onClick={() => handleGoogleSignIn("ADMIN")}
-              disabled={authLoading}
-              className="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-300 transition flex items-center justify-between group"
-            >
-              <div>
-                <div className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                  <span>Managing Editor Account</span>
-                  <Badge variant="default" className="text-[10px]">
-                    Triage & Review
-                  </Badge>
-                </div>
-                <div className="text-xs text-slate-500">
-                  Prof. Dr. Sarah Connor &bull; editor.google@uts.edu.au
-                </div>
-              </div>
-              <span className="text-xs font-semibold text-indigo-600 group-hover:translate-x-0.5 transition-transform">
-                Sign in &rarr;
-              </span>
-            </button>
-          </div>
-
-          <div className="pt-3 border-t border-slate-100 text-center text-[11px] text-slate-400">
-            University of Technology Sydney (UTS) &bull; Single Sign-On
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

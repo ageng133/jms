@@ -62,7 +62,7 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 
 	result, err := h.authUsecase.LoginWithGoogle(c.Request.Context(), req)
 	if err != nil {
-		response.InternalError(c, err.Error())
+		response.BadRequest(c, err.Error(), "")
 		return
 	}
 

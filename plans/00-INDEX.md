@@ -15,6 +15,7 @@ Master plan directory mapping all modular plan files across the decoupled archit
 * [PLAN-10: Editorial Admin Control Plane & Google OAuth SSO](./PLAN-10-admin-control-plane.md)
 * [PLAN-11: Storage Driver Adapter (Box Cloud vs Local Box)](./PLAN-11-storage-driver-adapter.md)
 * [PLAN-12: Light-Mode UI Revamp & Admin Panel Sidebar Redesign](./PLAN-12-light-mode-admin-sidebar-revamp.md)
+* [PLAN-13: Google Auth SSO Integration & Mandatory Audit Gate](./PLAN-13-google-auth-sso-audit-gate.md)
 
 ---
 

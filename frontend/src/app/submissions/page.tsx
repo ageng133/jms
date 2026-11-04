@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Clock, AlertTriangle, CheckCircle, FileCheck } from "lucide-react";
+import { Plus, Clock, AlertTriangle, CheckCircle, FileCheck, Loader2 } from "lucide-react";
 import { Manuscript } from "@/types/jms";
 import { listManuscripts } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { AuthGateCard } from "@/components/AuthGateCard";
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; icon: any }> = {
   DRAFT: { label: "Draft", bg: "bg-slate-100", text: "text-slate-700", icon: Clock },
@@ -17,11 +19,17 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; i
 };
 
 export default function SubmissionsPage() {
+  const { user, loading: authLoading } = useAuth();
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     async function loadData() {
       try {
         const data = await listManuscripts();
@@ -33,7 +41,26 @@ export default function SubmissionsPage() {
       }
     }
     loadData();
-  }, []);
+  }, [user]);
+
+  if (authLoading) {
+    return (
+      <div className="py-24 text-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-3" />
+        <p className="text-xs text-slate-500">Checking authorization status...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <AuthGateCard
+        title="Sign in with Google to View Submissions"
+        description="Your submission records, pre-submission audits, and reviewer logs are tied to your university Google SSO account."
+        actionText="Sign in with Google"
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

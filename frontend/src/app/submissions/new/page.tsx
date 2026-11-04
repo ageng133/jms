@@ -12,6 +12,8 @@ import {
   Layers,
   Sparkles,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { AuthGateCard } from "@/components/AuthGateCard";
 import {
   createDraftManuscript,
   requestUploadPresign,
@@ -22,6 +24,7 @@ import {
 
 export default function NewSubmissionPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,6 +141,25 @@ export default function NewSubmissionPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="py-24 text-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-3" />
+        <p className="text-xs text-slate-500">Checking authentication state...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <AuthGateCard
+        title="Sign in with Google to Submit & Audit"
+        description="Automated pre-submission format auditing, Box cloud storage upload, and visual layout checking require an authenticated Google session."
+        actionText="Sign in with Google to Start Submission"
+      />
+    );
   }
 
   return (

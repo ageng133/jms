@@ -2,8 +2,11 @@ package usecase
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -21,8 +24,10 @@ type AuthUsecase interface {
 }
 
 type GoogleLoginDTO struct {
-	Email       string      `json:"email" binding:"required,email"`
-	FullName    string      `json:"full_name" binding:"required"`
+	Credential  string      `json:"credential"` // Google ID token from GSI
+	IDToken     string      `json:"id_token"`
+	Email       string      `json:"email"`
+	FullName    string      `json:"full_name"`
 	GoogleID    string      `json:"google_id"`
 	Role        domain.Role `json:"role"`
 	Affiliation string      `json:"affiliation"`
@@ -128,7 +133,78 @@ func (a *authUsecase) Login(ctx context.Context, email, password string) (*AuthR
 	}, nil
 }
 
+type googleTokenClaims struct {
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Picture       string `json:"picture"`
+	Sub           string `json:"sub"`
+	HD            string `json:"hd"`
+}
+
+func parseGoogleIDToken(tokenString string) (*googleTokenClaims, error) {
+	parts := strings.Split(tokenString, ".")
+	if len(parts) < 2 {
+		return nil, errors.New("invalid jwt token format")
+	}
+
+	payloadSegment := parts[1]
+	// Handle URL base64 decoding with or without padding
+	decoded, err := base64.RawURLEncoding.DecodeString(payloadSegment)
+	if err != nil {
+		decoded, err = base64.URLEncoding.DecodeString(payloadSegment)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode jwt payload: %w", err)
+		}
+	}
+
+	var claims googleTokenClaims
+	if err := json.Unmarshal(decoded, &claims); err != nil {
+		return nil, fmt.Errorf("failed to parse jwt json claims: %w", err)
+	}
+
+	return &claims, nil
+}
+
 func (a *authUsecase) LoginWithGoogle(ctx context.Context, dto GoogleLoginDTO) (*AuthResult, error) {
+	rawToken := dto.Credential
+	if rawToken == "" {
+		rawToken = dto.IDToken
+	}
+
+	if rawToken != "" {
+		claims, err := parseGoogleIDToken(rawToken)
+		if err == nil && claims != nil {
+			if dto.Email == "" && claims.Email != "" {
+				dto.Email = claims.Email
+			}
+			if dto.FullName == "" && claims.Name != "" {
+				dto.FullName = claims.Name
+			}
+			if dto.GoogleID == "" && claims.Sub != "" {
+				dto.GoogleID = claims.Sub
+			}
+			if dto.Affiliation == "" && claims.HD != "" {
+				dto.Affiliation = fmt.Sprintf("UTS Google Workspace (%s)", claims.HD)
+			}
+		}
+	}
+
+	if strings.TrimSpace(dto.Email) == "" {
+		return nil, errors.New("email is required for Google SSO authentication")
+	}
+
+	if strings.TrimSpace(dto.FullName) == "" {
+		parts := strings.Split(dto.Email, "@")
+		dto.FullName = parts[0]
+	}
+
+	if strings.TrimSpace(dto.Affiliation) == "" {
+		dto.Affiliation = "UTS Faculty of Engineering & IT"
+	}
+
 	user, err := a.userRepo.GetByEmail(ctx, dto.Email)
 	if err != nil {
 		// User does not exist, provision new user

@@ -21,11 +21,14 @@ import {
 } from "lucide-react";
 import { PreSubmissionAuditReport } from "@/types/jms";
 import { getAuditReport } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { AuthGateCard } from "@/components/AuthGateCard";
 
 export default function AuditReportPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const searchParams = useSearchParams();
   const auditId = searchParams.get("audit_id");
+  const { user, loading: authLoading } = useAuth();
 
   const [report, setReport] = useState<PreSubmissionAuditReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +36,11 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
   const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   async function fetchReport() {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     if (!auditId) {
       setError("Missing audit_id parameter in URL");
       setLoading(false);
@@ -52,6 +60,11 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
   }
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     fetchReport();
     const interval = setInterval(() => {
       // Poll if report status is not completed yet
@@ -60,7 +73,26 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
       }
     }, 4000);
     return () => clearInterval(interval);
-  }, [auditId]);
+  }, [auditId, user]);
+
+  if (authLoading) {
+    return (
+      <div className="py-24 text-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-3" />
+        <p className="text-xs text-slate-500">Checking authorization status...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <AuthGateCard
+        title="Authentication Required to View Audit Report"
+        description="This pre-submission compliance audit contains confidential manuscript formatting insights, layout annotations, and double-blind checks. Please sign in with your Google account to view this report."
+        actionText="Sign In with Google to Inspect Audit"
+      />
+    );
+  }
 
   return (
     <div className="space-y-8">
