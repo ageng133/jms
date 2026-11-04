@@ -21,6 +21,7 @@ type AuthUsecase interface {
 	Login(ctx context.Context, email, password string) (*AuthResult, error)
 	LoginWithGoogle(ctx context.Context, dto GoogleLoginDTO) (*AuthResult, error)
 	ValidateToken(tokenString string) (*Claims, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 }
 
 type GoogleLoginDTO struct {
@@ -272,5 +273,9 @@ func (a *authUsecase) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	return nil, errors.New("invalid token")
+}
+
+func (a *authUsecase) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+	return a.userRepo.GetByID(ctx, id)
 }
 

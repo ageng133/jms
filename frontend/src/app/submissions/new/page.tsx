@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthGateCard } from "@/components/AuthGateCard";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input, Textarea, Label } from "@/components/ui/input";
 import {
   createDraftManuscript,
   requestUploadPresign,
@@ -37,7 +40,6 @@ export default function NewSubmissionPage() {
   // Dual File State
   const [draftFile, setDraftFile] = useState<File | null>(null);
   const [templateFile, setTemplateFile] = useState<File | null>(null);
-  const [useDefaultTemplate, setUseDefaultTemplate] = useState(false);
   const [templateDragOver, setTemplateDragOver] = useState(false);
   const [draftDragOver, setDraftDragOver] = useState(false);
 
@@ -146,8 +148,8 @@ export default function NewSubmissionPage() {
   if (authLoading) {
     return (
       <div className="py-24 text-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-3" />
-        <p className="text-xs text-slate-500">Checking authentication state...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-[#0071e3] mx-auto mb-3" />
+        <p className="text-xs text-[#86868b]">Checking authentication state...</p>
       </div>
     );
   }
@@ -163,127 +165,126 @@ export default function NewSubmissionPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8">
       {/* Step Indicator */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-5">
-        <div className={`flex items-center gap-2.5 text-sm font-semibold transition ${step >= 1 ? "text-blue-600" : "text-slate-400"}`}>
-          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition shadow-sm ${step >= 1 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
+      <div className="flex items-center justify-between border-b border-black/[0.06] pb-5">
+        <div className={`flex items-center gap-2 text-xs font-semibold transition ${step >= 1 ? "text-[#0071e3]" : "text-[#86868b]"}`}>
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition shadow-xs ${step >= 1 ? "bg-[#0071e3] text-white" : "bg-black/[0.05] text-[#86868b]"}`}>
             1
           </span>
-          <span>Metadata</span>
+          <span className="hidden sm:inline">Metadata</span>
         </div>
-        <div className={`flex-1 h-0.5 mx-4 rounded-full transition-colors ${step >= 2 ? "bg-blue-600" : "bg-slate-200"}`} />
-        <div className={`flex items-center gap-2.5 text-sm font-semibold transition ${step >= 2 ? "text-blue-600" : "text-slate-400"}`}>
-          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition shadow-sm ${step >= 2 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
+        <div className={`flex-1 h-0.5 mx-3 sm:mx-4 rounded-full transition-colors ${step >= 2 ? "bg-[#0071e3]" : "bg-black/[0.06]"}`} />
+        <div className={`flex items-center gap-2 text-xs font-semibold transition ${step >= 2 ? "text-[#0071e3]" : "text-[#86868b]"}`}>
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition shadow-xs ${step >= 2 ? "bg-[#0071e3] text-white" : "bg-black/[0.05] text-[#86868b]"}`}>
             2
           </span>
-          <span>Upload Template & Draft</span>
+          <span className="hidden sm:inline">Upload Template &amp; Draft</span>
         </div>
-        <div className={`flex-1 h-0.5 mx-4 rounded-full transition-colors ${step === 3 ? "bg-blue-600" : "bg-slate-200"}`} />
-        <div className={`flex items-center gap-2.5 text-sm font-semibold transition ${step === 3 ? "text-blue-600" : "text-slate-400"}`}>
-          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition shadow-sm ${step === 3 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>
+        <div className={`flex-1 h-0.5 mx-3 sm:mx-4 rounded-full transition-colors ${step === 3 ? "bg-[#34c759]" : "bg-black/[0.06]"}`} />
+        <div className={`flex items-center gap-2 text-xs font-semibold transition ${step === 3 ? "text-[#34c759]" : "text-[#86868b]"}`}>
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition shadow-xs ${step === 3 ? "bg-[#34c759] text-white" : "bg-black/[0.05] text-[#86868b]"}`}>
             3
           </span>
-          <span>AI Pre-Check</span>
+          <span className="hidden sm:inline">AI Pre-Check</span>
         </div>
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0" />
+        <div className="p-4 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs flex items-center gap-3">
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Step 1: Metadata Form */}
       {step === 1 && (
-        <form onSubmit={handleMetadataSubmit} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <form onSubmit={handleMetadataSubmit} className="bg-white p-6 sm:p-8 rounded-3xl border border-black/[0.06] shadow-apple-card space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-black/[0.06] pb-4">
             <div className="space-y-0.5">
-              <h2 className="text-xl font-bold text-slate-900">Manuscript Metadata</h2>
-              <p className="text-sm text-slate-500">Enter article title, abstract, and research indexing keywords.</p>
+              <h2 className="text-xl font-bold text-[#1d1d1f]">Manuscript Metadata</h2>
+              <p className="text-xs text-[#86868b]">Enter article title, abstract, and research indexing keywords.</p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={handlePrefillDemo}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50/70 text-blue-700 hover:bg-blue-100 text-xs font-semibold transition shadow-sm self-start sm:self-auto"
+              className="text-xs text-[#0071e3] rounded-full border-black/[0.08] gap-1.5 self-start sm:self-auto"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Auto-Fill Demo Data
-            </button>
+              <span>Auto-Fill Demo Data</span>
+            </Button>
           </div>
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Manuscript Title
-              </label>
-              <input
+            <div className="space-y-1">
+              <Label htmlFor="title" className="text-xs text-[#86868b]">Manuscript Title</Label>
+              <Input
+                id="title"
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Distributed Zero-Copy Memory Pipelines for High-Performance Parsing"
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="rounded-xl text-xs"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Abstract
-              </label>
-              <textarea
+            <div className="space-y-1">
+              <Label htmlFor="abstract" className="text-xs text-[#86868b]">Abstract</Label>
+              <Textarea
+                id="abstract"
                 required
                 rows={5}
                 value={abstract}
                 onChange={(e) => setAbstract(e.target.value)}
                 placeholder="Provide a concise 150-300 word summary of research contributions..."
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="rounded-xl text-xs"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Keywords (comma separated)
-              </label>
-              <input
+            <div className="space-y-1">
+              <Label htmlFor="keywords" className="text-xs text-[#86868b]">Keywords (comma separated)</Label>
+              <Input
+                id="keywords"
                 type="text"
                 required
                 value={keywordsInput}
                 onChange={(e) => setKeywordsInput(e.target.value)}
                 placeholder="Distributed systems, PyMuPDF, Document Layout, Arrow IPC"
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="rounded-xl text-xs"
               />
             </div>
           </div>
 
           <div className="flex justify-end pt-4">
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition shadow-sm disabled:opacity-50"
+              className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-xs rounded-full px-6 shadow-xs disabled:opacity-50 gap-2 h-10 active:scale-[0.98] transition-all"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Next: Upload Files"}
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </form>
       )}
 
       {/* Step 2: Dual File Direct S3 Upload (Template + Draft) - Side by Side */}
       {step === 2 && (
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8">
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-black/[0.06] shadow-apple-card space-y-8">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wide">
+              <Badge variant="secondary" className="text-[10px]">
                 Dual Ingestion Pipeline
-              </span>
-              <span className="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wide">
+              </Badge>
+              <Badge variant="default" className="text-[10px]">
                 Side-by-Side Verification
-              </span>
+              </Badge>
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Upload Template & Manuscript Draft</h2>
-            <p className="text-sm text-slate-500">
+            <h2 className="text-xl font-bold text-[#1d1d1f]">Upload Template &amp; Manuscript Draft</h2>
+            <p className="text-xs sm:text-sm text-[#86868b]">
               Upload the journal reference template alongside your draft side-by-side. The AI Engine compares geometry, margins, and column layouts directly against the template guidelines.
             </p>
           </div>
@@ -291,22 +292,22 @@ export default function NewSubmissionPage() {
           {/* Side-by-Side Dual Upload Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             {/* Upload Zone A: Journal Template (Left) */}
-            <div className="flex flex-col justify-between p-6 rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/30 to-white shadow-xs space-y-4">
+            <div className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl border border-black/[0.08] bg-[#f5f5f7] space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">
+                    <span className="w-5 h-5 rounded-full bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center text-xs font-bold">
                       A
                     </span>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                    <label className="text-xs font-semibold text-[#1d1d1f]">
                       Journal Template (.pdf)
                     </label>
                   </div>
-                  <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                  <Badge variant="secondary" className="text-[10px]">
                     Optional Spec
-                  </span>
+                  </Badge>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#86868b]">
                   Target style guide defining margins, page bounds, and multi-column grids.
                 </p>
 
@@ -319,7 +320,6 @@ export default function NewSubmissionPage() {
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
                       setTemplateFile(e.target.files[0]);
-                      setUseDefaultTemplate(false);
                     }
                   }}
                 />
@@ -338,56 +338,55 @@ export default function NewSubmissionPage() {
                       setTemplateDragOver(false);
                       if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                         setTemplateFile(e.dataTransfer.files[0]);
-                        setUseDefaultTemplate(false);
                       }
                     }}
-                    className={`border-2 border-dashed rounded-xl p-8 text-center transition cursor-pointer block space-y-3 bg-white hover:bg-indigo-50/40 ${
-                      templateDragOver ? "border-indigo-500 bg-indigo-50 scale-[1.01]" : "border-indigo-200"
+                    className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer block space-y-2.5 bg-white hover:bg-black/[0.02] ${
+                      templateDragOver ? "border-[#0071e3] bg-[#0071e3]/5 scale-[1.01]" : "border-black/[0.12]"
                     }`}
                   >
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-                      <Layers className="w-6 h-6" />
+                    <div className="w-10 h-10 rounded-2xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center mx-auto">
+                      <Layers className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-800">
+                      <p className="text-xs font-semibold text-[#1d1d1f]">
                         Drop Journal Template PDF here
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">or browse from your computer</p>
+                      <p className="text-[11px] text-[#86868b] mt-0.5">or browse from your computer</p>
                     </div>
-                    <span className="inline-block text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">
-                      Extracts target margins & column grid
+                    <span className="inline-block text-[10px] font-medium text-[#0071e3] bg-[#0071e3]/10 px-2.5 py-0.5 rounded-full">
+                      Extracts target margins &amp; column grid
                     </span>
                   </label>
                 ) : (
-                  <div className="bg-white rounded-xl border border-indigo-200 p-5 shadow-sm space-y-3">
+                  <div className="bg-white rounded-2xl border border-black/[0.08] p-4 shadow-xs space-y-3">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                          <FileText className="w-5 h-5" />
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900 truncate">{templateFile.name}</p>
-                          <p className="text-xs text-slate-500 font-mono">
+                          <p className="text-xs font-bold text-[#1d1d1f] truncate">{templateFile.name}</p>
+                          <p className="text-[10px] text-[#86868b] font-mono">
                             {(templateFile.size / (1024 * 1024)).toFixed(2)} MB &bull; PDF Template
                           </p>
                         </div>
                       </div>
-                      <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 text-[11px] font-bold shrink-0">
-                        Template Loaded
-                      </span>
+                      <Badge variant="default" className="text-[10px]">
+                        Loaded
+                      </Badge>
                     </div>
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 text-xs">
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-black/[0.06] text-xs">
                       <label
                         htmlFor="template-upload"
-                        className="font-semibold text-slate-600 hover:text-indigo-600 cursor-pointer"
+                        className="font-medium text-[#86868b] hover:text-[#0071e3] cursor-pointer"
                       >
                         Change File
                       </label>
-                      <span className="text-slate-300">&bull;</span>
+                      <span className="text-[#86868b]">&bull;</span>
                       <button
                         type="button"
                         onClick={() => setTemplateFile(null)}
-                        className="font-semibold text-rose-600 hover:underline"
+                        className="font-medium text-[#ff3b30] hover:underline"
                       >
                         Remove
                       </button>
@@ -397,28 +396,28 @@ export default function NewSubmissionPage() {
               </div>
 
               {/* Status / Selected File Info */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-500">
-                <span className="font-semibold text-slate-700">Fallback Notice:</span> If omitted, the audit automatically evaluates against UTS IEEE Standard formatting rules.
+              <div className="p-3 bg-white border border-black/[0.06] rounded-xl text-[11px] text-[#86868b]">
+                <span className="font-semibold text-[#1d1d1f]">Fallback Notice:</span> If omitted, the audit automatically evaluates against UTS IEEE Standard formatting rules.
               </div>
             </div>
 
             {/* Upload Zone B: Author Manuscript Draft (Right) */}
-            <div className="flex flex-col justify-between p-6 rounded-2xl border border-blue-100 bg-gradient-to-b from-blue-50/30 to-white shadow-xs space-y-4">
+            <div className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl border border-[#0071e3]/20 bg-[#0071e3]/5 space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                    <span className="w-5 h-5 rounded-full bg-[#0071e3] text-white flex items-center justify-center text-xs font-bold">
                       B
                     </span>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                      Manuscript Draft (.pdf) <span className="text-rose-500">*</span>
+                    <label className="text-xs font-semibold text-[#1d1d1f]">
+                      Manuscript Draft (.pdf) <span className="text-[#ff3b30]">*</span>
                     </label>
                   </div>
-                  <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                  <Badge variant="default" className="text-[10px]">
                     Required Draft
-                  </span>
+                  </Badge>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#86868b]">
                   Camera-ready draft evaluated for margin geometry, anonymization, and citations.
                 </p>
 
@@ -451,53 +450,53 @@ export default function NewSubmissionPage() {
                         setDraftFile(e.dataTransfer.files[0]);
                       }
                     }}
-                    className={`border-2 border-dashed rounded-xl p-8 text-center transition cursor-pointer block space-y-3 bg-white hover:bg-blue-50/40 ${
-                      draftDragOver ? "border-blue-500 bg-blue-50 scale-[1.01]" : "border-blue-300"
+                    className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer block space-y-2.5 bg-white hover:bg-[#0071e3]/5 ${
+                      draftDragOver ? "border-[#0071e3] bg-[#0071e3]/10 scale-[1.01]" : "border-[#0071e3]/30"
                     }`}
                   >
-                    <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-                      <UploadCloud className="w-6 h-6" />
+                    <div className="w-10 h-10 rounded-2xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center mx-auto">
+                      <UploadCloud className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-800">
+                      <p className="text-xs font-semibold text-[#1d1d1f]">
                         Drop Author Manuscript PDF here
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">or browse from your computer (Max 50MB)</p>
+                      <p className="text-[11px] text-[#86868b] mt-0.5">or browse from your computer (Max 50MB)</p>
                     </div>
-                    <span className="inline-block text-[11px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
+                    <span className="inline-block text-[10px] font-medium text-[#0071e3] bg-[#0071e3]/10 px-2.5 py-0.5 rounded-full">
                       Direct-to-S3 pre-signed upload
                     </span>
                   </label>
                 ) : (
-                  <div className="bg-white rounded-xl border border-blue-200 p-5 shadow-sm space-y-3">
+                  <div className="bg-white rounded-2xl border border-[#0071e3]/20 p-4 shadow-xs space-y-3">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                          <FileText className="w-5 h-5" />
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900 truncate">{draftFile.name}</p>
-                          <p className="text-xs text-slate-500 font-mono">
+                          <p className="text-xs font-bold text-[#1d1d1f] truncate">{draftFile.name}</p>
+                          <p className="text-[10px] text-[#86868b] font-mono">
                             {(draftFile.size / (1024 * 1024)).toFixed(2)} MB &bull; Author Manuscript
                           </p>
                         </div>
                       </div>
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold shrink-0 flex items-center gap-1">
+                      <Badge variant="success" className="text-[10px] gap-1">
                         <CheckCircle className="w-3 h-3" /> Ready
-                      </span>
+                      </Badge>
                     </div>
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 text-xs">
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-black/[0.06] text-xs">
                       <label
                         htmlFor="draft-upload"
-                        className="font-semibold text-slate-600 hover:text-blue-600 cursor-pointer"
+                        className="font-medium text-[#86868b] hover:text-[#0071e3] cursor-pointer"
                       >
                         Change File
                       </label>
-                      <span className="text-slate-300">&bull;</span>
+                      <span className="text-[#86868b]">&bull;</span>
                       <button
                         type="button"
                         onClick={() => setDraftFile(null)}
-                        className="font-semibold text-rose-600 hover:underline"
+                        className="font-medium text-[#ff3b30] hover:underline"
                       >
                         Remove
                       </button>
@@ -508,12 +507,12 @@ export default function NewSubmissionPage() {
 
               {/* Status / Selected File Info */}
               {draftFile ? (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-[11px] text-emerald-800 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="p-3 bg-[#34c759]/10 border border-[#34c759]/20 rounded-xl text-[11px] text-[#34c759] flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0" />
                   <span>Draft manuscript verified. Ready for asynchronous pre-submission audit.</span>
                 </div>
               ) : (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-700">
+                <div className="p-3 bg-[#ff3b30]/10 border border-[#ff3b30]/20 rounded-xl text-[11px] text-[#ff3b30]">
                   <span className="font-semibold">Action required:</span> Please select a draft manuscript PDF to proceed.
                 </div>
               )}
@@ -521,25 +520,27 @@ export default function NewSubmissionPage() {
           </div>
 
           {uploadProgress && (
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-2 text-xs font-medium text-slate-700 animate-pulse">
-              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+            <div className="p-3.5 bg-[#0071e3]/10 border border-[#0071e3]/20 rounded-2xl flex items-center gap-2 text-xs font-medium text-[#0071e3] animate-pulse">
+              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
               <span>{uploadProgress}</span>
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-            <button
+          <div className="flex items-center justify-between pt-4 border-t border-black/[0.06]">
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setStep(1)}
-              className="text-sm font-semibold text-slate-500 hover:text-slate-800"
+              className="text-xs rounded-full text-[#86868b] hover:text-[#1d1d1f]"
             >
               &larr; Back
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={handleFileUploadAndDispatch}
               disabled={!draftFile || loading}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition shadow-sm disabled:opacity-50"
+              className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-xs rounded-full px-6 shadow-xs disabled:opacity-50 gap-2 h-10 active:scale-[0.98] transition-all"
             >
               {loading ? (
                 <>
@@ -549,26 +550,26 @@ export default function NewSubmissionPage() {
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  Submit & Compare Against Template
+                  Submit &amp; Compare Against Template
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Step 3: Success & Redirecting */}
       {step === 3 && (
-        <div className="bg-white p-12 rounded-2xl border border-slate-200 shadow-sm text-center space-y-4">
-          <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
-            <CheckCircle className="w-8 h-8" />
+        <div className="bg-white p-10 sm:p-14 rounded-3xl border border-black/[0.06] shadow-apple-card text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-[#34c759]/10 text-[#34c759] flex items-center justify-center mx-auto">
+            <CheckCircle className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Manuscript & Template Submitted</h2>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
+          <h2 className="text-2xl font-bold text-[#1d1d1f] tracking-tight">Manuscript &amp; Template Submitted</h2>
+          <p className="text-xs sm:text-sm text-[#86868b] max-w-md mx-auto">
             Both files are securely uploaded to S3. AI Worker is comparing draft layout against template guidelines. Redirecting to live audit report...
           </p>
-          <div className="flex items-center justify-center gap-2 text-xs text-blue-600 font-medium">
+          <div className="flex items-center justify-center gap-2 text-xs text-[#0071e3] font-medium pt-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>Connecting to comparative audit report...</span>
           </div>

@@ -151,29 +151,29 @@ export function GoogleAuthModal() {
 
   return (
     <Dialog open={isGoogleModalOpen} onOpenChange={(open) => !open && closeGoogleModal()}>
-      <DialogContent onClose={closeGoogleModal} className="max-w-md bg-white border border-slate-200 shadow-xl rounded-2xl p-6">
+      <DialogContent onClose={closeGoogleModal} className="max-w-md bg-white border border-black/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-3xl p-6 sm:p-7">
         <DialogHeader className="space-y-2 text-center sm:text-left">
           <div className="flex items-center justify-between">
-            <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shadow-xs">
+            <div className="w-11 h-11 rounded-2xl bg-black/[0.03] border border-black/[0.06] flex items-center justify-center shadow-2xs">
               <GoogleLogo className="w-6 h-6" />
             </div>
-            <Badge variant="secondary" className="text-[11px] font-semibold bg-indigo-50 text-indigo-700 border-indigo-200">
+            <Badge variant="secondary" className="text-[11px] font-semibold bg-[#0071e3]/10 text-[#0071e3] border-[#0071e3]/20 rounded-full">
               UTS Google SSO
             </Badge>
           </div>
           <div>
-            <DialogTitle className="text-xl font-bold tracking-tight text-slate-900">
+            <DialogTitle className="text-xl font-bold tracking-tight text-[#1d1d1f]">
               Sign in with Google
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500 mt-1">
+            <DialogDescription className="text-xs text-[#86868b] mt-1 leading-relaxed">
               Required to run automated pre-submission compliance audits, format evaluations, and Box cloud storage.
             </DialogDescription>
           </div>
         </DialogHeader>
 
         {error && (
-          <div className="my-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+          <div className="my-3 p-3.5 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#ff3b30]" />
             <span>{error}</span>
           </div>
         )}
@@ -185,15 +185,15 @@ export function GoogleAuthModal() {
           </div>
         )}
 
-        {/* Tab switch between Quick UTS SSO and Custom Google Email */}
-        <div className="flex border-b border-slate-200 mt-2 mb-4 text-xs font-semibold">
+        {/* Apple Segmented Control */}
+        <div className="p-1 bg-black/[0.04] rounded-xl flex gap-1 mt-3 mb-4 text-xs font-medium">
           <button
             type="button"
             onClick={() => setActiveTab("quick")}
-            className={`flex-1 py-2 text-center border-b-2 transition ${
+            className={`flex-1 py-1.5 text-center rounded-lg transition-all ${
               activeTab === "quick"
-                ? "border-indigo-600 text-indigo-600 font-bold"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "bg-white text-[#1d1d1f] shadow-xs font-semibold"
+                : "text-[#86868b] hover:text-[#1d1d1f]"
             }`}
           >
             UTS Quick Accounts
@@ -201,10 +201,10 @@ export function GoogleAuthModal() {
           <button
             type="button"
             onClick={() => setActiveTab("custom")}
-            className={`flex-1 py-2 text-center border-b-2 transition ${
+            className={`flex-1 py-1.5 text-center rounded-lg transition-all ${
               activeTab === "custom"
-                ? "border-indigo-600 text-indigo-600 font-bold"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "bg-white text-[#1d1d1f] shadow-xs font-semibold"
+                : "text-[#86868b] hover:text-[#1d1d1f]"
             }`}
           >
             Custom Google Email
@@ -212,24 +212,24 @@ export function GoogleAuthModal() {
         </div>
 
         {activeTab === "quick" ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <button
               onClick={() => handleQuickSignIn("AUTHOR")}
               disabled={loading}
-              className="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-300 transition flex items-center justify-between group disabled:opacity-50"
+              className="w-full text-left p-3.5 rounded-2xl border border-black/[0.06] bg-black/[0.02] hover:bg-black/[0.04] transition-all flex items-center justify-between group disabled:opacity-50 active:scale-[0.99]"
             >
               <div className="space-y-0.5">
-                <div className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <div className="text-sm font-semibold text-[#1d1d1f] flex items-center gap-2">
                   <span>Author Account</span>
-                  <Badge variant="secondary" className="text-[10px] bg-slate-200 text-slate-800">
-                    Submit & Audit Papers
-                  </Badge>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/[0.05] text-[#86868b] font-medium">
+                    Submit & Audit
+                  </span>
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[#86868b]">
                   Dr. Alexander Wright &bull; author.google@uts.edu.au
                 </div>
               </div>
-              <span className="text-xs font-semibold text-indigo-600 group-hover:translate-x-0.5 transition-transform">
+              <span className="text-xs font-medium text-[#0071e3] group-hover:translate-x-0.5 transition-transform">
                 Sign in &rarr;
               </span>
             </button>
@@ -237,28 +237,28 @@ export function GoogleAuthModal() {
             <button
               onClick={() => handleQuickSignIn("ADMIN")}
               disabled={loading}
-              className="w-full text-left p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-300 transition flex items-center justify-between group disabled:opacity-50"
+              className="w-full text-left p-3.5 rounded-2xl border border-black/[0.06] bg-black/[0.02] hover:bg-black/[0.04] transition-all flex items-center justify-between group disabled:opacity-50 active:scale-[0.99]"
             >
               <div className="space-y-0.5">
-                <div className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <div className="text-sm font-semibold text-[#1d1d1f] flex items-center gap-2">
                   <span>Managing Editor Account</span>
-                  <Badge variant="default" className="text-[10px] bg-indigo-600 text-white">
-                    Triage & Review Audits
-                  </Badge>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0071e3]/10 text-[#0071e3] font-medium">
+                    Review Desk
+                  </span>
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[#86868b]">
                   Prof. Dr. Sarah Connor &bull; editor.google@uts.edu.au
                 </div>
               </div>
-              <span className="text-xs font-semibold text-indigo-600 group-hover:translate-x-0.5 transition-transform">
+              <span className="text-xs font-medium text-[#0071e3] group-hover:translate-x-0.5 transition-transform">
                 Sign in &rarr;
               </span>
             </button>
           </div>
         ) : (
-          <form onSubmit={handleCustomSignIn} className="space-y-3">
+          <form onSubmit={handleCustomSignIn} className="space-y-3.5">
             <div className="space-y-1">
-              <Label htmlFor="custom-email" className="text-xs font-semibold text-slate-700">
+              <Label htmlFor="custom-email" className="text-xs font-semibold text-[#1d1d1f]">
                 Google Workspace / University Email
               </Label>
               <Input
@@ -273,7 +273,7 @@ export function GoogleAuthModal() {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="custom-name" className="text-xs font-semibold text-slate-700">
+              <Label htmlFor="custom-name" className="text-xs font-semibold text-[#1d1d1f]">
                 Full Name & Academic Title
               </Label>
               <Input
@@ -287,15 +287,15 @@ export function GoogleAuthModal() {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-slate-700">Select Role</Label>
+              <Label className="text-xs font-semibold text-[#1d1d1f]">Select Role</Label>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => setCustomRole("AUTHOR")}
-                  className={`p-2 rounded-lg border text-center font-medium transition ${
+                  className={`p-2 rounded-xl border text-center font-medium transition-all ${
                     customRole === "AUTHOR"
-                      ? "bg-indigo-50 border-indigo-600 text-indigo-700 font-bold"
-                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                      ? "bg-[#0071e3]/10 border-[#0071e3] text-[#0071e3] font-semibold"
+                      : "bg-white border-black/[0.08] text-[#86868b] hover:bg-black/[0.02]"
                   }`}
                 >
                   Author (Submit & Audit)
@@ -303,10 +303,10 @@ export function GoogleAuthModal() {
                 <button
                   type="button"
                   onClick={() => setCustomRole("ADMIN")}
-                  className={`p-2 rounded-lg border text-center font-medium transition ${
+                  className={`p-2 rounded-xl border text-center font-medium transition-all ${
                     customRole === "ADMIN"
-                      ? "bg-indigo-50 border-indigo-600 text-indigo-700 font-bold"
-                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                      ? "bg-[#0071e3]/10 border-[#0071e3] text-[#0071e3] font-semibold"
+                      : "bg-white border-black/[0.08] text-[#86868b] hover:bg-black/[0.02]"
                   }`}
                 >
                   Editor (Review Desk)
@@ -317,7 +317,7 @@ export function GoogleAuthModal() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs gap-2 mt-2 shadow-sm"
+              className="w-full bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold text-xs gap-2 mt-2 rounded-full shadow-xs active:scale-[0.98]"
             >
               {loading ? (
                 <>
@@ -334,9 +334,9 @@ export function GoogleAuthModal() {
           </form>
         )}
 
-        <div className="pt-4 mt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+        <div className="pt-4 mt-3 border-t border-black/[0.06] flex items-center justify-between text-[11px] text-[#86868b]">
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <ShieldCheck className="w-3.5 h-3.5 text-[#34c759]" />
             <span>OAuth 2.0 / OpenID Connect</span>
           </div>
           <span>University of Technology Sydney</span>

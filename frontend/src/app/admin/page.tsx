@@ -24,6 +24,8 @@ import {
   ArrowRight,
   ShieldCheck,
   UserCheck,
+  PanelLeft,
+  X,
 } from "lucide-react";
 import {
   listManuscripts,
@@ -61,6 +63,7 @@ export default function AdminPortalPage() {
   const router = useRouter();
   const { user, signOut, signInWithGoogle, openGoogleModal, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<"overview" | "submissions" | "new-submission" | "templates">("overview");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -278,7 +281,7 @@ export default function AdminPortalPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-3" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#0071e3] mb-3" />
         <p className="text-xs text-slate-500 font-medium">Authenticating UTS session...</p>
       </div>
     );
@@ -297,46 +300,45 @@ export default function AdminPortalPage() {
   }
 
   // 2. AUTHENTICATED DEDICATED ADMIN SHELL (SIDEBAR + MAIN CANVAS)
-  return (
-    <div className="min-h-screen bg-slate-50 flex text-slate-900">
-      {/* SUCCESS TOAST */}
-      {successToast && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-emerald-600 text-white px-4 py-3 shadow-lg flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-bottom">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>{successToast}</span>
-        </div>
-      )}
-
-      {/* =========================================================================
-          LEFT SIDEBAR (260px wide, sticky, clean light theme)
-         ========================================================================= */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 h-screen sticky top-0 shadow-xs">
+  function renderSidebarContent() {
+    return (
+      <div className="flex flex-col justify-between h-full bg-white/95">
         <div>
           {/* Workspace Brand Header */}
-          <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2.5">
-              <span className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-xs">
+          <div className="p-4 sm:p-5 border-b border-black/[0.06] flex items-center justify-between">
+            <Link href="/" className="flex items-center space-x-2.5 group">
+              <span className="w-7 h-7 rounded-lg bg-[#0071e3] flex items-center justify-center text-xs font-bold text-white shadow-xs group-hover:scale-105 transition-transform">
                 JMS
               </span>
               <div>
-                <div className="text-sm font-bold tracking-tight text-slate-900 leading-tight">
+                <div className="text-sm font-semibold tracking-tight text-[#1d1d1f] leading-tight">
                   Journal Portal
                 </div>
-                <div className="text-[10px] text-slate-400 font-medium">
+                <div className="text-[10px] text-[#86868b] font-medium">
                   UTS Editorial Space
                 </div>
               </div>
             </Link>
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg text-[#86868b] hover:text-[#1d1d1f] hover:bg-black/[0.05]"
+              aria-label="Close Sidebar"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Navigation Links */}
           <nav className="p-3 space-y-1 text-xs font-medium">
             <button
-              onClick={() => setActiveTab("overview")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition ${
+              onClick={() => {
+                setActiveTab("overview");
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${
                 activeTab === "overview"
-                  ? "bg-indigo-50 text-indigo-700 font-semibold"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-black/[0.06] text-[#1d1d1f] font-semibold shadow-2xs"
+                  : "text-[#86868b] hover:bg-black/[0.03] hover:text-[#1d1d1f]"
               }`}
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -344,11 +346,14 @@ export default function AdminPortalPage() {
             </button>
 
             <button
-              onClick={() => setActiveTab("submissions")}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition ${
+              onClick={() => {
+                setActiveTab("submissions");
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all ${
                 activeTab === "submissions"
-                  ? "bg-indigo-50 text-indigo-700 font-semibold"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-black/[0.06] text-[#1d1d1f] font-semibold shadow-2xs"
+                  : "text-[#86868b] hover:bg-black/[0.03] hover:text-[#1d1d1f]"
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -361,23 +366,29 @@ export default function AdminPortalPage() {
             </button>
 
             <button
-              onClick={() => setActiveTab("new-submission")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition ${
+              onClick={() => {
+                setActiveTab("new-submission");
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${
                 activeTab === "new-submission"
-                  ? "bg-indigo-50 text-indigo-700 font-semibold"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-black/[0.06] text-[#1d1d1f] font-semibold shadow-2xs"
+                  : "text-[#86868b] hover:bg-black/[0.03] hover:text-[#1d1d1f]"
               }`}
             >
-              <Plus className="w-4 h-4 text-indigo-600" />
+              <Plus className="w-4 h-4 text-[#0071e3]" />
               <span>Submit Paper</span>
             </button>
 
             <button
-              onClick={() => setActiveTab("templates")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition ${
+              onClick={() => {
+                setActiveTab("templates");
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${
                 activeTab === "templates"
-                  ? "bg-indigo-50 text-indigo-700 font-semibold"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-black/[0.06] text-[#1d1d1f] font-semibold shadow-2xs"
+                  : "text-[#86868b] hover:bg-black/[0.03] hover:text-[#1d1d1f]"
               }`}
             >
               <BookOpen className="w-4 h-4" />
@@ -386,104 +397,151 @@ export default function AdminPortalPage() {
           </nav>
 
           {/* System Telemetry */}
-          <div className="px-4 py-3 mx-3 my-2 rounded-lg bg-slate-50 border border-slate-200 text-[11px] space-y-1.5">
-            <div className="font-semibold text-slate-500 uppercase tracking-wider text-[10px]">
+          <div className="px-4 py-3 mx-3 my-2 rounded-2xl bg-black/[0.02] border border-black/[0.04] text-[11px] space-y-1.5">
+            <div className="font-semibold text-[#86868b] uppercase tracking-wider text-[10px]">
               System Status
             </div>
-            <div className="flex items-center justify-between text-slate-600">
+            <div className="flex items-center justify-between text-[#1d1d1f]">
               <span className="flex items-center gap-1.5">
-                <Box className="w-3 h-3 text-blue-500" />
+                <Box className="w-3 h-3 text-[#0071e3]" />
                 Box Cloud
               </span>
-              <span className="text-emerald-600 font-medium">Online</span>
+              <span className="text-[#34c759] font-medium">Online</span>
             </div>
-            <div className="flex items-center justify-between text-slate-600">
+            <div className="flex items-center justify-between text-[#1d1d1f]">
               <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-indigo-500" />
+                <Sparkles className="w-3 h-3 text-[#af52de]" />
                 Gemini AI
               </span>
-              <span className="text-emerald-600 font-medium">Active</span>
+              <span className="text-[#34c759] font-medium">Active</span>
             </div>
           </div>
         </div>
 
         {/* User Profile Card at Bottom */}
-        <div className="p-3 border-t border-slate-200 bg-slate-50/50">
-          <div className="flex items-center space-x-3 p-2 rounded-lg">
-            <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
-              {user.full_name?.charAt(0) || "U"}
+        <div className="p-3 border-t border-black/[0.06] bg-black/[0.01]">
+          <div className="flex items-center space-x-3 p-2 rounded-xl bg-black/[0.02]">
+            <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+              {user?.full_name?.charAt(0) || "U"}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold text-slate-900 truncate">
-                {user.full_name}
+              <div className="text-xs font-semibold text-[#1d1d1f] truncate">
+                {user?.full_name || "User"}
               </div>
-              <div className="text-[10px] text-slate-500 truncate flex items-center gap-1">
-                <span>{user.role === "ADMIN" ? "Managing Editor" : "Author"}</span>
+              <div className="text-[10px] text-[#86868b] truncate flex items-center gap-1">
+                <span>{user?.role === "ADMIN" ? "Managing Editor" : "Author"}</span>
                 <span className="text-slate-300">&bull;</span>
-                <span className="text-indigo-600 font-medium">Google SSO</span>
+                <span className="text-[#0071e3] font-medium">Google SSO</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2 px-1">
+          <div className="flex items-center justify-between pt-2.5 px-1 text-[11px]">
             <button
               onClick={() =>
                 handleGoogleSignIn(
-                  user.role === "ADMIN" ? "AUTHOR" : "ADMIN"
+                  user?.role === "ADMIN" ? "AUTHOR" : "ADMIN"
                 )
               }
-              className="text-[11px] text-indigo-600 hover:underline font-medium"
+              className="text-[#0071e3] hover:underline font-medium"
             >
-              Switch to {user.role === "ADMIN" ? "Author" : "Editor"}
+              Switch to {user?.role === "ADMIN" ? "Author" : "Editor"}
             </button>
 
             <button
               onClick={handleSignOut}
-              className="text-[11px] text-slate-500 hover:text-slate-800 font-medium flex items-center gap-1"
+              className="text-[#86868b] hover:text-[#ff3b30] font-medium flex items-center gap-1 transition-colors"
             >
               <LogOut className="w-3 h-3" />
               Sign Out
             </button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f5f5f7] flex text-[#1d1d1f]">
+      {/* SUCCESS TOAST */}
+      {successToast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-[#34c759] text-white px-4 py-3 shadow-lg flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-bottom">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <span>{successToast}</span>
+        </div>
+      )}
+
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden lg:flex w-64 bg-white/80 backdrop-blur-xl border-r border-black/[0.06] flex-col justify-between shrink-0 h-screen sticky top-0 shadow-xs">
+        {renderSidebarContent()}
       </aside>
+
+      {/* MOBILE / TABLET DRAWER */}
+      {mobileSidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-xs transition-opacity animate-in fade-in"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <aside className="relative w-72 max-w-[85vw] bg-white h-full z-10 shadow-2xl p-0 animate-in slide-in-from-left duration-200">
+            {renderSidebarContent()}
+          </aside>
+        </div>
+      )}
 
       {/* =========================================================================
           MAIN CONTENT CANVAS
          ========================================================================= */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Top Header Bar */}
-        <header className="h-14 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-2 text-xs text-slate-500">
-            <span>Admin Portal</span>
-            <span>/</span>
-            <span className="text-slate-900 font-semibold capitalize">
+        <header className="h-14 bg-white/80 backdrop-blur-xl border-b border-black/[0.06] px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 sticky top-0 z-30">
+          <div className="flex items-center space-x-2.5 text-xs text-[#86868b]">
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="lg:hidden p-1.5 -ml-1 rounded-lg text-[#1d1d1f] hover:bg-black/[0.05] transition"
+              aria-label="Open sidebar"
+            >
+              <PanelLeft className="w-5 h-5" />
+            </button>
+            <span className="hidden sm:inline">Admin Portal</span>
+            <span className="hidden sm:inline">/</span>
+            <span className="text-[#1d1d1f] font-semibold capitalize">
               {activeTab === "new-submission" ? "Submit Paper" : activeTab}
             </span>
           </div>
 
-          {activeTab !== "new-submission" && (
-            <Button
-              size="sm"
-              onClick={() => setActiveTab("new-submission")}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold gap-1.5 shadow-xs"
+          <div className="flex items-center gap-2">
+            {activeTab !== "new-submission" && (
+              <Button
+                size="sm"
+                onClick={() => setActiveTab("new-submission")}
+                className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium gap-1.5 shadow-xs rounded-full"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Submit Paper</span>
+              </Button>
+            )}
+
+            <button
+              onClick={handleSignOut}
+              title="Sign Out"
+              className="lg:hidden h-8 w-8 rounded-full border border-black/[0.08] hover:bg-black/[0.05] text-[#86868b] hover:text-[#1d1d1f] flex items-center justify-center transition active:scale-[0.98]"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Submit Paper</span>
-            </Button>
-          )}
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </header>
 
         {/* Content Body */}
-        <div className="p-8 max-w-6xl w-full space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-6xl w-full space-y-6 mx-auto">
           {/* TAB 1: OVERVIEW DASHBOARD */}
           {activeTab === "overview" && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                <h1 className="text-xl font-bold tracking-tight text-[#1d1d1f]">
                   Welcome back, {user?.full_name}
                 </h1>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#86868b]">
                   Review recent submissions and inspect automated formatting pre-checks.
                 </p>
               </div>
@@ -493,55 +551,55 @@ export default function AdminPortalPage() {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Total Papers</CardDescription>
-                    <CardTitle className="text-2xl font-bold text-slate-900">
+                    <CardTitle className="text-2xl font-bold text-[#1d1d1f]">
                       {totalSubmissions}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-slate-500">Ingested submissions</p>
+                    <p className="text-xs text-[#86868b]">Ingested submissions</p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Format Pass Rate</CardDescription>
-                    <CardTitle className="text-2xl font-bold text-emerald-600">
+                    <CardTitle className="text-2xl font-bold text-[#34c759]">
                       {passRate}%
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-slate-500">Passed pre-screening</p>
+                    <p className="text-xs text-[#86868b]">Passed pre-screening</p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Awaiting Review</CardDescription>
-                    <CardTitle className="text-2xl font-bold text-amber-600">
+                    <CardTitle className="text-2xl font-bold text-[#ff9500]">
                       {deskReviewCount}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-slate-500">Pending editorial triage</p>
+                    <p className="text-xs text-[#86868b]">Pending editorial triage</p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Storage Driver</CardDescription>
-                    <CardTitle className="text-2xl font-bold text-blue-600">
+                    <CardTitle className="text-2xl font-bold text-[#0071e3]">
                       Box Cloud
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-slate-500">Direct file streams active</p>
+                    <p className="text-xs text-[#86868b]">Direct file streams active</p>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Recent Submissions Quick View */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-black/[0.06]">
                   <div>
                     <CardTitle>Recent Submissions</CardTitle>
                     <CardDescription>
@@ -552,40 +610,40 @@ export default function AdminPortalPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setActiveTab("submissions")}
-                    className="text-xs"
+                    className="text-xs rounded-full"
                   >
                     View All &rarr;
                   </Button>
                 </CardHeader>
                 <CardContent className="p-0">
                   {manuscripts.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-slate-500">
-                      No submissions recorded yet. Click "Submit Paper" to start.
+                    <div className="p-8 text-center text-xs text-[#86868b]">
+                      No submissions recorded yet. Click &quot;Submit Paper&quot; to start.
                     </div>
                   ) : (
-                    <div className="divide-y divide-slate-100 text-xs">
+                    <div className="divide-y divide-black/[0.06] text-xs">
                       {manuscripts.slice(0, 3).map((m) => (
                         <div
                           key={m.id}
-                          className="p-4 flex items-center justify-between hover:bg-slate-50 transition"
+                          className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-black/[0.02] transition"
                         >
-                          <div className="space-y-0.5">
+                          <div className="space-y-0.5 min-w-0">
                             <Link
                               href={`/submissions/${m.id}/audit`}
-                              className="font-semibold text-slate-900 hover:text-indigo-600"
+                              className="font-semibold text-[#1d1d1f] hover:text-[#0071e3] transition line-clamp-1"
                             >
                               {m.title}
                             </Link>
-                            <div className="text-[11px] text-slate-500">
+                            <div className="text-[11px] text-[#86868b]">
                               {m.author?.full_name || "Author"} &bull; {new Date(m.created_at).toLocaleDateString()}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2.5 shrink-0">
                             <Badge variant="default" className="text-[10px]">
                               Score: 95/100
                             </Badge>
                             <Link href={`/submissions/${m.id}/audit`}>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs">
+                              <Button variant="ghost" size="sm" className="h-7 text-xs rounded-full">
                                 View Report &rarr;
                               </Button>
                             </Link>
@@ -603,30 +661,31 @@ export default function AdminPortalPage() {
           {activeTab === "submissions" && (
             <div className="space-y-4">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                <h1 className="text-xl font-bold tracking-tight text-[#1d1d1f]">
                   All Submissions
                 </h1>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#86868b]">
                   Search, inspect format scores, and triage submitted papers.
                 </p>
               </div>
 
               {/* Filters Toolbar */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-lg bg-white border border-slate-200">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-black/[0.06] shadow-apple-card">
                 <div className="relative flex-1 max-w-sm">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#86868b]" />
                   <Input
                     placeholder="Search by title or ID..."
-                    className="pl-8 h-8 text-xs"
+                    className="pl-8 h-8 text-xs rounded-full"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-1 text-xs">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs p-1 rounded-full bg-black/[0.04]">
                   <Button
                     variant={filterStatus === "ALL" ? "secondary" : "ghost"}
                     size="sm"
+                    className="h-7 px-3 rounded-full text-xs"
                     onClick={() => setFilterStatus("ALL")}
                   >
                     All
@@ -634,6 +693,7 @@ export default function AdminPortalPage() {
                   <Button
                     variant={filterStatus === "UNDER_REVIEW" ? "secondary" : "ghost"}
                     size="sm"
+                    className="h-7 px-3 rounded-full text-xs"
                     onClick={() => setFilterStatus("UNDER_REVIEW")}
                   >
                     Under Review
@@ -641,6 +701,7 @@ export default function AdminPortalPage() {
                   <Button
                     variant={filterStatus === "ACCEPTED" ? "secondary" : "ghost"}
                     size="sm"
+                    className="h-7 px-3 rounded-full text-xs"
                     onClick={() => setFilterStatus("ACCEPTED")}
                   >
                     Accepted
@@ -648,6 +709,7 @@ export default function AdminPortalPage() {
                   <Button
                     variant={filterStatus === "REVISION_REQUIRED" ? "secondary" : "ghost"}
                     size="sm"
+                    className="h-7 px-3 rounded-full text-xs"
                     onClick={() => setFilterStatus("REVISION_REQUIRED")}
                   >
                     Revisions
@@ -656,26 +718,27 @@ export default function AdminPortalPage() {
                     variant="ghost"
                     size="sm"
                     onClick={fetchSubmissions}
-                    className="text-slate-500"
+                    className="h-7 w-7 p-0 rounded-full text-[#86868b]"
+                    title="Refresh"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
                   </Button>
                 </div>
               </div>
 
-              {/* Data Table */}
+              {/* Data Table Container */}
               <Card className="p-0 overflow-hidden">
                 {loading ? (
                   <div className="py-16 text-center space-y-2">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" />
-                    <p className="text-xs text-slate-500">Loading submissions...</p>
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#0071e3]" />
+                    <p className="text-xs text-[#86868b]">Loading submissions...</p>
                   </div>
                 ) : filteredManuscripts.length === 0 ? (
-                  <div className="py-16 text-center space-y-3">
-                    <FileText className="w-8 h-8 mx-auto text-slate-400" />
+                  <div className="py-16 text-center space-y-3 p-6">
+                    <FileText className="w-8 h-8 mx-auto text-[#86868b]" />
                     <div className="space-y-1">
-                      <h3 className="font-semibold text-slate-900 text-sm">No papers found</h3>
-                      <p className="text-xs text-slate-500">
+                      <h3 className="font-semibold text-[#1d1d1f] text-sm">No papers found</h3>
+                      <p className="text-xs text-[#86868b]">
                         {searchTerm
                           ? "No records matched your search query."
                           : "Submit your manuscript to run your first pre-check."}
@@ -684,54 +747,41 @@ export default function AdminPortalPage() {
                     <Button
                       onClick={() => setActiveTab("new-submission")}
                       size="sm"
-                      className="text-xs font-semibold"
+                      className="text-xs font-medium rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" />
                       Submit Paper
                     </Button>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Paper Title</TableHead>
-                        <TableHead>Author</TableHead>
-                        <TableHead>Template</TableHead>
-                        <TableHead>Format Score</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  <>
+                    {/* MOBILE CARD VIEW (< md screens) */}
+                    <div className="md:hidden divide-y divide-black/[0.06]">
                       {filteredManuscripts.map((m) => {
                         const isCustomTemplate = m.files?.some((f) => f.file_role === "TEMPLATE");
                         return (
-                          <TableRow key={m.id}>
-                            <TableCell className="max-w-md">
-                              <div className="space-y-0.5">
-                                <Link
-                                  href={`/submissions/${m.id}/audit`}
-                                  className="font-semibold text-slate-900 hover:text-indigo-600 transition flex items-center gap-1.5"
-                                >
-                                  <span>{m.title}</span>
-                                  <ExternalLink className="w-3 h-3 opacity-50 shrink-0" />
-                                </Link>
-                                <div className="text-[11px] text-slate-500">
-                                  ID: {m.id.substring(0, 8)}... &bull; {new Date(m.created_at).toLocaleDateString()}
-                                </div>
+                          <div key={m.id} className="p-4 space-y-3 bg-white">
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[10px] text-[#86868b] font-mono">
+                                  ID: {m.id.substring(0, 8)}...
+                                </span>
+                                <span className="text-[10px] text-[#86868b]">
+                                  {new Date(m.created_at).toLocaleDateString()}
+                                </span>
                               </div>
-                            </TableCell>
+                              <Link
+                                href={`/submissions/${m.id}/audit`}
+                                className="font-semibold text-sm text-[#1d1d1f] hover:text-[#0071e3] transition line-clamp-2"
+                              >
+                                {m.title}
+                              </Link>
+                              <div className="text-xs text-[#86868b]">
+                                {m.author?.full_name || "Author"} &bull; {m.author?.affiliation || "UTS"}
+                              </div>
+                            </div>
 
-                            <TableCell>
-                              <div className="text-xs text-slate-800">
-                                {m.author?.full_name || "Dr. Alexander Wright"}
-                              </div>
-                              <div className="text-[11px] text-slate-500">
-                                {m.author?.affiliation || "UTS Faculty of IT"}
-                              </div>
-                            </TableCell>
-
-                            <TableCell>
+                            <div className="flex flex-wrap items-center gap-1.5">
                               {isCustomTemplate ? (
                                 <Badge variant="info" className="text-[10px]">
                                   Custom Template
@@ -741,22 +791,12 @@ export default function AdminPortalPage() {
                                   Standard IEEE
                                 </Badge>
                               )}
-                            </TableCell>
-
-                            <TableCell>
                               <Badge
-                                variant={
-                                  m.status === "PRE_CHECK_FAILED"
-                                    ? "destructive"
-                                    : "success"
-                                }
+                                variant={m.status === "PRE_CHECK_FAILED" ? "destructive" : "success"}
                                 className="text-[10px]"
                               >
-                                Score: 95 / 100
+                                Score: 95/100
                               </Badge>
-                            </TableCell>
-
-                            <TableCell>
                               <Badge
                                 variant={
                                   m.status === "ACCEPTED"
@@ -769,46 +809,170 @@ export default function AdminPortalPage() {
                               >
                                 {m.status}
                               </Badge>
-                            </TableCell>
+                            </div>
 
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <Link href={`/submissions/${m.id}/audit`}>
-                                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
-                                    <Sparkles className="w-3 h-3 text-indigo-600" />
-                                    <span>Report</span>
+                            <div className="pt-1 flex items-center justify-between gap-2">
+                              <Link href={`/submissions/${m.id}/audit`} className="flex-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full h-8 text-xs rounded-full gap-1"
+                                >
+                                  <Sparkles className="w-3.5 h-3.5 text-[#0071e3]" />
+                                  <span>View Report</span>
+                                </Button>
+                              </Link>
+
+                              {user?.role === "ADMIN" && (
+                                <div className="flex items-center gap-1.5">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled={actionLoading === m.id}
+                                    onClick={() => handleStatusChange(m.id, "ACCEPTED")}
+                                    className="h-8 text-xs rounded-full text-[#34c759] hover:bg-[#34c759]/10"
+                                  >
+                                    Accept
                                   </Button>
-                                </Link>
-
-                                {user?.role === "ADMIN" && (
-                                  <div className="flex items-center gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      disabled={actionLoading === m.id}
-                                      onClick={() => handleStatusChange(m.id, "ACCEPTED")}
-                                      className="h-7 text-xs text-emerald-600 hover:text-emerald-700"
-                                    >
-                                      Accept
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      disabled={actionLoading === m.id}
-                                      onClick={() => handleStatusChange(m.id, "REVISION_REQUIRED")}
-                                      className="h-7 text-xs text-amber-600 hover:text-amber-700"
-                                    >
-                                      Revise
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled={actionLoading === m.id}
+                                    onClick={() => handleStatusChange(m.id, "REVISION_REQUIRED")}
+                                    className="h-8 text-xs rounded-full text-[#ff9500] hover:bg-[#ff9500]/10"
+                                  >
+                                    Revise
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         );
                       })}
-                    </TableBody>
-                  </Table>
+                    </div>
+
+                    {/* DESKTOP TABLE VIEW (>= md screens) */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Paper Title</TableHead>
+                            <TableHead>Author</TableHead>
+                            <TableHead>Template</TableHead>
+                            <TableHead>Format Score</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredManuscripts.map((m) => {
+                            const isCustomTemplate = m.files?.some((f) => f.file_role === "TEMPLATE");
+                            return (
+                              <TableRow key={m.id}>
+                                <TableCell className="max-w-md">
+                                  <div className="space-y-0.5">
+                                    <Link
+                                      href={`/submissions/${m.id}/audit`}
+                                      className="font-semibold text-[#1d1d1f] hover:text-[#0071e3] transition flex items-center gap-1.5"
+                                    >
+                                      <span>{m.title}</span>
+                                      <ExternalLink className="w-3 h-3 opacity-50 shrink-0" />
+                                    </Link>
+                                    <div className="text-[11px] text-[#86868b]">
+                                      ID: {m.id.substring(0, 8)}... &bull; {new Date(m.created_at).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="text-xs text-[#1d1d1f]">
+                                    {m.author?.full_name || "Dr. Alexander Wright"}
+                                  </div>
+                                  <div className="text-[11px] text-[#86868b]">
+                                    {m.author?.affiliation || "UTS Faculty of IT"}
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  {isCustomTemplate ? (
+                                    <Badge variant="info" className="text-[10px]">
+                                      Custom Template
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="secondary" className="text-[10px]">
+                                      Standard IEEE
+                                    </Badge>
+                                  )}
+                                </TableCell>
+
+                                <TableCell>
+                                  <Badge
+                                    variant={
+                                      m.status === "PRE_CHECK_FAILED"
+                                        ? "destructive"
+                                        : "success"
+                                    }
+                                    className="text-[10px]"
+                                  >
+                                    Score: 95 / 100
+                                  </Badge>
+                                </TableCell>
+
+                                <TableCell>
+                                  <Badge
+                                    variant={
+                                      m.status === "ACCEPTED"
+                                        ? "success"
+                                        : m.status === "REVISION_REQUIRED"
+                                        ? "warning"
+                                        : "secondary"
+                                    }
+                                    className="text-[10px]"
+                                  >
+                                    {m.status}
+                                  </Badge>
+                                </TableCell>
+
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <Link href={`/submissions/${m.id}/audit`}>
+                                      <Button variant="outline" size="sm" className="h-7 text-xs rounded-full gap-1">
+                                        <Sparkles className="w-3 h-3 text-[#0071e3]" />
+                                        <span>Report</span>
+                                      </Button>
+                                    </Link>
+
+                                    {user?.role === "ADMIN" && (
+                                      <div className="flex items-center gap-1">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          disabled={actionLoading === m.id}
+                                          onClick={() => handleStatusChange(m.id, "ACCEPTED")}
+                                          className="h-7 text-xs rounded-full text-[#34c759] hover:bg-[#34c759]/10"
+                                        >
+                                          Accept
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          disabled={actionLoading === m.id}
+                                          onClick={() => handleStatusChange(m.id, "REVISION_REQUIRED")}
+                                          className="h-7 text-xs rounded-full text-[#ff9500] hover:bg-[#ff9500]/10"
+                                        >
+                                          Revise
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
                 )}
               </Card>
             </div>
@@ -816,12 +980,12 @@ export default function AdminPortalPage() {
 
           {/* TAB 3: IN-ADMIN SUBMIT FORM */}
           {activeTab === "new-submission" && (
-            <Card className="max-w-3xl mx-auto shadow-sm">
-              <CardHeader className="border-b border-slate-100 pb-4">
-                <div className="flex items-center justify-between">
+            <Card className="max-w-3xl mx-auto shadow-apple-card">
+              <CardHeader className="border-b border-black/[0.06] pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <CardTitle className="text-base">Submit Your Research Paper</CardTitle>
-                    <CardDescription className="text-xs">
+                    <CardTitle className="text-base text-[#1d1d1f]">Submit Your Research Paper</CardTitle>
+                    <CardDescription className="text-xs text-[#86868b]">
                       Attach your draft PDF and reference template for automated formatting review.
                     </CardDescription>
                   </div>
@@ -829,30 +993,30 @@ export default function AdminPortalPage() {
                   {/* Step indicators */}
                   <div className="flex items-center gap-1.5 text-xs">
                     <span
-                      className={`px-2 py-0.5 rounded ${
+                      className={`px-3 py-1 rounded-full text-xs transition-colors ${
                         submissionStep === 1
-                          ? "bg-indigo-600 text-white font-semibold"
-                          : "bg-slate-100 text-slate-500"
+                          ? "bg-[#0071e3] text-white font-medium shadow-xs"
+                          : "bg-black/[0.04] text-[#86868b]"
                       }`}
                     >
                       1. Details
                     </span>
-                    <span className="text-slate-400">&rarr;</span>
+                    <span className="text-[#86868b]">&rarr;</span>
                     <span
-                      className={`px-2 py-0.5 rounded ${
+                      className={`px-3 py-1 rounded-full text-xs transition-colors ${
                         submissionStep === 2
-                          ? "bg-indigo-600 text-white font-semibold"
-                          : "bg-slate-100 text-slate-500"
+                          ? "bg-[#0071e3] text-white font-medium shadow-xs"
+                          : "bg-black/[0.04] text-[#86868b]"
                       }`}
                     >
                       2. Upload
                     </span>
-                    <span className="text-slate-400">&rarr;</span>
+                    <span className="text-[#86868b]">&rarr;</span>
                     <span
-                      className={`px-2 py-0.5 rounded ${
+                      className={`px-3 py-1 rounded-full text-xs transition-colors ${
                         submissionStep === 3
-                          ? "bg-emerald-600 text-white font-semibold"
-                          : "bg-slate-100 text-slate-500"
+                          ? "bg-[#34c759] text-white font-medium shadow-xs"
+                          : "bg-black/[0.04] text-[#86868b]"
                       }`}
                     >
                       3. Report
@@ -863,7 +1027,7 @@ export default function AdminPortalPage() {
 
               <CardContent className="p-6">
                 {submitError && (
-                  <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                  <div className="mb-4 p-3.5 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{submitError}</span>
                   </div>
@@ -873,13 +1037,13 @@ export default function AdminPortalPage() {
                 {submissionStep === 1 && (
                   <form onSubmit={handleCreateDraft} className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label>Paper Information</Label>
+                      <Label className="text-[#1d1d1f] font-semibold text-xs">Paper Information</Label>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handlePrefillDemo}
-                        className="text-xs text-indigo-600 border-slate-200"
+                        className="text-xs text-[#0071e3] rounded-full border-black/[0.08]"
                       >
                         <Sparkles className="w-3.5 h-3.5 mr-1" />
                         Auto-fill Sample Paper
@@ -887,18 +1051,19 @@ export default function AdminPortalPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="title">Title</Label>
+                      <Label htmlFor="title" className="text-xs text-[#86868b]">Title</Label>
                       <Input
                         id="title"
                         required
                         placeholder="e.g. A Comparative Study of Efficient File Ingestion in Academic Web Portals"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
+                        className="rounded-xl text-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="abstract">Abstract</Label>
+                      <Label htmlFor="abstract" className="text-xs text-[#86868b]">Abstract</Label>
                       <Textarea
                         id="abstract"
                         required
@@ -906,17 +1071,19 @@ export default function AdminPortalPage() {
                         placeholder="Overview of the research problem, methodology, and findings..."
                         value={abstract}
                         onChange={(e) => setAbstract(e.target.value)}
+                        className="rounded-xl text-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="keywords">Keywords (Comma Separated)</Label>
+                      <Label htmlFor="keywords" className="text-xs text-[#86868b]">Keywords (Comma Separated)</Label>
                       <Input
                         id="keywords"
                         required
                         placeholder="Academic Publishing, Cloud Storage, Document Processing"
                         value={keywordsInput}
                         onChange={(e) => setKeywordsInput(e.target.value)}
+                        className="rounded-xl text-xs"
                       />
                     </div>
 
@@ -924,7 +1091,7 @@ export default function AdminPortalPage() {
                       <Button
                         type="submit"
                         disabled={submitLoading || !title || !abstract}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold"
+                        className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full px-5 shadow-xs"
                       >
                         {submitLoading ? (
                           <>
@@ -945,16 +1112,16 @@ export default function AdminPortalPage() {
                 {/* STEP 2: DUAL FILE UPLOAD */}
                 {submissionStep === 2 && (
                   <div className="space-y-5">
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[#86868b]">
                       Upload both files below. Your manuscript draft will be checked against the reference template.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
                       {/* Dropzone A: Template */}
-                      <div className="flex flex-col p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2.5">
+                      <div className="flex flex-col p-4 rounded-2xl border border-black/[0.08] bg-[#f5f5f7] space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-slate-900 text-xs flex items-center gap-1.5">
-                            <Layers className="w-4 h-4 text-blue-600" />
+                          <span className="font-semibold text-[#1d1d1f] text-xs flex items-center gap-1.5">
+                            <Layers className="w-4 h-4 text-[#0071e3]" />
                             1. Journal Template (PDF)
                           </span>
                           <Badge variant="secondary" className="text-[10px]">
@@ -962,23 +1129,23 @@ export default function AdminPortalPage() {
                           </Badge>
                         </div>
 
-                        <p className="text-[11px] text-slate-500">
-                          The journal's official styling template (e.g. IEEE or ACM). Defaults to IEEE if omitted.
+                        <p className="text-[11px] text-[#86868b]">
+                          The journal&apos;s official styling template (e.g. IEEE or ACM). Defaults to IEEE if omitted.
                         </p>
 
-                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-slate-300 rounded-lg bg-white text-center">
-                          <UploadCloud className="w-6 h-6 text-blue-500 mb-1" />
+                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-black/[0.12] rounded-xl bg-white text-center">
+                          <UploadCloud className="w-6 h-6 text-[#0071e3] mb-1" />
                           {templateFile ? (
-                            <div className="text-xs text-emerald-600 font-medium">
+                            <div className="text-xs text-[#34c759] font-medium">
                               {templateFile.name} ({(templateFile.size / 1024).toFixed(1)} KB)
                             </div>
                           ) : (
-                            <div className="text-xs text-slate-500">Choose template PDF</div>
+                            <div className="text-xs text-[#86868b]">Choose template PDF</div>
                           )}
                           <input
                             type="file"
                             accept=".pdf"
-                            className="mt-2 text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:bg-slate-100 file:text-slate-700 cursor-pointer"
+                            className="mt-2 text-xs text-[#86868b] file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:bg-black/[0.05] file:text-[#1d1d1f] cursor-pointer"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
                                 setTemplateFile(e.target.files[0]);
@@ -989,10 +1156,10 @@ export default function AdminPortalPage() {
                       </div>
 
                       {/* Dropzone B: Draft */}
-                      <div className="flex flex-col p-4 rounded-xl border border-indigo-200 bg-indigo-50/30 space-y-2.5">
+                      <div className="flex flex-col p-4 rounded-2xl border border-[#0071e3]/20 bg-[#0071e3]/5 space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-slate-900 text-xs flex items-center gap-1.5">
-                            <FileText className="w-4 h-4 text-indigo-600" />
+                          <span className="font-semibold text-[#1d1d1f] text-xs flex items-center gap-1.5">
+                            <FileText className="w-4 h-4 text-[#0071e3]" />
                             2. Manuscript Draft (PDF)
                           </span>
                           <Badge variant="default" className="text-[10px]">
@@ -1000,24 +1167,24 @@ export default function AdminPortalPage() {
                           </Badge>
                         </div>
 
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[11px] text-[#86868b]">
                           Your draft paper to be reviewed for margins, columns, double-blind privacy, and citations.
                         </p>
 
-                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-indigo-300 rounded-lg bg-white text-center">
-                          <UploadCloud className="w-6 h-6 text-indigo-600 mb-1" />
+                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-[#0071e3]/30 rounded-xl bg-white text-center">
+                          <UploadCloud className="w-6 h-6 text-[#0071e3] mb-1" />
                           {draftFile ? (
-                            <div className="text-xs text-emerald-600 font-medium">
+                            <div className="text-xs text-[#34c759] font-medium">
                               {draftFile.name} ({(draftFile.size / 1024).toFixed(1)} KB)
                             </div>
                           ) : (
-                            <div className="text-xs text-slate-500">Choose manuscript PDF</div>
+                            <div className="text-xs text-[#86868b]">Choose manuscript PDF</div>
                           )}
                           <input
                             type="file"
                             accept=".pdf"
                             required
-                            className="mt-2 text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:bg-indigo-600 file:text-white cursor-pointer"
+                            className="mt-2 text-xs text-[#86868b] file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:bg-[#0071e3] file:text-white cursor-pointer"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
                                 setDraftFile(e.target.files[0]);
@@ -1029,7 +1196,7 @@ export default function AdminPortalPage() {
                     </div>
 
                     {uploadProgress && (
-                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700 flex items-center gap-2">
+                      <div className="p-3.5 rounded-2xl bg-[#0071e3]/10 border border-[#0071e3]/20 text-xs text-[#0071e3] flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                         <span>{uploadProgress}</span>
                       </div>
@@ -1041,6 +1208,7 @@ export default function AdminPortalPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setSubmissionStep(1)}
+                        className="rounded-full text-xs"
                       >
                         &larr; Back to Details
                       </Button>
@@ -1049,7 +1217,7 @@ export default function AdminPortalPage() {
                         type="button"
                         disabled={submitLoading || !draftFile}
                         onClick={handleDualUploadToBox}
-                        className="bg-indigo-600 hover:bg-indigo-700 font-semibold text-xs px-5"
+                        className="bg-[#0071e3] hover:bg-[#0077ed] font-medium text-xs px-5 rounded-full text-white shadow-xs"
                       >
                         {submitLoading ? (
                           <>
@@ -1058,7 +1226,7 @@ export default function AdminPortalPage() {
                           </>
                         ) : (
                           <>
-                            Upload to Box & Run Format Check
+                            Upload &amp; Run Format Check
                             <Send className="w-3.5 h-3.5 ml-1.5" />
                           </>
                         )}
@@ -1070,31 +1238,31 @@ export default function AdminPortalPage() {
                 {/* STEP 3: RESULT */}
                 {submissionStep === 3 && (
                   <div className="text-center py-8 space-y-4">
-                    <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mx-auto">
+                    <div className="w-12 h-12 rounded-full bg-[#34c759]/10 border border-[#34c759]/20 flex items-center justify-center text-[#34c759] mx-auto">
                       <CheckCircle2 className="w-6 h-6" />
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-lg font-bold text-slate-900">
-                        Upload & Review Completed
+                      <h3 className="text-lg font-bold text-[#1d1d1f]">
+                        Upload &amp; Review Completed
                       </h3>
-                      <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                      <p className="text-xs text-[#86868b] max-w-sm mx-auto">
                         Your files were uploaded to Box Cloud Storage and checked with Google Gemini AI.
                       </p>
                     </div>
 
-                    <div className="max-w-xs mx-auto p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                      <div className="text-xs text-slate-500">Compliance Score</div>
-                      <div className="text-2xl font-bold text-emerald-600">
+                    <div className="max-w-xs mx-auto p-4 rounded-2xl bg-[#f5f5f7] border border-black/[0.06] space-y-1.5">
+                      <div className="text-xs text-[#86868b]">Compliance Score</div>
+                      <div className="text-2xl font-bold text-[#34c759]">
                         95 / 100
                       </div>
-                      <Badge variant="success">Compliant & Ready for Review</Badge>
+                      <Badge variant="success">Compliant &amp; Ready for Review</Badge>
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-2.5 pt-3">
                       {submittedAuditId && (
                         <Link href={`/submissions/${manuscriptId}/audit`}>
-                          <Button className="bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold gap-1.5">
+                          <Button className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full gap-1.5 shadow-xs">
                             <Sparkles className="w-3.5 h-3.5" />
                             View Detailed Report
                           </Button>
@@ -1105,7 +1273,7 @@ export default function AdminPortalPage() {
                         variant="outline"
                         size="sm"
                         onClick={handleResetSubmission}
-                        className="text-xs"
+                        className="text-xs rounded-full"
                       >
                         Submit Another Paper
                       </Button>
@@ -1114,7 +1282,7 @@ export default function AdminPortalPage() {
                         variant="secondary"
                         size="sm"
                         onClick={() => setActiveTab("submissions")}
-                        className="text-xs"
+                        className="text-xs rounded-full"
                       >
                         Back to Submissions
                       </Button>
@@ -1129,10 +1297,10 @@ export default function AdminPortalPage() {
           {activeTab === "templates" && (
             <div className="space-y-4">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                <h1 className="text-xl font-bold tracking-tight text-[#1d1d1f]">
                   Journal Template Guidelines
                 </h1>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#86868b]">
                   Pre-configured layout specifications used to check submitted papers.
                 </p>
               </div>
@@ -1141,14 +1309,14 @@ export default function AdminPortalPage() {
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">IEEE Transactions</CardTitle>
+                      <CardTitle className="text-base text-[#1d1d1f]">IEEE Transactions</CardTitle>
                       <Badge variant="default">Double Column</Badge>
                     </div>
-                    <CardDescription>
+                    <CardDescription className="text-xs text-[#86868b]">
                       Standard for computer science and engineering transactions.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-1.5 text-xs text-slate-600">
+                  <CardContent className="space-y-1.5 text-xs text-[#86868b]">
                     <div>Font: Times New Roman 10pt</div>
                     <div>Columns: 2 Columns</div>
                     <div>Margins: 19mm top, 14.3mm side</div>
@@ -1158,14 +1326,14 @@ export default function AdminPortalPage() {
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">ACM SIGCOMM</CardTitle>
+                      <CardTitle className="text-base text-[#1d1d1f]">ACM SIGCOMM</CardTitle>
                       <Badge variant="default">Double Column</Badge>
                     </div>
-                    <CardDescription>
+                    <CardDescription className="text-xs text-[#86868b]">
                       Conference format for systems and networking papers.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-1.5 text-xs text-slate-600">
+                  <CardContent className="space-y-1.5 text-xs text-[#86868b]">
                     <div>Font: Libertine 9pt</div>
                     <div>Columns: 2 Columns</div>
                     <div>Margins: 20mm uniform</div>
@@ -1175,15 +1343,15 @@ export default function AdminPortalPage() {
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">UTS Open Journal</CardTitle>
+                      <CardTitle className="text-base text-[#1d1d1f]">UTS Open Journal</CardTitle>
                       <Badge variant="secondary">Single Column</Badge>
                     </div>
-                    <CardDescription>
+                    <CardDescription className="text-xs text-[#86868b]">
                       Institutional publication format for faculty technical reports.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-1.5 text-xs text-slate-600">
-                    <div>Font: Inter / Helvetica 11pt</div>
+                  <CardContent className="space-y-1.5 text-xs text-[#86868b]">
+                    <div>Font: SF Pro / Inter 11pt</div>
                     <div>Columns: 1 Column</div>
                     <div>Margins: 25mm uniform</div>
                   </CardContent>

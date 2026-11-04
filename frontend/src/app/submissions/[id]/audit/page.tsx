@@ -23,6 +23,8 @@ import { PreSubmissionAuditReport } from "@/types/jms";
 import { getAuditReport } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { AuthGateCard } from "@/components/AuthGateCard";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export default function AuditReportPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -78,8 +80,8 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
   if (authLoading) {
     return (
       <div className="py-24 text-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-3" />
-        <p className="text-xs text-slate-500">Checking authorization status...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-[#0071e3] mx-auto mb-3" />
+        <p className="text-xs text-[#86868b]">Checking authorization status...</p>
       </div>
     );
   }
@@ -95,57 +97,59 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-5xl mx-auto">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/[0.06] pb-6">
         <div className="space-y-1">
           <Link
             href="/admin"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 mb-2 transition"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#86868b] hover:text-[#1d1d1f] mb-2 transition"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to Admin Portal
           </Link>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">AI Pre-Submission Audit Report</h1>
-            <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-bold text-[#1d1d1f] tracking-tight">AI Pre-Submission Audit Report</h1>
+            <Badge variant="default" className="text-[10px]">
               Template-Driven Audit
-            </span>
+            </Badge>
           </div>
-          <p className="text-xs text-slate-500 font-mono">
+          <p className="text-xs text-[#86868b] font-mono">
             Manuscript: {resolvedParams.id} &bull; Audit: {auditId || "N/A"}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            variant="outline"
+            size="sm"
             onClick={fetchReport}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
+            className="rounded-full text-xs gap-1.5 border-black/[0.12] hover:bg-black/[0.04]"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
+            <span>Refresh</span>
+          </Button>
+
           {report?.annotated_pdf_s3_key && (
             <>
-              <button
+              <Button
+                variant={showPdfPreview ? "secondary" : "outline"}
+                size="sm"
                 onClick={() => setShowPdfPreview(!showPdfPreview)}
-                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border text-xs font-semibold transition ${
-                  showPdfPreview
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-slate-300 text-slate-700 hover:bg-slate-50"
-                }`}
+                className="rounded-full text-xs gap-1.5 border-black/[0.12]"
               >
                 {showPdfPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                {showPdfPreview ? "Hide PDF Preview" : "Preview Annotated PDF"}
-              </button>
+                <span>{showPdfPreview ? "Hide PDF Preview" : "Preview Annotated PDF"}</span>
+              </Button>
               <a
                 href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/files/download?key=${encodeURIComponent(report.annotated_pdf_s3_key)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition"
               >
-                <Download className="w-3.5 h-3.5" />
-                Download Annotated PDF
+                <Button size="sm" className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full shadow-xs gap-1.5">
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download PDF</span>
+                </Button>
               </a>
             </>
           )}
@@ -153,44 +157,41 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {loading && !report && (
-        <div className="p-16 text-center bg-white rounded-2xl border border-slate-200 space-y-4">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-700">Executing Comparative Multi-Module AI Audit...</p>
-          <p className="text-xs text-slate-400">Comparing draft geometry against template guidelines, double-blind NER & citation graphs.</p>
+        <div className="p-16 text-center bg-white rounded-3xl border border-black/[0.06] shadow-apple-card space-y-3">
+          <Loader2 className="w-8 h-8 text-[#0071e3] animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-[#1d1d1f]">Executing Comparative Multi-Module AI Audit...</p>
+          <p className="text-xs text-[#86868b]">Comparing draft geometry against template guidelines, double-blind NER &amp; citation graphs.</p>
         </div>
       )}
 
       {error && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm">
+        <div className="p-4 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs">
           {error}
         </div>
       )}
 
       {report && (
         <div className="space-y-8">
-          {/* Interactive Annotated PDF Visual Proof Viewer */}
+          {/* Interactive Annotated PDF Visual Proof Viewer (macOS Chrome) */}
           {showPdfPreview && report.annotated_pdf_s3_key && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4 animate-in fade-in duration-200">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900">Interactive Visual Annotation Proof</h2>
-                    <p className="text-xs text-slate-500">
-                      Red bounding boxes indicate margin violations, double-blind identity leaks & citation gaps.
-                    </p>
-                  </div>
+            <div className="bg-white rounded-3xl border border-black/[0.06] shadow-apple-card overflow-hidden p-0 space-y-0 animate-in fade-in duration-200">
+              <div className="h-11 bg-[#f5f5f7] px-4 flex items-center justify-between border-b border-black/[0.06] text-xs text-[#86868b]">
+                <div className="flex items-center space-x-2">
+                  <span className="w-3 h-3 rounded-full bg-[#ff5f57] border border-[#e0443e] inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d89e24] inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-[#28c840] border border-[#1aab29] inline-block" />
+                  <span className="ml-3 font-medium text-[#1d1d1f]">
+                    Visual Proof: {report.annotated_pdf_s3_key}
+                  </span>
                 </div>
-                <span className="text-xs font-mono text-slate-400">
-                  {report.annotated_pdf_s3_key}
-                </span>
+                <Badge variant="warning" className="text-[10px]">
+                  Visual Annotations
+                </Badge>
               </div>
-              <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-900/5 h-[700px]">
+              <div className="h-[650px] bg-white">
                 <iframe
                   src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "http://localhost:9000"}/jms-manuscripts/${report.annotated_pdf_s3_key}#toolbar=1&navpanes=0`}
-                  className="w-full h-full"
+                  className="w-full h-full border-0"
                   title="Annotated Manuscript PDF Preview"
                 />
               </div>
@@ -198,53 +199,50 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
           )}
 
           {/* Executive Summary Card */}
-          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
-            <div className="flex items-center gap-4 md:border-r md:border-slate-200 pr-6">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-black/[0.06] shadow-apple-card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+            <div className="flex items-center gap-4 sm:border-r sm:border-black/[0.06] pr-4">
               <div
-                className={`w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-black shrink-0 ${
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0 ${
                   report.overall_score >= 80
-                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                    : "bg-rose-50 text-rose-600 border border-rose-200"
+                    ? "bg-[#34c759]/10 text-[#34c759] border border-[#34c759]/20"
+                    : "bg-[#ff3b30]/10 text-[#ff3b30] border border-[#ff3b30]/20"
                 }`}
               >
                 {report.overall_score}
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Compliance Score</p>
+                <p className="text-xs font-semibold text-[#86868b]">Compliance Score</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                      report.summary.status === "PASS"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-rose-100 text-rose-800"
-                    }`}
+                  <Badge
+                    variant={report.summary.status === "PASS" ? "success" : "destructive"}
+                    className="text-[11px] gap-1"
                   >
                     {report.summary.status === "PASS" ? (
                       <CheckCircle2 className="w-3 h-3" />
                     ) : (
                       <XCircle className="w-3 h-3" />
                     )}
-                    {report.summary.status}
-                  </span>
+                    <span>{report.summary.status}</span>
+                  </Badge>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Critical Errors</p>
-              <p className="text-2xl font-black text-rose-600">{report.summary.critical_errors}</p>
-              <p className="text-xs text-slate-500">Requires author remediation</p>
+            <div className="space-y-0.5 sm:border-r sm:border-black/[0.06] pr-4">
+              <p className="text-xs font-semibold text-[#86868b]">Critical Errors</p>
+              <p className="text-2xl font-bold text-[#ff3b30]">{report.summary.critical_errors}</p>
+              <p className="text-xs text-[#86868b]">Requires author remediation</p>
             </div>
 
-            <div className="space-y-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Warnings</p>
-              <p className="text-2xl font-black text-amber-500">{report.summary.warnings}</p>
-              <p className="text-xs text-slate-500">Non-fatal compliance advisories</p>
+            <div className="space-y-0.5 lg:border-r lg:border-black/[0.06] pr-4">
+              <p className="text-xs font-semibold text-[#86868b]">Warnings</p>
+              <p className="text-2xl font-bold text-[#ff9500]">{report.summary.warnings}</p>
+              <p className="text-xs text-[#86868b]">Non-fatal advisories</p>
             </div>
 
-            <div className="space-y-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Desk Review Status</p>
-              <p className="text-sm font-bold text-slate-800">
+            <div className="space-y-0.5">
+              <p className="text-xs font-semibold text-[#86868b]">Desk Review Status</p>
+              <p className="text-sm font-semibold text-[#1d1d1f]">
                 {report.summary.status === "PASS" ? "Ready for Desk Review" : "Revision Required Before Review"}
               </p>
             </div>
@@ -252,47 +250,47 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
 
           {/* Reference Journal Template Specifications Card */}
           {report.template_specs && (
-            <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-900/60 pb-4">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-black/[0.06] shadow-apple-card space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-black/[0.06] pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
+                  <div className="w-9 h-9 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
                     <Layers className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    <h2 className="text-base font-bold text-[#1d1d1f] flex items-center gap-2">
                       Reference Journal Template Specifications
-                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <Sparkles className="w-4 h-4 text-[#ff9500]" />
                     </h2>
-                    <p className="text-xs text-indigo-200">
+                    <p className="text-xs text-[#86868b]">
                       {report.template_specs.is_custom_template
                         ? "Extracted dynamically from uploaded Journal Template PDF"
                         : "Using Standard Baseline Academic Template"}
                     </p>
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 text-xs font-semibold self-start sm:self-auto">
+                <Badge variant="secondary" className="text-xs self-start sm:self-auto">
                   Format: {report.template_specs.page_format} ({report.template_specs.page_width_mm} &times; {report.template_specs.page_height_mm} mm)
-                </span>
+                </Badge>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs pt-1">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
-                  <span className="text-indigo-300 font-semibold uppercase tracking-wider">Top Margin</span>
-                  <p className="text-lg font-black text-white">{report.template_specs.margin_top_mm} mm</p>
+                <div className="bg-[#f5f5f7] rounded-2xl p-3.5 space-y-1 border border-black/[0.04]">
+                  <span className="text-[#86868b] font-medium text-[10px] uppercase">Top Margin</span>
+                  <p className="text-base font-bold text-[#1d1d1f]">{report.template_specs.margin_top_mm} mm</p>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
-                  <span className="text-indigo-300 font-semibold uppercase tracking-wider">Bottom Margin</span>
-                  <p className="text-lg font-black text-white">{report.template_specs.margin_bottom_mm} mm</p>
+                <div className="bg-[#f5f5f7] rounded-2xl p-3.5 space-y-1 border border-black/[0.04]">
+                  <span className="text-[#86868b] font-medium text-[10px] uppercase">Bottom Margin</span>
+                  <p className="text-base font-bold text-[#1d1d1f]">{report.template_specs.margin_bottom_mm} mm</p>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
-                  <span className="text-indigo-300 font-semibold uppercase tracking-wider">Left & Right Margins</span>
-                  <p className="text-lg font-black text-white">
+                <div className="bg-[#f5f5f7] rounded-2xl p-3.5 space-y-1 border border-black/[0.04]">
+                  <span className="text-[#86868b] font-medium text-[10px] uppercase">Left &amp; Right Margins</span>
+                  <p className="text-base font-bold text-[#1d1d1f]">
                     {report.template_specs.margin_left_mm} / {report.template_specs.margin_right_mm} mm
                   </p>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1">
-                  <span className="text-indigo-300 font-semibold uppercase tracking-wider">Column Grid</span>
-                  <p className="text-lg font-black text-white">
+                <div className="bg-[#f5f5f7] rounded-2xl p-3.5 space-y-1 border border-black/[0.04]">
+                  <span className="text-[#86868b] font-medium text-[10px] uppercase">Column Grid</span>
+                  <p className="text-base font-bold text-[#1d1d1f]">
                     {report.template_specs.column_count === 2 ? "2 Columns" : "1 Column"}
                     {report.template_specs.column_gap_mm ? ` (${report.template_specs.column_gap_mm}mm gap)` : ""}
                   </p>
@@ -302,58 +300,55 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
           )}
 
           {/* Module 1: Geometry & Layout */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div className="bg-white rounded-3xl border border-black/[0.06] shadow-apple-card overflow-hidden">
+            <div className="p-6 border-b border-black/[0.06] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center">
                   <FileText className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Module 1: Geometry & Layout Inspection</h2>
-                  <p className="text-xs text-slate-500">
+                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 1: Geometry &amp; Layout Inspection</h2>
+                  <p className="text-xs text-[#86868b]">
                     Draft layout compared against {report.template_specs ? "uploaded template specifications" : "standard margins"}
                   </p>
                 </div>
               </div>
-              <span
-                className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                  report.modules.geometry_and_layout.pass
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-rose-100 text-rose-800"
-                }`}
+              <Badge
+                variant={report.modules.geometry_and_layout.pass ? "success" : "destructive"}
+                className="text-[10px]"
               >
                 {report.modules.geometry_and_layout.pass ? "PASSED" : "FAILED"}
-              </span>
+              </Badge>
             </div>
 
             {report.modules.geometry_and_layout.checks.length === 0 ? (
-              <div className="p-6 text-xs text-emerald-700 bg-emerald-50/50 flex items-center gap-2">
+              <div className="p-6 text-xs text-[#34c759] bg-[#34c759]/5 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                All margins, page dimensions, and column grids strictly conform to the target Journal Template.
+                <span>All margins, page dimensions, and column grids strictly conform to the target Journal Template.</span>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
+                  <thead className="bg-[#f5f5f7] text-[#86868b] font-semibold border-b border-black/[0.06]">
                     <tr>
                       <th className="px-6 py-3">Rule / Constraint</th>
                       <th className="px-6 py-3">Page</th>
                       <th className="px-6 py-3">Template Expected</th>
                       <th className="px-6 py-3">Draft Actual</th>
-                      <th className="px-6 py-3">Violation Bounding Box [x0, y0, x1, y1]</th>
+                      <th className="px-6 py-3">Violation Box</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-black/[0.06]">
                     {report.modules.geometry_and_layout.checks.map((c, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/80">
-                        <td className="px-6 py-3.5 font-bold text-rose-600 flex items-center gap-1.5">
+                      <tr key={idx} className="hover:bg-black/[0.02]">
+                        <td className="px-6 py-3.5 font-semibold text-[#ff3b30] flex items-center gap-1.5">
                           <XCircle className="w-3.5 h-3.5 shrink-0" />
-                          {c.rule}
+                          <span>{c.rule}</span>
                         </td>
-                        <td className="px-6 py-3.5 font-medium text-slate-700">{c.page}</td>
-                        <td className="px-6 py-3.5 text-slate-600 font-mono">{c.expected}</td>
-                        <td className="px-6 py-3.5 text-rose-700 font-mono font-bold">{c.actual}</td>
-                        <td className="px-6 py-3.5 text-slate-500 font-mono">
+                        <td className="px-6 py-3.5 font-medium text-[#1d1d1f]">{c.page}</td>
+                        <td className="px-6 py-3.5 text-[#86868b] font-mono">{c.expected}</td>
+                        <td className="px-6 py-3.5 text-[#ff3b30] font-mono font-bold">{c.actual}</td>
+                        <td className="px-6 py-3.5 text-[#86868b] font-mono">
                           [{c.bbox.join(", ")}]
                         </td>
                       </tr>
@@ -365,43 +360,40 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {/* Module 2: Anonymization */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div className="bg-white rounded-3xl border border-black/[0.06] shadow-apple-card overflow-hidden">
+            <div className="p-6 border-b border-black/[0.06] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#af52de]/10 text-[#af52de] flex items-center justify-center">
                   <Shield className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Module 2: Double-Blind Anonymization</h2>
-                  <p className="text-xs text-slate-500">spaCy Named Entity Recognition & regex identifier sweep</p>
+                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 2: Double-Blind Anonymization</h2>
+                  <p className="text-xs text-[#86868b]">spaCy Named Entity Recognition &amp; regex identifier sweep</p>
                 </div>
               </div>
-              <span
-                className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                  report.modules.anonymization.pass
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-amber-100 text-amber-800"
-                }`}
+              <Badge
+                variant={report.modules.anonymization.pass ? "success" : "warning"}
+                className="text-[10px]"
               >
                 {report.modules.anonymization.pass ? "PASSED" : "LEAKS DETECTED"}
-              </span>
+              </Badge>
             </div>
 
             {report.modules.anonymization.leaks_found.length === 0 ? (
-              <div className="p-6 text-xs text-emerald-700 bg-emerald-50/50 flex items-center gap-2">
+              <div className="p-6 text-xs text-[#34c759] bg-[#34c759]/5 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                No author names, affiliations, emails, ORCID numbers, or metadata tags detected.
+                <span>No author names, affiliations, emails, ORCID numbers, or metadata tags detected.</span>
               </div>
             ) : (
               <div className="p-6 space-y-3">
                 {report.modules.anonymization.leaks_found.map((l, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-amber-50/70 border border-amber-200 text-xs">
+                  <div key={idx} className="flex items-center justify-between p-3.5 rounded-2xl bg-[#ff9500]/10 border border-[#ff9500]/20 text-xs">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span className="font-bold text-amber-900">[{l.type}]</span>
-                      <span className="text-slate-800 font-mono font-medium">{l.leak}</span>
+                      <AlertTriangle className="w-4 h-4 text-[#ff9500] shrink-0" />
+                      <span className="font-semibold text-[#1d1d1f]">[{l.type}]</span>
+                      <span className="text-[#1d1d1f] font-mono font-medium">{l.leak}</span>
                     </div>
-                    <span className="text-slate-500 font-semibold">Page {l.page}</span>
+                    <span className="text-[#86868b] font-medium">Page {l.page}</span>
                   </div>
                 ))}
               </div>
@@ -409,44 +401,41 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {/* Module 3: Citation Crosscheck */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div className="bg-white rounded-3xl border border-black/[0.06] shadow-apple-card overflow-hidden">
+            <div className="p-6 border-b border-black/[0.06] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#34c759]/10 text-[#34c759] flex items-center justify-center">
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Module 3: Citation Graph Crosscheck</h2>
-                  <p className="text-xs text-slate-500">
+                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 3: Citation Graph Crosscheck</h2>
+                  <p className="text-xs text-[#86868b]">
                     Bidirectional mapping between body citations and bibliography items ({report.modules.citation_crosscheck.total_cited} cited)
                   </p>
                 </div>
               </div>
-              <span
-                className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                  report.modules.citation_crosscheck.pass
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-amber-100 text-amber-800"
-                }`}
+              <Badge
+                variant={report.modules.citation_crosscheck.pass ? "success" : "warning"}
+                className="text-[10px]"
               >
                 {report.modules.citation_crosscheck.pass ? "PASSED" : "DISCREPANCIES"}
-              </span>
+              </Badge>
             </div>
 
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Uncited references */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#86868b]">
                   Uncited References in Bibliography ({report.modules.citation_crosscheck.uncited_references.length})
                 </h3>
                 {report.modules.citation_crosscheck.uncited_references.length === 0 ? (
-                  <p className="text-xs text-emerald-600 flex items-center gap-1.5">
+                  <p className="text-xs text-[#34c759] flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" /> All bibliography entries are cited.
                   </p>
                 ) : (
                   <ul className="space-y-1.5">
                     {report.modules.citation_crosscheck.uncited_references.map((ref, idx) => (
-                      <li key={idx} className="text-xs p-2 rounded bg-slate-50 border border-slate-200 text-slate-700 font-mono">
+                      <li key={idx} className="text-xs p-2.5 rounded-xl bg-[#f5f5f7] border border-black/[0.04] text-[#1d1d1f] font-mono">
                         {ref}
                       </li>
                     ))}
@@ -456,17 +445,17 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
 
               {/* Missing citations */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#86868b]">
                   Missing in Bibliography ({report.modules.citation_crosscheck.missing_citations.length})
                 </h3>
                 {report.modules.citation_crosscheck.missing_citations.length === 0 ? (
-                  <p className="text-xs text-emerald-600 flex items-center gap-1.5">
+                  <p className="text-xs text-[#34c759] flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" /> All inline citations exist in bibliography.
                   </p>
                 ) : (
                   <ul className="space-y-1.5">
                     {report.modules.citation_crosscheck.missing_citations.map((c, idx) => (
-                      <li key={idx} className="text-xs p-2 rounded bg-rose-50 border border-rose-200 text-rose-800 font-mono">
+                      <li key={idx} className="text-xs p-2.5 rounded-xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] font-mono">
                         {c}
                       </li>
                     ))}

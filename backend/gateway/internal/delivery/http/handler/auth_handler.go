@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/jms-uts/backend/gateway/internal/delivery/http/middleware"
 	"github.com/jms-uts/backend/gateway/internal/usecase"
 	"github.com/jms-uts/backend/gateway/pkg/response"
 )
@@ -67,5 +69,22 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, result)
+}
+
+func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
+	userIDVal, exists := c.Get(middleware.ContextUserIDKey)
+	if !exists {
+		response.Unauthorized(c, "Not authenticated")
+		return
+	}
+
+	userID := userIDVal.(uuid.UUID)
+	user, err := h.authUsecase.GetUserByID(c.Request.Context(), userID)
+	if err != nil {
+		response.Unauthorized(c, "User account not found")
+		return
+	}
+
+	response.Success(c, http.StatusOK, user)
 }
 

@@ -6,6 +6,7 @@ import {
   getStoredToken,
   loginWithGoogle as apiLoginWithGoogle,
   logout as apiLogout,
+  fetchCurrentUser,
   GoogleLoginPayload,
 } from "@/lib/api";
 
@@ -44,6 +45,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(storedUser);
     setToken(storedToken);
     setLoading(false);
+
+    if (storedToken) {
+      fetchCurrentUser()
+        .then((freshUser) => {
+          if (freshUser) {
+            setUser(freshUser);
+            localStorage.setItem("jms_user", JSON.stringify(freshUser));
+          }
+        })
+        .catch(() => {
+          apiLogout();
+          setUser(null);
+          setToken(null);
+        });
+    }
   }, []);
 
   useEffect(() => {

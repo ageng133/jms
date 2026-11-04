@@ -55,6 +55,9 @@ func NewRouter(
 		protected := api.Group("/")
 		protected.Use(middleware.AuthMiddleware(authUsecase))
 		{
+			// Auth Profile Verification
+			protected.GET("/auth/me", authHandler.GetCurrentUser)
+
 			// Manuscripts
 			manuscripts := protected.Group("/manuscripts")
 			{
