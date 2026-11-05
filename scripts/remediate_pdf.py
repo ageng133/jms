@@ -107,6 +107,33 @@ class TemplateExtractor:
                 if right_min_x0 > left_max_x1:
                     column_gap_mm = round((right_min_x0 - left_max_x1) * PT_TO_MM, 1)
 
+            # Detect Typography & Spacing from template
+            font_counts = {}
+            size_counts = {}
+            line_spacings = []
+
+            for page in doc[:3]:
+                pdict = page.get_text("dict")
+                for blk in pdict.get("blocks", []):
+                    if blk.get("type") == 0:
+                        lines = blk.get("lines", [])
+                        for i, l in enumerate(lines):
+                            if i > 0:
+                                dy = l["bbox"][1] - lines[i-1]["bbox"][1]
+                                if 6.0 <= dy <= 30.0:
+                                    line_spacings.append(dy)
+                            for sp in l.get("spans", []):
+                                fn = sp.get("font", "Helvetica")
+                                sz = round(sp.get("size", 10.0), 1)
+                                text_len = len(sp.get("text", "").strip())
+                                if text_len > 0:
+                                    font_counts[fn] = font_counts.get(fn, 0) + text_len
+                                    size_counts[sz] = size_counts.get(sz, 0) + text_len
+
+            top_font = max(font_counts.items(), key=lambda x: x[1])[0] if font_counts else "Helvetica"
+            top_size = max(size_counts.items(), key=lambda x: x[1])[0] if size_counts else 9.5
+            avg_leading = round(sum(line_spacings) / len(line_spacings), 1) if line_spacings else 11.5
+
             doc.close()
             specs = {
                 "page_format": fmt,
@@ -118,6 +145,9 @@ class TemplateExtractor:
                 "margin_right_mm": margin_right_mm,
                 "column_count": column_count,
                 "column_gap_mm": column_gap_mm,
+                "font_family": top_font,
+                "body_font_size_pt": top_size,
+                "line_height_pt": avg_leading,
                 "is_custom_template": True,
             }
 
@@ -145,6 +175,9 @@ class TemplateExtractor:
             "margin_right_mm": 18.0,
             "column_count": 2,
             "column_gap_mm": 6.35,
+            "font_family": "Times-Roman",
+            "body_font_size_pt": 9.5,
+            "line_height_pt": 11.5,
             "is_custom_template": False,
         }
 
@@ -237,6 +270,28 @@ def audit_draft_against_template(draft_doc: fitz.Document, template_specs: Dict[
                     "actual": f"{draft_cols} Column(s)",
                     "page": page_idx + 1
                 })
+
+            # Check Font Size & Typography
+            pdict = page.get_text("dict")
+            draft_sizes = {}
+            for blk in pdict.get("blocks", []):
+                if blk.get("type") == 0:
+                    for l in blk.get("lines", []):
+                        for sp in l.get("spans", []):
+                            sz = round(sp.get("size", 10.0), 1)
+                            if len(sp.get("text", "").strip()) > 5:
+                                draft_sizes[sz] = draft_sizes.get(sz, 0) + len(sp.get("text", "").strip())
+            
+            target_size = template_specs.get("body_font_size_pt", 9.5)
+            if draft_sizes:
+                draft_body_size = max(draft_sizes.items(), key=lambda x: x[1])[0]
+                if abs(draft_body_size - target_size) > 2.0:
+                    violations.append({
+                        "rule": "Font Size & Typography Compliance",
+                        "expected": f"~{target_size} pt ({template_specs.get('font_family', 'Helvetica')})",
+                        "actual": f"{draft_body_size} pt",
+                        "page": page_idx + 1
+                    })
 
         # Check double-blind leaks
         text = page.get_text()
@@ -374,9 +429,11 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
         col1_text = " ".join(words[:half])
         col2_text = " ".join(words[half:])
 
-        page.insert_textbox(col1_rect, col1_text, fontsize=9.0, fontname="helv", align=fitz.TEXT_ALIGN_JUSTIFY)
-        page.insert_textbox(col2_rect, col2_text, fontsize=9.0, fontname="helv", align=fitz.TEXT_ALIGN_JUSTIFY)
+        body_font_sz = template_specs.get("body_font_size_pt", 9.0)
+        page.insert_textbox(col1_rect, col1_text, fontsize=body_font_sz, fontname="helv", align=fitz.TEXT_ALIGN_JUSTIFY)
+        page.insert_textbox(col2_rect, col2_text, fontsize=body_font_sz, fontname="helv", align=fitz.TEXT_ALIGN_JUSTIFY)
         reshape_logs.append(f"Reshaped single-column draft into template 2-column grid ({col_width:.1f}pt width, {gap_pt * PT_TO_MM:.1f}mm gutter)")
+        reshape_logs.append(f"Calibrated typography to {body_font_sz}pt ({template_specs.get('font_family', 'Helvetica')}) conforming to template")
     else:
         # Single column layout conforming to template margins
         col_rect = fitz.Rect(left_pt, cur_y, w - right_pt, h - bottom_pt - 20)
