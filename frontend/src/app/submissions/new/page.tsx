@@ -292,33 +292,27 @@ export default function NewSubmissionPage() {
             </p>
           </div>
 
-          {/* Side-by-Side Dual Upload Grid */}
+          {/* Side-by-Side Dual Upload Grid: Target Journal Template & Author Draft */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-            {/* Upload Zone A: Journal Template (Left) */}
-            <div className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl border border-black/[0.08] bg-[#f5f5f7] space-y-4">
+            {/* Upload Zone A: Target Journal Template (Left) */}
+            <div className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl border border-indigo-200 bg-indigo-50/40 space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center text-xs font-bold">
-                      A
+                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+                      1
                     </span>
-                    <label className="text-xs font-semibold text-[#1d1d1f]">
-                      Journal Template (.pdf)
+                    <label className="text-xs font-bold text-[#1d1d1f]">
+                      Template / Pedoman Jurnal Sasaran (.pdf)
                     </label>
                   </div>
-                  <Badge variant="secondary" className="text-[10px]">
-                    Optional Spec
+                  <Badge className="bg-indigo-600 text-white text-[10px] font-semibold">
+                    Target Template DNA
                   </Badge>
                 </div>
                 <p className="text-xs text-[#86868b]">
-                  Target style guide defining margins, page bounds, and multi-column grids.
+                  Unggah file <strong>Pedoman Penulisan (Author Guidelines)</strong> atau <strong>Contoh Naskah Terbit</strong> dari jurnal tujuan Anda. Format Kilat akan mengekstrak aturannya secara otomatis.
                 </p>
-
-                <TemplatePresetSelect
-                  value={templatePreset}
-                  onChange={setTemplatePreset}
-                  hasUploadedTemplate={!!templateFile}
-                />
 
                 {/* Hidden File Input */}
                 <input
@@ -349,47 +343,47 @@ export default function NewSubmissionPage() {
                         setTemplateFile(e.dataTransfer.files[0]);
                       }
                     }}
-                    className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer block space-y-2.5 bg-white hover:bg-black/[0.02] ${
-                      templateDragOver ? "border-[#0071e3] bg-[#0071e3]/5 scale-[1.01]" : "border-black/[0.12]"
+                    className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer block space-y-2.5 bg-white hover:bg-indigo-50/50 ${
+                      templateDragOver ? "border-indigo-600 bg-indigo-50 scale-[1.01]" : "border-indigo-300"
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-2xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center mx-auto">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto">
                       <Layers className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-[#1d1d1f]">
-                        Drop Journal Template PDF here
+                      <p className="text-xs font-bold text-[#1d1d1f]">
+                        Tarik &amp; lepas PDF Template / Pedoman Jurnal di sini
                       </p>
-                      <p className="text-[11px] text-[#86868b] mt-0.5">or browse from your computer</p>
+                      <p className="text-[11px] text-[#86868b] mt-0.5">atau klik untuk telusuri dari komputer</p>
                     </div>
-                    <span className="inline-block text-[10px] font-medium text-[#0071e3] bg-[#0071e3]/10 px-2.5 py-0.5 rounded-full">
-                      Extracts target margins &amp; column grid
+                    <span className="inline-block text-[10px] font-semibold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full">
+                      Mengekstrak aturan margin, kolom, font &amp; gaya sitasi
                     </span>
                   </label>
                 ) : (
-                  <div className="bg-white rounded-2xl border border-black/[0.08] p-4 shadow-xs space-y-3">
+                  <div className="bg-white rounded-2xl border border-indigo-200 p-4 shadow-xs space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-[#1d1d1f] truncate">{templateFile.name}</p>
                           <p className="text-[10px] text-[#86868b] font-mono">
-                            {(templateFile.size / (1024 * 1024)).toFixed(2)} MB &bull; PDF Template
+                            {(templateFile.size / (1024 * 1024)).toFixed(2)} MB &bull; Target Journal Spec Loaded
                           </p>
                         </div>
                       </div>
-                      <Badge variant="default" className="text-[10px]">
-                        Loaded
+                      <Badge className="bg-emerald-600 text-white text-[10px]">
+                        Siap Diekstrak
                       </Badge>
                     </div>
                     <div className="flex items-center justify-end gap-2 pt-2 border-t border-black/[0.06] text-xs">
                       <label
                         htmlFor="template-upload"
-                        className="font-medium text-[#86868b] hover:text-[#0071e3] cursor-pointer"
+                        className="font-medium text-[#86868b] hover:text-indigo-600 cursor-pointer"
                       >
-                        Change File
+                        Ganti File Template
                       </label>
                       <span className="text-[#86868b]">&bull;</span>
                       <button
@@ -397,16 +391,28 @@ export default function NewSubmissionPage() {
                         onClick={() => setTemplateFile(null)}
                         className="font-medium text-[#ff3b30] hover:underline"
                       >
-                        Remove
+                        Hapus
                       </button>
                     </div>
                   </div>
                 )}
+
+                {/* Optional Preset Selector Fallback Accordion */}
+                <div className="pt-2">
+                  <p className="text-[11px] font-medium text-slate-500 mb-1.5">
+                    Atau gunakan starter preset jika belum memiliki file template jurnal:
+                  </p>
+                  <TemplatePresetSelect
+                    value={templatePreset}
+                    onChange={setTemplatePreset}
+                    hasUploadedTemplate={!!templateFile}
+                  />
+                </div>
               </div>
 
               {/* Status / Selected File Info */}
-              <div className="p-3 bg-white border border-black/[0.06] rounded-xl text-[11px] text-[#86868b]">
-                <span className="font-semibold text-[#1d1d1f]">Fallback Notice:</span> If omitted, the audit automatically evaluates against UTS IEEE Standard formatting rules.
+              <div className="p-3 bg-white/80 border border-indigo-100 rounded-xl text-[11px] text-indigo-950">
+                <span className="font-bold text-indigo-700">⚡ Unique Value:</span> Naskah Anda diaudit spesifik terhadap template jurnal yang Anda unggah (baik berupa pedoman teks maupun contoh dokumen), bukan format generik kaku.
               </div>
             </div>
 
@@ -416,18 +422,18 @@ export default function NewSubmissionPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-[#0071e3] text-white flex items-center justify-center text-xs font-bold">
-                      B
+                      2
                     </span>
-                    <label className="text-xs font-semibold text-[#1d1d1f]">
-                      Manuscript Draft (.pdf) <span className="text-[#ff3b30]">*</span>
+                    <label className="text-xs font-bold text-[#1d1d1f]">
+                      Draft Naskah Anda (.pdf) <span className="text-[#ff3b30]">*</span>
                     </label>
                   </div>
                   <Badge variant="default" className="text-[10px]">
-                    Required Draft
+                    Naskah Penulis
                   </Badge>
                 </div>
                 <p className="text-xs text-[#86868b]">
-                  Camera-ready draft evaluated for margin geometry, anonymization, and citations.
+                  Naskah draft Anda yang akan diaudit dan dibandingkan langsung terhadap template jurnal tujuan di sebelah kiri.
                 </p>
 
                 {/* Hidden File Input */}

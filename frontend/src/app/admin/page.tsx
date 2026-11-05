@@ -1160,35 +1160,35 @@ export default function AdminPortalPage() {
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-                      {/* Dropzone A: Template */}
-                      <div className="flex flex-col p-4 rounded-2xl border border-black/[0.08] bg-[#f5f5f7] space-y-2.5">
+                      {/* Dropzone A: Target Journal Template */}
+                      <div className="flex flex-col p-4 rounded-2xl border border-indigo-200 bg-indigo-50/40 space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-[#1d1d1f] text-xs flex items-center gap-1.5">
-                            <Layers className="w-4 h-4 text-[#0071e3]" />
-                            1. Journal Template (PDF)
+                          <span className="font-bold text-[#1d1d1f] text-xs flex items-center gap-1.5">
+                            <Layers className="w-4 h-4 text-indigo-600" />
+                            1. Template / Pedoman Jurnal Sasaran (PDF)
                           </span>
-                          <Badge variant="secondary" className="text-[10px]">
-                            Optional
+                          <Badge className="bg-indigo-600 text-white text-[10px]">
+                            Target DNA
                           </Badge>
                         </div>
 
                         <p className="text-[11px] text-[#86868b]">
-                          The journal&apos;s official styling template. If you don&apos;t have it, pick a built-in layout below.
+                          Unggah <strong>Pedoman Penulisan (Author Guidelines)</strong> atau <strong>Contoh Naskah Terbit</strong> dari jurnal tujuan. Sistem akan mengekstrak aturan/geometrinya otomatis.
                         </p>
 
-                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-black/[0.12] rounded-xl bg-white text-center">
-                          <UploadCloud className="w-6 h-6 text-[#0071e3] mb-1" />
+                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-indigo-300 rounded-xl bg-white text-center">
+                          <UploadCloud className="w-6 h-6 text-indigo-600 mb-1" />
                           {templateFile ? (
-                            <div className="text-xs text-[#34c759] font-medium">
+                            <div className="text-xs text-emerald-600 font-bold">
                               {templateFile.name} ({(templateFile.size / 1024).toFixed(1)} KB)
                             </div>
                           ) : (
-                            <div className="text-xs text-[#86868b]">Choose template PDF</div>
+                            <div className="text-xs text-[#86868b]">Pilih file PDF Pedoman atau Contoh Jurnal</div>
                           )}
                           <input
                             type="file"
                             accept=".pdf"
-                            className="mt-2 text-xs text-[#86868b] file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:bg-black/[0.05] file:text-[#1d1d1f] cursor-pointer"
+                            className="mt-2 text-xs text-[#86868b] file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:bg-indigo-100 file:text-indigo-800 cursor-pointer"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
                                 setTemplateFile(e.target.files[0]);
@@ -1197,11 +1197,16 @@ export default function AdminPortalPage() {
                           />
                         </div>
 
-                        <TemplatePresetSelect
-                          value={templatePreset}
-                          onChange={setTemplatePreset}
-                          hasUploadedTemplate={!!templateFile}
-                        />
+                        <div className="pt-1">
+                          <span className="text-[10px] text-slate-500 block mb-1">
+                            Atau gunakan starter preset jika belum memiliki file template:
+                          </span>
+                          <TemplatePresetSelect
+                            value={templatePreset}
+                            onChange={setTemplatePreset}
+                            hasUploadedTemplate={!!templateFile}
+                          />
+                        </div>
                       </div>
 
                       {/* Dropzone B: Draft */}

@@ -49,6 +49,15 @@ class AuditSummary(BaseModel):
     status: Literal["PASS", "FAIL"]
 
 
+class TemplateRuleComparison(BaseModel):
+    category: str  # "Page Format", "Margins", "Columns", "Typography", "Citation", "Anonymity"
+    rule_name: str  # e.g. "Top Margin", "Column Grid", "Citation System"
+    target_spec: str  # e.g. "≥ 30.0 mm (Extracted from Aturan Penulisan)"
+    draft_actual: str  # e.g. "20.0 mm (Outermost content at 20.0 mm)"
+    status: Literal["MATCH", "BREACH", "WARNING", "INFO"]
+    delta_note: Optional[str] = None  # e.g. "Increase margin by 10.0 mm"
+
+
 class TemplateSpecs(BaseModel):
     page_format: str = "A4"
     page_width_mm: float = 210.0
@@ -60,10 +69,20 @@ class TemplateSpecs(BaseModel):
     column_count: int = 1
     column_gap_mm: Optional[float] = None
     is_custom_template: bool = False
-    # Human-readable label and where the specs came from:
-    # "uploaded_template" | "preset:<id>" | "default"
     name: Optional[str] = None
     source: Optional[str] = None
+
+    # Template Intelligence & Classification:
+    # "AUTHOR_GUIDELINES" (Pedoman/Aturan Penulisan) | "SAMPLE_PAPER" (Contoh Naskah Jurnal) | "CUSTOM_DOCUMENT"
+    template_type: str = "SAMPLE_PAPER"
+    template_type_label: str = "Contoh Dokumen Jurnal (Sample Paper Template)"
+    extraction_mode: str = "GEOMETRIC_INSPECTION"  # "TEXTUAL_GUIDELINE_PARSER" | "GEOMETRIC_INSPECTION"
+    detected_font_family: Optional[str] = None
+    detected_font_size_pt: Optional[float] = None
+    detected_citation_style: Optional[str] = None
+    double_blind_required: bool = True
+    extracted_rules_summary: List[str] = Field(default_factory=list)
+    comparison_matrix: List[TemplateRuleComparison] = Field(default_factory=list)
 
 
 class AuditReport(BaseModel):

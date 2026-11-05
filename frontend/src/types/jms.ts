@@ -39,6 +39,15 @@ export interface AnonymizationLeak {
   page: number;
 }
 
+export interface TemplateRuleComparison {
+  category: string;
+  rule_name: string;
+  target_spec: string;
+  draft_actual: string;
+  status: "MATCH" | "BREACH" | "WARNING" | "INFO";
+  delta_note?: string;
+}
+
 export interface TemplateSpecs {
   page_format: string;
   page_width_mm: number;
@@ -54,6 +63,16 @@ export interface TemplateSpecs {
   name?: string;
   /** "uploaded_template" | "preset:<id>" | "default" */
   source?: string;
+  /** "AUTHOR_GUIDELINES" | "SAMPLE_PAPER" | "CUSTOM_DOCUMENT" */
+  template_type?: string;
+  template_type_label?: string;
+  extraction_mode?: string;
+  detected_font_family?: string;
+  detected_font_size_pt?: number;
+  detected_citation_style?: string;
+  double_blind_required?: boolean;
+  extracted_rules_summary?: string[];
+  comparison_matrix?: TemplateRuleComparison[];
 }
 
 export interface AuditSummary {

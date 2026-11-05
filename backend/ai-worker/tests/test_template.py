@@ -84,3 +84,56 @@ def test_layout_auditor_compares_against_template():
 
     assert result_ok.pass_
     assert len(result_ok.checks) == 0
+
+
+def test_template_extractor_guidelines_rule_parser():
+    doc = fitz.open()
+    page = doc.new_page(width=595.28, height=841.89)
+
+    guidelines_text = (
+        "Pedoman Penulisan Naskah Jurnal Sinta 2\n\n"
+        "1. Format Naskah\n"
+        "Naskah diketik pada kertas A4 dengan batas margin: margin atas 3.0 cm, "
+        "margin bawah 2.5 cm, margin kiri 3.0 cm, dan margin kanan 2.5 cm.\n\n"
+        "2. Format Kolom\n"
+        "Naskah disusun dalam format 2 kolom dengan jarak antar kolom 5 mm.\n\n"
+        "3. Font dan Sitasi\n"
+        "Font menggunakan Times New Roman ukuran 10 pt. "
+        "Format sitasi menggunakan sistem penomoran IEEE [1].\n"
+    )
+    page.insert_textbox(fitz.Rect(50, 50, 500, 500), guidelines_text)
+
+    extractor = TemplateExtractor()
+    specs = extractor.extract_specs(doc)
+    doc.close()
+
+    assert specs.template_type == "AUTHOR_GUIDELINES"
+    assert specs.extraction_mode == "TEXTUAL_GUIDELINE_PARSER"
+    assert specs.margin_top_mm == 30.0
+    assert specs.margin_bottom_mm == 25.0
+    assert specs.margin_left_mm == 30.0
+    assert specs.margin_right_mm == 25.0
+    assert specs.column_count == 2
+    assert specs.column_gap_mm == 5.0
+    assert specs.detected_font_family == "Times New Roman"
+    assert specs.detected_font_size_pt == 10.0
+    assert "IEEE" in (specs.detected_citation_style or "")
+    assert len(specs.extracted_rules_summary) >= 3
+
+
+def test_template_extractor_comparison_matrix():
+    tpl_doc = create_synthetic_template_pdf()
+    draft_doc = fitz.open()
+    p = draft_doc.new_page(width=595.28, height=841.89)
+    p.insert_textbox(fitz.Rect(60, 70, 500, 400), "Draft single column text spanning full width of page.")
+
+    extractor = TemplateExtractor()
+    specs = extractor.extract_specs(template_doc=tpl_doc, draft_doc=draft_doc)
+    tpl_doc.close()
+    draft_doc.close()
+
+    assert specs.comparison_matrix is not None
+    assert len(specs.comparison_matrix) >= 5
+    rules = [m.rule_name for m in specs.comparison_matrix]
+    assert any("Margin Atas" in r for r in rules)
+    assert any("Kolom" in r for r in rules)

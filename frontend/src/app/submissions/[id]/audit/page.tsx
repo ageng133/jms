@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LayoutComparisonViewer } from "@/components/audit/LayoutComparisonViewer";
 import { AICopilotWidget } from "@/components/audit/AICopilotWidget";
+import { TemplateComparisonMatrix } from "@/components/audit/TemplateComparisonMatrix";
 
 function humanizeLeakType(type: string): string {
   const map: Record<string, string> = {
@@ -445,58 +446,8 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
 
-          {/* Reference Journal Template Specifications Card */}
-          {report.template_specs && (
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-black/[0.06] shadow-apple-card space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-black/[0.06] pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-[#1d1d1f] flex items-center gap-2">
-                      Reference Journal Template Specifications
-                      <Sparkles className="w-4 h-4 text-[#ff9500]" />
-                    </h2>
-                    <p className="text-xs text-[#86868b]">
-                      {report.template_specs.is_custom_template || report.template_specs.source === "uploaded_template"
-                        ? "Extracted dynamically from uploaded Journal Template PDF"
-                        : report.template_specs.source?.startsWith("preset:")
-                          ? `Preset layout: ${report.template_specs.name || report.template_specs.source.slice(7)}`
-                          : `Using ${report.template_specs.name || "Standard Baseline Academic Template"}`}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant="secondary" className="text-xs self-start sm:self-auto">
-                  Format: {report.template_specs.page_format} ({report.template_specs.page_width_mm} &times; {report.template_specs.page_height_mm} mm)
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs pt-1">
-                <div className="bg-[#f5f5f7] rounded-2xl p-3.5 space-y-1 border border-black/[0.04]">
-                  <span className="text-[#86868b] font-medium text-[10px] uppercase">Top Margin</span>
-                  <p className="text-base font-bold text-[#1d1d1f]">{report.template_specs.margin_top_mm} mm</p>
-                </div>
-                <div className="bg-[#f5f5f7] rounded-2xl p-3.5 space-y-1 border border-black/[0.04]">
-                  <span className="text-[#86868b] font-medium text-[10px] uppercase">Bottom Margin</span>
-                  <p className="text-base font-bold text-[#1d1d1f]">{report.template_specs.margin_bottom_mm} mm</p>
-                </div>
-                <div className="bg-[#f5f5f7] rounded-2xl p-3.5 space-y-1 border border-black/[0.04]">
-                  <span className="text-[#86868b] font-medium text-[10px] uppercase">Left &amp; Right Margins</span>
-                  <p className="text-base font-bold text-[#1d1d1f]">
-                    {report.template_specs.margin_left_mm} / {report.template_specs.margin_right_mm} mm
-                  </p>
-                </div>
-                <div className="bg-[#f5f5f7] rounded-2xl p-3.5 space-y-1 border border-black/[0.04]">
-                  <span className="text-[#86868b] font-medium text-[10px] uppercase">Column Grid</span>
-                  <p className="text-base font-bold text-[#1d1d1f]">
-                    {report.template_specs.column_count === 2 ? "2 Columns" : "1 Column"}
-                    {report.template_specs.column_gap_mm ? ` (${report.template_specs.column_gap_mm}mm gap)` : ""}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Template-Driven Comparison Matrix (Target Journal Template vs Draft) */}
+          <TemplateComparisonMatrix templateSpecs={report.template_specs} />
 
           {/* Module 1: Geometry & Layout */}
           <div className="bg-white rounded-3xl border border-black/[0.06] shadow-apple-card overflow-hidden">

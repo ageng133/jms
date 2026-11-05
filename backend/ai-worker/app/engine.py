@@ -91,20 +91,25 @@ class AuditEngine:
           2. the `template_specs` preset passed by the caller (e.g. IEEE)
           3. TemplateSpecs() defaults (A4, 25.4 mm, 1 column)
         """
-        specs: Optional[TemplateSpecs] = None
-        if template_bytes:
-            tdoc = _open_pdf(template_bytes, "Template PDF")
-            try:
-                specs = self.template_extractor.extract_specs(tdoc)
-                specs.source = "uploaded_template"
-                specs.name = specs.name or "Uploaded journal template"
-            finally:
-                tdoc.close()
-        if specs is None:
-            specs = template_specs or TemplateSpecs(source="default", name="Default (A4, 25.4 mm)")
-
         doc = _open_pdf(draft_bytes, "Manuscript PDF")
         try:
+            specs: Optional[TemplateSpecs] = None
+            if template_bytes:
+                tdoc = _open_pdf(template_bytes, "Template PDF")
+                try:
+                    specs = self.template_extractor.extract_specs(
+                        template_doc=tdoc,
+                        draft_doc=doc,
+                    )
+                    specs.source = "uploaded_template"
+                    specs.name = specs.name or "Uploaded Journal Template"
+                finally:
+                    tdoc.close()
+
+            if specs is None:
+                specs = template_specs or TemplateSpecs(source="default", name="Default Baseline (A4, 25.4 mm)")
+                specs.comparison_matrix = self.template_extractor.build_comparison_matrix(specs, doc)
+
             layout_res, layout_annots = self.layout_auditor.audit(doc, template_specs=specs)
             anon_res, anon_annots = self.anonymization_auditor.audit(doc)
             cite_res, cite_annots = self.citation_auditor.audit(doc)
