@@ -280,15 +280,15 @@ export default function NewSubmissionPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-[10px]">
-                Dual Ingestion Pipeline
+                Input Dokumen
               </Badge>
               <Badge variant="default" className="text-[10px]">
-                Side-by-Side Verification
+                Verifikasi Berpasangan
               </Badge>
             </div>
-            <h2 className="text-xl font-bold text-[#1d1d1f]">Upload Template &amp; Manuscript Draft</h2>
+            <h2 className="text-xl font-bold text-[#1d1d1f]">Unggah Template Jurnal &amp; Naskah Draft</h2>
             <p className="text-xs sm:text-sm text-[#86868b]">
-              Upload the journal reference template alongside your draft side-by-side. The AI Engine compares geometry, margins, and column layouts directly against the template guidelines.
+              Unggah template atau pedoman penulisan jurnal sasaran bersama draft naskah Anda. Sistem akan memeriksa margin, kolom, dan sitasi.
             </p>
           </div>
 
@@ -307,11 +307,11 @@ export default function NewSubmissionPage() {
                     </label>
                   </div>
                   <Badge className="bg-indigo-600 text-white text-[10px] font-semibold">
-                    Target Template DNA
+                    Acuan Format
                   </Badge>
                 </div>
                 <p className="text-xs text-[#86868b]">
-                  Unggah file <strong>Pedoman Penulisan (Author Guidelines)</strong> atau <strong>Contoh Naskah Terbit</strong> dari jurnal tujuan Anda. Format Kilat akan mengekstrak aturannya secara otomatis.
+                  Unggah file <strong>Pedoman Penulisan (Author Guidelines)</strong> atau <strong>Contoh Artikel Jurnal</strong> dari jurnal tujuan Anda. Format Kilat akan mendeteksi aturannya secara otomatis.
                 </p>
 
                 {/* Hidden File Input */}
@@ -357,7 +357,7 @@ export default function NewSubmissionPage() {
                       <p className="text-[11px] text-[#86868b] mt-0.5">atau klik untuk telusuri dari komputer</p>
                     </div>
                     <span className="inline-block text-[10px] font-semibold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full">
-                      Mengekstrak aturan margin, kolom, font &amp; gaya sitasi
+                      Mendeteksi margin, kolom, font &amp; gaya sitasi
                     </span>
                   </label>
                 ) : (
@@ -412,7 +412,7 @@ export default function NewSubmissionPage() {
 
               {/* Status / Selected File Info */}
               <div className="p-3 bg-white/80 border border-indigo-100 rounded-xl text-[11px] text-indigo-950">
-                <span className="font-bold text-indigo-700">⚡ Unique Value:</span> Naskah Anda diaudit spesifik terhadap template jurnal yang Anda unggah (baik berupa pedoman teks maupun contoh dokumen), bukan format generik kaku.
+                <span className="font-bold text-indigo-700">Catatan:</span> Naskah Anda diperiksa langsung terhadap file template jurnal yang diunggah, baik berupa pedoman tertulis maupun contoh artikel.
               </div>
             </div>
 
@@ -433,7 +433,7 @@ export default function NewSubmissionPage() {
                   </Badge>
                 </div>
                 <p className="text-xs text-[#86868b]">
-                  Naskah draft Anda yang akan diaudit dan dibandingkan langsung terhadap template jurnal tujuan di sebelah kiri.
+                  File draft naskah Anda yang akan diperiksa terhadap standar template jurnal di sebelah kiri.
                 </p>
 
                 {/* Hidden File Input */}

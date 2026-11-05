@@ -168,7 +168,7 @@ class TemplateExtractor:
             u_mm = val * 10 if unit == "cm" else (val * 25.4 if "in" in unit else val)
             top_mm, bot_mm, left_mm, right_mm = u_mm, u_mm, u_mm, u_mm
 
-        rules_summary.append(f"Aturan Margin: Atas {top_mm:.1f}mm, Bawah {bot_mm:.1f}mm, Kiri {left_mm:.1f}mm, Kanan {right_mm:.1f}mm")
+        rules_summary.append(f"Margin: Atas {top_mm:.1f} mm, Bawah {bot_mm:.1f} mm, Kiri {left_mm:.1f} mm, Kanan {right_mm:.1f} mm")
 
         # 3. Columns
         column_count = 1
@@ -185,7 +185,7 @@ class TemplateExtractor:
         elif column_count == 2:
             column_gap_mm = 6.35
 
-        rules_summary.append(f"Format Kolom: {column_count} Kolom" + (f" (Jarak Antar Kolom: {column_gap_mm} mm)" if column_gap_mm else ""))
+        rules_summary.append(f"Kolom: {column_count} Kolom" + (f" (Jarak Antar Kolom: {column_gap_mm} mm)" if column_gap_mm else ""))
 
         # 4. Typography (Font & Size)
         font_family = "Times New Roman"
@@ -198,7 +198,7 @@ class TemplateExtractor:
         if m_pt:
             font_size_pt = float(m_pt.group(1).replace(",", "."))
 
-        rules_summary.append(f"Tipografi: Font {font_family} {font_size_pt} pt")
+        rules_summary.append(f"Font: {font_family} {font_size_pt} pt")
 
         # 5. Citation Style
         citation_style = "IEEE Numeric [1]"
@@ -209,12 +209,12 @@ class TemplateExtractor:
         elif "[1]" in text or "kurung siku" in text:
             citation_style = "IEEE Numeric [1]"
 
-        rules_summary.append(f"Gaya Sitasi: {citation_style}")
+        rules_summary.append(f"Sitasi: {citation_style}")
 
         # 6. Double-blind policy
         double_blind = bool(re.search(r"double-blind|blind\s*review|tanpa\s*nama\s*penulis|hilangkan\s*identitas", text, re.I))
         if double_blind:
-            rules_summary.append("Integritas Review: Double-Blind (Nama & afiliasi penulis harus dihilangkan)")
+            rules_summary.append("Review: Double-Blind (Nama & afiliasi penulis disamarkan)")
 
         return {
             "page_format": page_format,
@@ -368,11 +368,11 @@ class TemplateExtractor:
         citation_style = "IEEE Numeric [1]" if bool(re.search(r"\[\d+\]", sample_text)) else "APA / Harvard (Author, Year)"
 
         rules_summary = [
-            f"Karakter Fisik Dokumen: {page_format} ({w_mm} × {h_mm} mm)",
-            f"Batas Tepi Konten (Margin): Atas {margin_top_mm}mm, Bawah {margin_bottom_mm}mm, Kiri {margin_left_mm}mm, Kanan {margin_right_mm}mm",
-            f"Struktur Kolom: {column_count} Kolom" + (f" (Jarak Gutter: {column_gap_mm} mm)" if column_gap_mm else ""),
-            f"Tipografi Terdeteksi: {font_family} {font_size_pt} pt",
-            f"Gaya Sitasi Terdeteksi: {citation_style}",
+            f"Ukuran Kertas: {page_format} ({w_mm} × {h_mm} mm)",
+            f"Margin: Atas {margin_top_mm} mm, Bawah {margin_bottom_mm} mm, Kiri {margin_left_mm} mm, Kanan {margin_right_mm} mm",
+            f"Kolom: {column_count} Kolom" + (f" (Jarak: {column_gap_mm} mm)" if column_gap_mm else ""),
+            f"Font: {font_family} {font_size_pt} pt",
+            f"Sitasi: {citation_style}",
         ]
 
         return {
@@ -394,8 +394,8 @@ class TemplateExtractor:
 
     def build_comparison_matrix(self, specs: TemplateSpecs, draft_doc: fitz.Document) -> List[TemplateRuleComparison]:
         """
-        Engine C: Generates a high-density, side-by-side Comparative Audit Log
-        directly contrasting the uploaded journal template specifications vs author draft.
+        Engine C: Generates a clear, side-by-side comparison matrix
+        contrasting the target journal template against the author draft.
         """
         matrix: List[TemplateRuleComparison] = []
         if len(draft_doc) == 0:
@@ -413,11 +413,11 @@ class TemplateExtractor:
         matrix.append(
             TemplateRuleComparison(
                 category="Page Format",
-                rule_name="Ukuran & Dimensi Kertas",
+                rule_name="Ukuran Kertas",
                 target_spec=f"{specs.page_format} ({specs.page_width_mm:.1f} × {specs.page_height_mm:.1f} mm)",
                 draft_actual=f"{draft_w_mm:.1f} × {draft_h_mm:.1f} mm",
                 status="MATCH" if is_dim_match else "BREACH",
-                delta_note="Ukuran kertas sesuai" if is_dim_match else f"Selisih lebar: {w_diff:.1f}mm, tinggi: {h_diff:.1f}mm",
+                delta_note="Ukuran kertas sesuai" if is_dim_match else f"Selisih lebar: {w_diff:.1f} mm, tinggi: {h_diff:.1f} mm",
             )
         )
 
@@ -446,7 +446,7 @@ class TemplateExtractor:
             matrix.append(
                 TemplateRuleComparison(
                     category="Margins",
-                    rule_name="Margin Atas (Top Margin)",
+                    rule_name="Margin Atas",
                     target_spec=f"≥ {specs.margin_top_mm:.1f} mm",
                     draft_actual=f"{draft_top:.1f} mm",
                     status="MATCH" if top_pass else "BREACH",
@@ -460,7 +460,7 @@ class TemplateExtractor:
             matrix.append(
                 TemplateRuleComparison(
                     category="Margins",
-                    rule_name="Margin Bawah (Bottom Margin)",
+                    rule_name="Margin Bawah",
                     target_spec=f"≥ {specs.margin_bottom_mm:.1f} mm",
                     draft_actual=f"{draft_bot:.1f} mm",
                     status="MATCH" if bot_pass else "BREACH",
@@ -474,7 +474,7 @@ class TemplateExtractor:
             matrix.append(
                 TemplateRuleComparison(
                     category="Margins",
-                    rule_name="Margin Kiri (Left Margin)",
+                    rule_name="Margin Kiri",
                     target_spec=f"≥ {specs.margin_left_mm:.1f} mm",
                     draft_actual=f"{draft_left:.1f} mm",
                     status="MATCH" if left_pass else "BREACH",
@@ -488,7 +488,7 @@ class TemplateExtractor:
             matrix.append(
                 TemplateRuleComparison(
                     category="Margins",
-                    rule_name="Margin Kanan (Right Margin)",
+                    rule_name="Margin Kanan",
                     target_spec=f"≥ {specs.margin_right_mm:.1f} mm",
                     draft_actual=f"{draft_right:.1f} mm",
                     status="MATCH" if right_pass else "BREACH",
@@ -505,8 +505,8 @@ class TemplateExtractor:
             matrix.append(
                 TemplateRuleComparison(
                     category="Columns",
-                    rule_name="Struktur Kolom Teks",
-                    target_spec=f"{specs.column_count} Kolom" + (f" (Gutter: {specs.column_gap_mm}mm)" if specs.column_gap_mm else ""),
+                    rule_name="Jumlah Kolom",
+                    target_spec=f"{specs.column_count} Kolom" + (f" (Jarak: {specs.column_gap_mm} mm)" if specs.column_gap_mm else ""),
                     draft_actual=f"{draft_cols} Kolom",
                     status="MATCH" if col_match else "BREACH",
                     delta_note="Format kolom sesuai" if col_match else f"Naskah dibuat {draft_cols} kolom, template mensyaratkan {specs.column_count} kolom",
@@ -524,11 +524,11 @@ class TemplateExtractor:
         matrix.append(
             TemplateRuleComparison(
                 category="Citation",
-                rule_name="Sistem Sitasi & Referensi",
+                rule_name="Gaya Sitasi",
                 target_spec=specs.detected_citation_style or "IEEE Numeric [1]",
                 draft_actual=draft_cite_label,
                 status="MATCH" if cite_match else "WARNING",
-                delta_note="Gaya rujukan selaras" if cite_match else f"Template memakai {specs.detected_citation_style}, draft memakai {draft_cite_label}",
+                delta_note="Format sitasi sesuai" if cite_match else f"Standar template: {specs.detected_citation_style}, naskah Anda: {draft_cite_label}",
             )
         )
 
@@ -536,11 +536,11 @@ class TemplateExtractor:
         matrix.append(
             TemplateRuleComparison(
                 category="Anonymity",
-                rule_name="Pemeriksaan Double-Blind Review",
-                target_spec="Wajib Anonim (Nama, Email, Afiliasi Dihilangkan)" if specs.double_blind_required else "Boleh Mencantumkan Penulis",
-                draft_actual="Pemeriksaan Integritas Identitas",
+                rule_name="Double-Blind Review",
+                target_spec="Wajib Anonim (nama & afiliasi disamarkan)" if specs.double_blind_required else "Boleh Mencantumkan Penulis",
+                draft_actual="Pengecekan Identitas Penulis",
                 status="INFO",
-                delta_note="Evaluasi kebocoran metadata dan baris byline pada naskah",
+                delta_note="Pemeriksaan nama, email, dan institusi penulis pada naskah",
             )
         )
 

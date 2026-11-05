@@ -92,4 +92,4 @@ def test_anonymization_indonesian_true_authors_and_affiliations():
     assert len(annotations) > 0
     # Verify humanized notes
     for _, _, rule, comment in annotations:
-        assert "Author byline identified" in comment or "Institutional affiliation identified" in comment
+        assert "Author name found" in comment or "Institution found" in comment

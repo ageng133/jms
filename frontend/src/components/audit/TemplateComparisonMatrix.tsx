@@ -40,7 +40,7 @@ export function TemplateComparisonMatrix({
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                Template-Driven AI Audit
+                Pemeriksaan Format Jurnal
               </span>
               <Badge
                 className={`text-xs font-semibold px-2.5 py-0.5 ${
@@ -49,25 +49,24 @@ export function TemplateComparisonMatrix({
                     : "bg-emerald-500/20 text-emerald-300 border-emerald-400/30"
                 }`}
               >
-                {templateSpecs.template_type_label || (isGuideline ? "Pedoman / Aturan Penulisan" : "Contoh Dokumen Jurnal")}
+                {templateSpecs.template_type_label || (isGuideline ? "Pedoman Penulisan" : "Contoh Artikel Jurnal")}
               </Badge>
             </div>
             <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              Komparasi Draft vs Template Jurnal Tujuan
+              Perbandingan Naskah vs Template Jurnal
             </h2>
             <p className="text-xs text-slate-300">
-              Audit dianalisis langsung terhadap file template jurnal yang Anda unggah{" "}
-              {originalTemplateName && <span className="font-semibold text-white">({originalTemplateName})</span>},
-              bukan format predefined generik.
+              Hasil pengecekan naskah Anda terhadap template jurnal yang diunggah{" "}
+              {originalTemplateName && <span className="font-semibold text-white">({originalTemplateName})</span>}.
             </p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 text-xs text-right shrink-0">
-            <span className="text-slate-300 text-[10px] uppercase font-bold tracking-wider block">Mode Ekstraksi</span>
+            <span className="text-slate-300 text-[10px] uppercase font-bold tracking-wider block">Sumber Acuan</span>
             <span className="font-bold text-white text-sm">
               {templateSpecs.extraction_mode === "TEXTUAL_GUIDELINE_PARSER"
-                ? "Aturan Teks Pedoman (NLP)"
-                : "Geometri & Tipografi Dokumen"}
+                ? "Pedoman Penulisan (Teks)"
+                : "Contoh Artikel (Layout)"}
             </span>
           </div>
         </div>
@@ -76,7 +75,7 @@ export function TemplateComparisonMatrix({
         {templateSpecs.extracted_rules_summary && templateSpecs.extracted_rules_summary.length > 0 && (
           <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-2">
             <span className="text-[11px] font-semibold text-indigo-300 py-1 mr-1">
-              DNA Template Terdeteksi:
+              Aturan Template:
             </span>
             {templateSpecs.extracted_rules_summary.map((rule, idx) => (
               <span
@@ -97,11 +96,11 @@ export function TemplateComparisonMatrix({
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-600" />
             <h3 className="text-sm font-bold text-slate-900">
-              Matriks Audit Komparatif (Spesifikasi Jurnal vs Naskah Anda)
+              Perbandingan Format Dokumen
             </h3>
           </div>
           <span className="text-xs text-slate-500 font-medium">
-            Evaluasi Berpasangan ({matrix.length} Parameter)
+            {matrix.length} Poin Pengecekan
           </span>
         </div>
 
@@ -109,10 +108,10 @@ export function TemplateComparisonMatrix({
           <table className="w-full text-xs text-left">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="py-3 px-4">Parameter Format</th>
-                <th className="py-3 px-4">Target Template Jurnal Terunggah</th>
-                <th className="py-3 px-4">Kondisi Draft Naskah Anda</th>
-                <th className="py-3 px-4">Status &amp; Rekomendasi Deviasi</th>
+                <th className="py-3 px-4">Format</th>
+                <th className="py-3 px-4">Standar Jurnal</th>
+                <th className="py-3 px-4">Naskah Anda</th>
+                <th className="py-3 px-4">Status &amp; Saran Perbaikan</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-normal">
@@ -181,11 +180,17 @@ export function TemplateComparisonMatrix({
                             ) : (
                               <Info className="w-3 h-3 mr-1 text-indigo-600" />
                             )}
-                            {row.status}
+                            {isMatch
+                              ? "Sesuai"
+                              : isBreach
+                              ? "Perlu Diperbaiki"
+                              : isWarning
+                              ? "Periksa"
+                              : "Info"}
                           </Badge>
 
                           <span className="text-slate-600 text-[11px] leading-tight">
-                            {row.delta_note || (isMatch ? "Sesuai template tujuan" : "Perlu penyesuaian")}
+                            {row.delta_note || (isMatch ? "Sesuai standar template" : "Perlu perbaikan")}
                           </span>
                         </div>
                       </td>
@@ -195,7 +200,7 @@ export function TemplateComparisonMatrix({
               ) : (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-slate-400 text-xs">
-                    Memuat matriks perbandingan template...
+                    Memuat hasil perbandingan template...
                   </td>
                 </tr>
               )}
@@ -203,12 +208,12 @@ export function TemplateComparisonMatrix({
           </table>
         </div>
 
-        {/* Unique Value Footer */}
+        {/* Helpful Tips Footer */}
         <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center justify-between text-xs text-indigo-900">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
             <span>
-              <strong>Keunggulan Format Kilat:</strong> Kami memeriksa naskah Anda terhadap aturan &amp; contoh nyata jurnal sasaran, memastikan kesesuaian sebelum submission ke dewan editor.
+              <strong>Tips:</strong> Perbaiki poin yang bertanda merah agar naskah siap dikirim ke editor jurnal.
             </span>
           </div>
         </div>

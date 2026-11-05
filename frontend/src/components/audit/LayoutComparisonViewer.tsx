@@ -54,14 +54,14 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f] tracking-tight">
-                Visual Layout Comparison Engine
+                Perbandingan Layout Naskah
               </h2>
               <Badge className="bg-[#0071e3] text-white text-[10px] font-semibold">
-                Interactive Audit
+                Tampilan Dokumen
               </Badge>
             </div>
             <p className="text-xs text-[#86868b] mt-0.5">
-              Compare Original Draft with detected violations against the Autonomously Reshaped Camera-Ready PDF.
+              Bandingkan naskah draft asli Anda dengan dokumen yang telah disesuaikan dengan template jurnal.
             </p>
           </div>
         </div>
@@ -79,7 +79,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
               }`}
             >
               <SplitSquareVertical className="w-3.5 h-3.5" />
-              <span>Side-by-Side</span>
+              <span>Berdampingan</span>
             </button>
             <button
               type="button"
@@ -91,7 +91,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>Original Draft</span>
+              <span>Naskah Asli</span>
             </button>
             <button
               type="button"
@@ -103,7 +103,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-[#0071e3]" />
-              <span>⚡ Reshaped</span>
+              <span>⚡ Hasil Format</span>
             </button>
           </div>
 
@@ -111,7 +111,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
             type="button"
             onClick={() => setExpanded(!expanded)}
             className="p-2 rounded-full border border-black/[0.08] hover:bg-black/[0.04] text-[#86868b] hover:text-[#1d1d1f] transition"
-            title={expanded ? "Standard Height" : "Expand Height"}
+            title={expanded ? "Tinggi Standar" : "Perbesar Tampilan"}
           >
             {expanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
@@ -122,32 +122,32 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
       <div className="px-5 py-3.5 bg-gradient-to-r from-[#f5f5f7] via-white to-[#f5f5f7] border-b border-black/[0.06] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#ff9500] shrink-0" />
-          <span className="text-[#86868b] font-medium">Columns:</span>
+          <span className="text-[#86868b] font-medium">Format Kolom:</span>
           <span className="text-[#1d1d1f] font-semibold flex items-center gap-1">
-            {layoutViolationsCount > 0 ? "Non-standard columns" : "Standard"}
+            {layoutViolationsCount > 0 ? "1 Kolom (Perlu disesuaikan)" : "Sesuai"}
             <ArrowRight className="w-3 h-3 text-[#86868b]" />
             <span className="text-[#0071e3] font-bold">
-              {report.template_specs?.column_count === 2 ? "2 Columns" : "1 Column"}
+              {report.template_specs?.column_count === 2 ? "2 Kolom" : "1 Kolom"}
             </span>
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#34c759] shrink-0" />
-          <span className="text-[#86868b] font-medium">Template Margins:</span>
+          <span className="text-[#86868b] font-medium">Standar Margin:</span>
           <span className="text-[#1d1d1f] font-semibold flex items-center gap-1">
-            Calibrated to {report.template_specs?.margin_top_mm ?? 20}mm / {report.template_specs?.margin_left_mm ?? 18}mm
+            Atas {report.template_specs?.margin_top_mm ?? 20} mm / Kiri {report.template_specs?.margin_left_mm ?? 18} mm
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#0071e3] shrink-0" />
-          <span className="text-[#86868b] font-medium">Blind Review Anonymity:</span>
+          <span className="text-[#86868b] font-medium">Identitas Penulis:</span>
           <span className="text-[#1d1d1f] font-semibold flex items-center gap-1">
             {anonymizationLeaksCount > 0 ? (
-              <span className="text-[#ff3b30]">{anonymizationLeaksCount} Author Details Found</span>
+              <span className="text-[#ff3b30]">{anonymizationLeaksCount} Identitas Ditemukan</span>
             ) : (
-              <span className="text-[#34c759]">Protected &amp; Clean</span>
+              <span className="text-[#34c759]">Sudah Anonim</span>
             )}
           </span>
         </div>
@@ -171,18 +171,18 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                 <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e] border border-[#d89e24] inline-block" />
                 <span className="w-2.5 h-2.5 rounded-full bg-[#28c840] border border-[#1aab29] inline-block" />
                 <span className="ml-2 font-medium text-[#1d1d1f]">
-                  Original Submitted Draft
+                  Naskah Asli (Draft)
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 {layoutViolationsCount > 0 ? (
                   <Badge variant="destructive" className="text-[10px] gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    <span>{layoutViolationsCount} Format Violations</span>
+                    <span>{layoutViolationsCount} Perlu Disesuaikan</span>
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="text-[10px]">
-                    Raw Upload
+                    Naskah Awal
                   </Badge>
                 )}
                 {originalKey && (
@@ -191,7 +191,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                     target="_blank"
                     rel="noreferrer"
                     className="text-[#86868b] hover:text-[#0071e3] transition"
-                    title="Open Original in New Tab"
+                    title="Buka Naskah Asli di Tab Baru"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
@@ -217,9 +217,9 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                     <FileText className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-semibold text-[#1d1d1f]">Original Draft Stored in Gateway Box Storage</p>
+                    <p className="text-xs font-semibold text-[#1d1d1f]">Naskah Draft Tersimpan di Penyimpanan Sistem</p>
                     <p className="text-[11px] text-[#86868b] max-w-xs">
-                      Key: {originalKey || report.manuscript_id || "submission_draft.pdf"}
+                      ID: {originalKey || report.manuscript_id || "submission_draft.pdf"}
                     </p>
                   </div>
                   {originalKey && (
@@ -230,7 +230,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                     >
                       <Button variant="outline" size="sm" className="rounded-full text-xs gap-1.5 border-black/[0.12]">
                         <Download className="w-3.5 h-3.5" />
-                        <span>Download Raw Draft</span>
+                        <span>Download Naskah Asli</span>
                       </Button>
                     </a>
                   )}
@@ -240,8 +240,8 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
 
             {/* Panel Footer */}
             <div className="p-3 bg-[#fbfbfd] border-t border-black/[0.06] flex items-center justify-between text-[11px] text-[#86868b]">
-              <span>Layout: Single column draft</span>
-              <span>Blind Review: Author details scanned</span>
+              <span>Layout: Naskah asli</span>
+              <span>Anonimitas: Pengecekan selesai</span>
             </div>
           </div>
         )}
@@ -257,13 +257,13 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                 <span className="w-2.5 h-2.5 rounded-full bg-[#28c840] border border-[#1aab29] inline-block" />
                 <span className="ml-2 font-medium text-[#1d1d1f] flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-[#0071e3]" />
-                  ⚡ Format Kilat Camera-Ready Output
+                  ⚡ Format Kilat Siap Kirim
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="bg-[#34c759] text-white text-[10px] gap-1">
                   <CheckCircle2 className="w-3 h-3" />
-                  <span>Conforming Layout</span>
+                  <span>Format Sesuai</span>
                 </Badge>
                 {reshapedKey && (
                   <a
@@ -271,7 +271,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                     target="_blank"
                     rel="noreferrer"
                     className="text-[#86868b] hover:text-[#0071e3] transition"
-                    title="Open Camera-Ready in New Tab"
+                    title="Buka Dokumen di Tab Baru"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
@@ -297,9 +297,9 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                     <Sparkles className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-semibold text-[#1d1d1f]">Camera-Ready Layout Generation In Progress</p>
+                    <p className="text-xs font-semibold text-[#1d1d1f]">Sedang Menyesuaikan Layout...</p>
                     <p className="text-[11px] text-[#86868b] max-w-xs">
-                      The automated remediation engine is reflowing columns and applying margin alignments.
+                      Sistem sedang merapikan kolom dan margin sesuai standar template jurnal.
                     </p>
                   </div>
                 </div>
@@ -310,7 +310,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
             <div className="p-3 bg-[#fbfbfd] border-t border-black/[0.06] flex items-center justify-between text-[11px] text-[#86868b]">
               <span className="text-[#34c759] font-medium flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Double-blind anonymized &amp; verified
+                Identitas penulis disamarkan
               </span>
               {reshapedKey && (
                 <a
@@ -323,7 +323,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                     className="h-6 px-2.5 bg-[#0071e3] hover:bg-[#0077ed] text-white text-[11px] font-medium rounded-full shadow-xs gap-1"
                   >
                     <Download className="w-3 h-3" />
-                    <span>Download Reshaped PDF</span>
+                    <span>Download PDF Hasil Format</span>
                   </Button>
                 </a>
               )}

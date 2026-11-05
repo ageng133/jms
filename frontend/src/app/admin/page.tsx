@@ -1168,12 +1168,12 @@ export default function AdminPortalPage() {
                             1. Template / Pedoman Jurnal Sasaran (PDF)
                           </span>
                           <Badge className="bg-indigo-600 text-white text-[10px]">
-                            Target DNA
+                            Acuan Format
                           </Badge>
                         </div>
 
                         <p className="text-[11px] text-[#86868b]">
-                          Unggah <strong>Pedoman Penulisan (Author Guidelines)</strong> atau <strong>Contoh Naskah Terbit</strong> dari jurnal tujuan. Sistem akan mengekstrak aturan/geometrinya otomatis.
+                          Unggah <strong>Pedoman Penulisan (Author Guidelines)</strong> atau <strong>Contoh Artikel Jurnal</strong> dari jurnal tujuan. Sistem akan mendeteksi aturan formatnya secara otomatis.
                         </p>
 
                         <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-indigo-300 rounded-xl bg-white text-center">

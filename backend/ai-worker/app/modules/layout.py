@@ -71,8 +71,7 @@ class LayoutAuditor(BaseAuditModule):
                     exp_fmt = f"{template_specs.page_format} ({template_specs.page_width_mm:.1f} × {template_specs.page_height_mm:.1f} mm)"
                     act_fmt = f"{page_width_mm:.1f} × {page_height_mm:.1f} mm"
                     comment = (
-                        f"Page dimensions mismatch on Page {page_idx + 1}: Target template specifies {exp_fmt}, "
-                        f"but manuscript page is {act_fmt}."
+                        f"Page {page_idx + 1} size is {act_fmt}. Target template requires {exp_fmt}."
                     )
                     checks.append(GeometryCheck(
                         rule="PAGE_DIMENSIONS",
@@ -141,8 +140,8 @@ class LayoutAuditor(BaseAuditModule):
                 ]
                 delta_mm = round(target_top_mm - actual_mm, 1)
                 comment = (
-                    f"Top margin breach on Page {page_idx + 1}: Content starts at {actual_mm:.1f} mm "
-                    f"(required: ≥ {target_top_mm:.1f} mm). Increase top margin by at least {delta_mm:.1f} mm."
+                    f"Page {page_idx + 1} top margin is {actual_mm:.1f} mm. "
+                    f"Template requires at least {target_top_mm:.1f} mm (add {delta_mm:.1f} mm)."
                 )
                 checks.append(GeometryCheck(
                     rule="MARGIN_TOP",
@@ -166,8 +165,8 @@ class LayoutAuditor(BaseAuditModule):
                 ]
                 delta_mm = round(target_bottom_mm - actual_mm, 1)
                 comment = (
-                    f"Bottom margin breach on Page {page_idx + 1}: Outermost text extends to {actual_mm:.1f} mm "
-                    f"from bottom (required: ≥ {target_bottom_mm:.1f} mm). Increase bottom margin by at least {delta_mm:.1f} mm."
+                    f"Page {page_idx + 1} bottom margin is {actual_mm:.1f} mm. "
+                    f"Template requires at least {target_bottom_mm:.1f} mm (add {delta_mm:.1f} mm)."
                 )
                 checks.append(GeometryCheck(
                     rule="MARGIN_BOTTOM",
@@ -191,8 +190,8 @@ class LayoutAuditor(BaseAuditModule):
                 ]
                 delta_mm = round(target_left_mm - actual_mm, 1)
                 comment = (
-                    f"Left margin breach on Page {page_idx + 1}: Leftmost content starts at {actual_mm:.1f} mm "
-                    f"(required: ≥ {target_left_mm:.1f} mm). {len(left_breaches)} text block(s) breach margin by up to {delta_mm:.1f} mm."
+                    f"Page {page_idx + 1} left margin is {actual_mm:.1f} mm. "
+                    f"Template requires at least {target_left_mm:.1f} mm (add {delta_mm:.1f} mm)."
                 )
                 checks.append(GeometryCheck(
                     rule="MARGIN_LEFT",
@@ -216,8 +215,8 @@ class LayoutAuditor(BaseAuditModule):
                 ]
                 delta_mm = round(target_right_mm - actual_mm, 1)
                 comment = (
-                    f"Right margin breach on Page {page_idx + 1}: Text extends to {actual_mm:.1f} mm "
-                    f"from right edge (required: ≥ {target_right_mm:.1f} mm). {len(right_breaches)} block(s) affected."
+                    f"Page {page_idx + 1} right margin is {actual_mm:.1f} mm. "
+                    f"Template requires at least {target_right_mm:.1f} mm (add {delta_mm:.1f} mm)."
                 )
                 checks.append(GeometryCheck(
                     rule="MARGIN_RIGHT",
@@ -238,8 +237,8 @@ class LayoutAuditor(BaseAuditModule):
                     int(max(b[3] for b in column_breaches)),
                 ]
                 comment = (
-                    f"Column layout breach on Page {page_idx + 1}: Template specifies a 2-column grid, "
-                    f"but {len(column_breaches)} full-width paragraph block(s) span across columns."
+                    f"Page {page_idx + 1} uses single-column text. "
+                    f"Template requires a 2-column layout."
                 )
                 checks.append(GeometryCheck(
                     rule="COLUMN_LAYOUT",

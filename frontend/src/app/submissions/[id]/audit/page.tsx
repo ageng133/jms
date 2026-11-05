@@ -185,7 +185,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-bold text-[#1d1d1f] tracking-tight">AI Pre-Submission Audit Report</h1>
             <Badge variant="default" className="text-[10px]">
-              Template-Driven Audit
+              Pemeriksaan Format Jurnal
             </Badge>
             {report?.ai_engine && (
               <Badge
@@ -225,7 +225,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 className="rounded-full text-xs gap-1.5 border-black/[0.12]"
               >
                 {showPdfPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                <span>{showPdfPreview ? "Hide Layout Comparison" : "Show Layout Comparison"}</span>
+                <span>{showPdfPreview ? "Tutup Perbandingan Visual" : "Buka Perbandingan Visual"}</span>
               </Button>
               <a
                 href={getFileDownloadUrl(report.annotated_pdf_s3_key)}
@@ -234,7 +234,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               >
                 <Button size="sm" className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full shadow-xs gap-1.5">
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download Annotated PDF</span>
+                  <span>Download Catatan Revisi (PDF)</span>
                 </Button>
               </a>
             </>
@@ -246,24 +246,24 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
         <div className="p-16 text-center bg-white rounded-3xl border border-black/[0.06] shadow-apple-card space-y-3">
           <Loader2 className="w-8 h-8 text-[#0071e3] animate-spin mx-auto" />
           <p className="text-sm font-semibold text-[#1d1d1f]">
-            Audit {report?.status === "QUEUED" ? "queued" : "in progress"}...
+            Pemeriksaan {report?.status === "QUEUED" ? "dalam antrean" : "sedang diproses"}...
           </p>
-          <p className="text-xs text-[#86868b]">This page refreshes automatically when the report is ready.</p>
+          <p className="text-xs text-[#86868b]">Halaman ini akan diperbarui otomatis saat hasil audit selesai.</p>
         </div>
       )}
 
       {isFailed && (
         <div className="p-4 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs">
-          The audit could not be completed{report?.error_message ? `: ${report.error_message}` : "."} Please re-upload
-          the manuscript or contact the editorial office.
+          Pemeriksaan belum dapat diselesaikan{report?.error_message ? `: ${report.error_message}` : "."} Silakan unggah
+          kembali naskah atau hubungi redaksi jurnal.
         </div>
       )}
 
       {loading && !report && (
         <div className="p-16 text-center bg-white rounded-3xl border border-black/[0.06] shadow-apple-card space-y-3">
           <Loader2 className="w-8 h-8 text-[#0071e3] animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-[#1d1d1f]">Executing Comparative Multi-Module AI Audit...</p>
-          <p className="text-xs text-[#86868b]">Comparing draft geometry against template guidelines, double-blind NER &amp; citation graphs.</p>
+          <p className="text-sm font-semibold text-[#1d1d1f]">Memeriksa format naskah terhadap template jurnal...</p>
+          <p className="text-xs text-[#86868b]">Memeriksa ukuran kertas, margin, kolom, identitas penulis, dan sitasi.</p>
         </div>
       )}
 
@@ -294,7 +294,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 {report.overall_score}
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-500">Compliance Score</p>
+                <p className="text-xs font-semibold text-slate-500">Skor Kesesuaian</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <Badge
                     className={`text-[11px] gap-1 font-bold ${
@@ -308,34 +308,34 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                     ) : (
                       <XCircle className="w-3 h-3 text-rose-600" />
                     )}
-                    <span>{report.summary.status}</span>
+                    <span>{report.summary.status === "PASS" ? "LULUS" : "REVISI"}</span>
                   </Badge>
                 </div>
               </div>
             </div>
 
             <div className="space-y-0.5 sm:border-r sm:border-slate-100 pr-4">
-              <p className="text-xs font-semibold text-slate-500">Critical Errors</p>
+              <p className="text-xs font-semibold text-slate-500">Perlu Diperbaiki</p>
               <p className="text-2xl font-black text-rose-600">{report.summary.critical_errors}</p>
-              <p className="text-xs text-slate-400">Blockers to submission</p>
+              <p className="text-xs text-slate-400">Poin penting sebelum kirim</p>
             </div>
 
             <div className="space-y-0.5 lg:border-r lg:border-slate-100 pr-4">
-              <p className="text-xs font-semibold text-slate-500">Warnings</p>
+              <p className="text-xs font-semibold text-slate-500">Perhatian</p>
               <p className="text-2xl font-black text-amber-500">{report.summary.warnings}</p>
-              <p className="text-xs text-slate-400">Non-fatal advisories</p>
+              <p className="text-xs text-slate-400">Saran perbaikan format</p>
             </div>
 
             <div className="space-y-0.5">
-              <p className="text-xs font-semibold text-slate-500">Desk Review Status</p>
+              <p className="text-xs font-semibold text-slate-500">Status Desk Review</p>
               <p className="text-xs sm:text-sm font-bold text-slate-800">
                 {report.summary.status === "PASS" ? (
                   <span className="text-emerald-600 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4" /> Ready for Desk Review
+                    <CheckCircle2 className="w-4 h-4" /> Siap Masuk Review
                   </span>
                 ) : (
                   <span className="text-rose-600 flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4" /> Revision Required Before Review
+                    <AlertTriangle className="w-4 h-4" /> Perlu Perbaikan Format
                   </span>
                 )}
               </p>
@@ -360,19 +360,19 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-base sm:text-lg font-bold text-[#1d1d1f] tracking-tight">
-                        ⚡ Autonomous Layout Reshape &amp; Remediation Blueprint
+                        ⚡ Penyesuaian Layout Otomatis (Format Kilat)
                       </h2>
                       <Badge className="bg-[#34c759] text-white text-[10px] font-semibold">
-                        {report.fixed_layout.camera_ready_status || "RESHAPED_PASS"}
+                        {report.fixed_layout.camera_ready_status || "SIAP_KIRIM"}
                       </Badge>
                       {report.template_specs?.is_custom_template && (
                         <Badge variant="outline" className="text-[10px] border-[#0071e3]/30 text-[#0071e3] bg-[#0071e3]/5">
-                          Uploaded Template Match
+                          Sesuai Template Jurnal
                         </Badge>
                       )}
                     </div>
                     <p className="text-xs text-[#86868b] mt-0.5">
-                      Draft layout audited and autonomously reshaped to conform with {report.fixed_layout.target_format}
+                      Layout naskah telah disesuaikan agar sesuai dengan standar {report.fixed_layout.target_format}
                     </p>
                   </div>
                 </div>
@@ -385,7 +385,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   >
                     <Button size="sm" className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold rounded-full px-4 shadow-xs gap-2">
                       <Download className="w-4 h-4" />
-                      <span>Download Reshaped PDF (⚡)</span>
+                      <span>Download Hasil Format (PDF)</span>
                     </Button>
                   </a>
                 )}
@@ -394,7 +394,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               {/* Target Geometry Specs */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                 <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Target Format</span>
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Ukuran Kertas</span>
                   <p className="text-sm font-bold text-[#1d1d1f]">
                     {report.template_specs?.page_format || "A4"}
                   </p>
@@ -403,27 +403,27 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   </p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Reshaped Margins</span>
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Margin Atas &amp; Bawah</span>
                   <p className="text-sm font-bold text-[#1d1d1f]">
-                    {report.template_specs?.margin_top_mm ?? 20}mm / {report.template_specs?.margin_bottom_mm ?? 20}mm
+                    {report.template_specs?.margin_top_mm ?? 20} mm / {report.template_specs?.margin_bottom_mm ?? 20} mm
                   </p>
-                  <p className="text-[11px] text-[#86868b]">Top &amp; Bottom bounds</p>
+                  <p className="text-[11px] text-[#86868b]">Batas tepi vertikal</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Side Margins</span>
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Margin Kiri &amp; Kanan</span>
                   <p className="text-sm font-bold text-[#1d1d1f]">
-                    {report.template_specs?.margin_left_mm ?? 18}mm / {report.template_specs?.margin_right_mm ?? 18}mm
+                    {report.template_specs?.margin_left_mm ?? 18} mm / {report.template_specs?.margin_right_mm ?? 18} mm
                   </p>
-                  <p className="text-[11px] text-[#86868b]">Left &amp; Right borders</p>
+                  <p className="text-[11px] text-[#86868b]">Batas tepi horizontal</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Column Alignment</span>
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Jumlah Kolom</span>
                   <p className="text-sm font-bold text-[#1d1d1f] text-[#0071e3]">
                     {report.template_specs?.column_count === 2
-                      ? `2 Columns (${report.template_specs?.column_gap_mm || 6.35}mm gap)`
-                      : "1 Column (Single Column Grid)"}
+                      ? `2 Kolom (${report.template_specs?.column_gap_mm || 6.35} mm spasi)`
+                      : "1 Kolom"}
                   </p>
-                  <p className="text-[11px] text-[#86868b]">Template column grid</p>
+                  <p className="text-[11px] text-[#86868b]">Struktur kolom naskah</p>
                 </div>
               </div>
 
@@ -431,7 +431,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               {report.fixed_layout.remediation_actions && report.fixed_layout.remediation_actions.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#86868b]">
-                    Automated Corrective Actions Applied Today ({report.fixed_layout.remediation_actions.length})
+                    Penyesuaian Format Otomatis ({report.fixed_layout.remediation_actions.length})
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {report.fixed_layout.remediation_actions.map((act, i) => (
@@ -457,9 +457,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   <FileText className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 1: Page Layout &amp; Margins</h2>
+                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">1. Format Halaman &amp; Margin</h2>
                   <p className="text-xs text-[#86868b]">
-                    Checks page dimensions, margins, and column layouts against {report.template_specs ? "target template specifications" : "standard guidelines"}
+                    Pengecekan ukuran kertas, margin batas tepi, dan jumlah kolom terhadap template jurnal.
                   </p>
                 </div>
               </div>
@@ -467,25 +467,25 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 variant={report.modules.geometry_and_layout.pass ? "success" : "destructive"}
                 className="text-[10px]"
               >
-                {report.modules.geometry_and_layout.pass ? "PASSED" : "NEEDS FIX"}
+                {report.modules.geometry_and_layout.pass ? "SESUAI" : "PERLU DIPERBAIKI"}
               </Badge>
             </div>
 
             {report.modules.geometry_and_layout.checks.length === 0 ? (
               <div className="p-6 text-xs text-[#34c759] bg-[#34c759]/5 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>All page dimensions, margins, and column layouts match the journal guidelines perfectly.</span>
+                <span>Ukuran kertas, margin batas tepi, dan format kolom naskah sudah sesuai standar jurnal.</span>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#f5f5f7] text-[#86868b] font-semibold border-b border-black/[0.06]">
                     <tr>
-                      <th className="px-6 py-3">Formatting Rule</th>
-                      <th className="px-6 py-3">Page</th>
-                      <th className="px-6 py-3">Required by Journal</th>
-                      <th className="px-6 py-3">Found in Your Draft</th>
-                      <th className="px-6 py-3">Detected Area [x, y, w, h]</th>
+                      <th className="px-6 py-3">Aturan Format</th>
+                      <th className="px-6 py-3">Halaman</th>
+                      <th className="px-6 py-3">Standar Jurnal</th>
+                      <th className="px-6 py-3">Naskah Anda</th>
+                      <th className="px-6 py-3">Posisi [x, y, w, h]</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-black/[0.06]">
@@ -517,22 +517,22 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   <Shield className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 2: Blind Review Anonymity</h2>
-                  <p className="text-xs text-[#86868b]">Ensures author names, university affiliations, emails, and grant mentions are removed for fair peer review</p>
+                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">2. Pemeriksaan Anonimitas (Double-Blind)</h2>
+                  <p className="text-xs text-[#86868b]">Memeriksa nama penulis, afiliasi kampus, email, dan info pendanaan agar tetap anonim saat ditinjau reviewer</p>
                 </div>
               </div>
               <Badge
                 variant={report.modules.anonymization.pass ? "success" : "warning"}
                 className="text-[10px]"
               >
-                {report.modules.anonymization.pass ? "PASSED" : "AUTHOR INFO FOUND"}
+                {report.modules.anonymization.pass ? "SESUAI" : "IDENTITAS DITEMUKAN"}
               </Badge>
             </div>
 
             {report.modules.anonymization.leaks_found.length === 0 ? (
               <div className="p-6 text-xs text-[#34c759] bg-[#34c759]/5 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>No author names, university affiliations, emails, ORCID numbers, or metadata tags found.</span>
+                <span>Naskah bersih. Tidak ditemukan nama penulis, afiliasi institusi, email, maupun ID peneliti.</span>
               </div>
             ) : (
               <div className="p-6 space-y-3">
@@ -545,7 +545,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                       </span>
                       <span className="text-[#1d1d1f] font-mono font-medium">{l.leak}</span>
                     </div>
-                    <span className="text-[#86868b] font-medium">Page {l.page}</span>
+                    <span className="text-[#86868b] font-medium">Halaman {l.page}</span>
                   </div>
                 ))}
               </div>
@@ -560,9 +560,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 3: Citations &amp; References Check</h2>
+                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">3. Sitasi &amp; Daftar Pustaka</h2>
                   <p className="text-xs text-[#86868b]">
-                    Matches in-text citations against the reference list ({report.modules.citation_crosscheck.total_cited} references found)
+                    Pengecekan kesesuaian sitasi dalam teks dengan daftar pustaka ({report.modules.citation_crosscheck.total_cited} rujukan ditemukan)
                   </p>
                 </div>
               </div>
@@ -570,7 +570,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 variant={report.modules.citation_crosscheck.pass ? "success" : "warning"}
                 className="text-[10px]"
               >
-                {report.modules.citation_crosscheck.pass ? "PASSED" : "ISSUES FOUND"}
+                {report.modules.citation_crosscheck.pass ? "SESUAI" : "PERLU DICEK"}
               </Badge>
             </div>
 
@@ -578,11 +578,11 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               {/* Uncited references */}
               <div className="space-y-2">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[#86868b]">
-                  References Never Cited in Body Text ({report.modules.citation_crosscheck.uncited_references.length})
+                  Ada di Daftar Pustaka tapi Belum Dikutip ({report.modules.citation_crosscheck.uncited_references.length})
                 </h3>
                 {report.modules.citation_crosscheck.uncited_references.length === 0 ? (
                   <p className="text-xs text-[#34c759] flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Every reference in the bibliography is cited in the paper.
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Semua referensi di daftar pustaka telah dikutip dalam naskah.
                   </p>
                 ) : (
                   <ul className="space-y-1.5">
@@ -598,11 +598,11 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               {/* Missing citations */}
               <div className="space-y-2">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[#86868b]">
-                  Citations Missing from Bibliography ({report.modules.citation_crosscheck.missing_citations.length})
+                  Dikutip di Naskah tapi Belum Masuk Daftar Pustaka ({report.modules.citation_crosscheck.missing_citations.length})
                 </h3>
                 {report.modules.citation_crosscheck.missing_citations.length === 0 ? (
                   <p className="text-xs text-[#34c759] flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Every inline citation exists in the bibliography.
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Semua sitasi dalam teks sudah tercantum di daftar pustaka.
                   </p>
                 ) : (
                   <ul className="space-y-1.5">

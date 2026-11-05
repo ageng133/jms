@@ -95,7 +95,7 @@ class CitationAuditor(BaseAuditModule):
                                 p_idx,
                                 [int(r.x0), int(r.y0), int(r.x1), int(r.y1)],
                                 "CITATION_MISSING",
-                                f"Citation [{num}] cited in body text but not found in Bibliography.",
+                                f"Citation [{num}] is not listed in the bibliography.",
                             ))
 
             # Check backward: bibliography entries never cited in body
@@ -116,7 +116,7 @@ class CitationAuditor(BaseAuditModule):
                                 p_idx,
                                 [int(r.x0), int(r.y0), int(r.x1), int(r.y1)],
                                 "UNCITED_REFERENCE",
-                                f"Reference [{idx}] listed in bibliography but never cited in body text.",
+                                f"Reference [{idx}] is never cited in the body text.",
                             ))
 
             total_cited = len(inline_numbers)

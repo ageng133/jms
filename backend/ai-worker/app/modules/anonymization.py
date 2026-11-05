@@ -105,18 +105,18 @@ def is_valid_academic_affiliation(text: str) -> bool:
 
 
 def humanize_leak_annotation(leak_type: str, leak_text: str, page: int) -> str:
-    """Generates a contextual, actionable note for each specific double-blind leak."""
+    """Generates a clear, friendly note for each specific double-blind leak."""
     if leak_type == "Author Name":
-        return f"Author byline identified: '{leak_text}' on Page {page}. Author names must be removed or blinded for double-blind peer review."
+        return f"Author name found: '{leak_text}' (Page {page}). Remove author name for double-blind review."
     elif leak_type == "University / Affiliation":
-        return f"Institutional affiliation identified: '{leak_text}' on Page {page}. Institution names should be omitted to preserve reviewer anonymity."
+        return f"Institution found: '{leak_text}' (Page {page}). Remove affiliation for double-blind review."
     elif leak_type == "EMAIL":
-        return f"Direct email address detected: '{leak_text}' on Page {page}. Email addresses must be removed before submission."
+        return f"Email found: '{leak_text}' (Page {page}). Remove email address for double-blind review."
     elif leak_type == "ORCID":
-        return f"Author ORCID detected: '{leak_text}' on Page {page}. Persistent author identifiers must be omitted during review."
+        return f"ORCID found: '{leak_text}' (Page {page}). Remove ORCID for double-blind review."
     elif leak_type == "FUNDING_LEAK":
-        return f"Funding disclosure identified: '{leak_text}' on Page {page}. Move grant and funding details to a separate non-blinded disclosure sheet."
-    return f"Double-blind review leak ({leak_type}): '{leak_text}'. Remove or anonymize before submission."
+        return f"Funding source found: '{leak_text}' (Page {page}). Remove grant or funding details for double-blind review."
+    return f"Identity detail found: '{leak_text}' (Page {page}). Remove for double-blind review."
 
 
 class AnonymizationAuditor(BaseAuditModule):
