@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -193,18 +194,31 @@ func (h *SubmissionHandler) ConfirmSubmission(c *gin.Context) {
 	response.Success(c, http.StatusAccepted, result)
 }
 
-// Query audit outcome
+// Query audit outcome (accepts either Audit UUID or Manuscript UUID)
 func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 	idStr := c.Param("id")
-	auditID, err := uuid.Parse(idStr)
+	targetID, err := uuid.Parse(idStr)
 	if err != nil {
-		response.BadRequest(c, "Invalid audit UUID", err.Error())
+		response.BadRequest(c, "Invalid UUID parameter", err.Error())
 		return
 	}
 
-	audit, err := h.usecase.GetAuditReport(c.Request.Context(), auditID)
-	if err != nil {
-		response.NotFound(c, "Audit report not found")
+	audit, err := h.usecase.GetAuditReport(c.Request.Context(), targetID)
+	if err != nil || audit == nil {
+		// Graceful fallback: Check if targetID is a Manuscript ID and resolve its latest audit
+		if manuscript, mErr := h.usecase.GetManuscript(c.Request.Context(), targetID); mErr == nil && manuscript != nil {
+			for _, file := range manuscript.Files {
+				if len(file.Audits) > 0 {
+					// Choose the latest audit
+					audit = &file.Audits[len(file.Audits)-1]
+					break
+				}
+			}
+		}
+	}
+
+	if audit == nil {
+		response.NotFound(c, "Audit report not found for specified Audit or Manuscript ID")
 		return
 	}
 
@@ -319,7 +333,19 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 		"fixed_layout":         fixedLayout,
 		"annotated_pdf_s3_key": audit.AnnotatedPdfS3Key,
 		"original_pdf_s3_key":  originalPdfS3Key,
-		"error_message":        audit.ErrorMessage,
+		"ai_engine": func() string {
+			if os.Getenv("GEMINI_API_KEY") != "" || os.Getenv("GOOGLE_API_KEY") != "" {
+				return "Google Gemini 1.5 Flash (Multimodal Vision)"
+			}
+			return "Autonomous Geometry Engine (PyMuPDF Heuristic)"
+		}(),
+		"ai_mode": func() string {
+			if os.Getenv("GEMINI_API_KEY") != "" || os.Getenv("GOOGLE_API_KEY") != "" {
+				return "LIVE_GEMINI_AI"
+			}
+			return "DETERMINISTIC_LOCAL_RECOVERY"
+		}(),
+		"error_message": audit.ErrorMessage,
 		"created_at":           audit.CreatedAt,
 		"completed_at":         audit.CompletedAt,
 	}

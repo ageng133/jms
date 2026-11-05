@@ -97,6 +97,8 @@ export interface PreSubmissionAuditReport {
   template_specs?: TemplateSpecs;
   annotated_pdf_s3_key?: string;
   original_pdf_s3_key?: string;
+  ai_engine?: string;
+  ai_mode?: "LIVE_GEMINI_AI" | "DETERMINISTIC_LOCAL_RECOVERY";
   fixed_layout?: FixedLayoutRemediation;
 }
 

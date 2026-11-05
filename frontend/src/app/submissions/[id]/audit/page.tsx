@@ -44,8 +44,10 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
       return;
     }
 
-    if (!auditId) {
-      setError("Missing audit_id parameter in URL");
+    // Resolve via query parameter audit_id or automatically via manuscript ID in route
+    const targetIdentifier = auditId || resolvedParams.id;
+    if (!targetIdentifier) {
+      setError("Missing submission identifier");
       setLoading(false);
       return;
     }
@@ -53,7 +55,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
     try {
       setLoading(true);
       setError(null);
-      const data = await getAuditReport(auditId);
+      const data = await getAuditReport(targetIdentifier);
       setReport(data);
     } catch (err: any) {
       setError(err.message || "Failed to fetch audit report");
@@ -76,7 +78,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
       }
     }, 4000);
     return () => clearInterval(interval);
-  }, [auditId, user]);
+  }, [auditId, resolvedParams.id, user]);
 
   if (authLoading) {
     return (
@@ -114,9 +116,21 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
             <Badge variant="default" className="text-[10px]">
               Template-Driven Audit
             </Badge>
+            {report?.ai_engine && (
+              <Badge
+                variant="outline"
+                className={`text-[10px] ${
+                  report.ai_mode === "LIVE_GEMINI_AI"
+                    ? "border-[#34c759]/30 text-[#34c759] bg-[#34c759]/5"
+                    : "border-[#ff9500]/30 text-[#ff9500] bg-[#ff9500]/5"
+                }`}
+              >
+                {report.ai_engine}
+              </Badge>
+            )}
           </div>
           <p className="text-xs text-[#86868b] font-mono">
-            Manuscript: {resolvedParams.id} &bull; Audit: {auditId || "N/A"}
+            Manuscript: {resolvedParams.id} &bull; Audit: {report?.audit_id || auditId || "Latest Audit"}
           </p>
         </div>
 
