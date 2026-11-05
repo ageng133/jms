@@ -99,7 +99,6 @@ def run_e2e_verification():
     # 2. Authenticate with Gateway via Google SSO
     print("\n[Step 1] Authenticating with Gateway API via Google SSO...")
     res = requests.post(f"{BASE_URL}/auth/google", json={
-        "credential": "test.google.jwt.token",
         "email": "author.reshape.test@uts.edu.au",
         "name": "Dr. Reshape Tester"
     })
@@ -129,12 +128,12 @@ def run_e2e_verification():
     template_s3_key = f"raw/{m_id}/custom_template.pdf"
     draft_s3_key = f"raw/{m_id}/draft_violating.pdf"
 
-    # Direct upload to Gateway file storage
-    res_t = requests.post(f"{BASE_URL}/files/upload?key={template_s3_key}", data=t_bytes)
+    # Direct upload to Gateway file storage (authenticated)
+    res_t = requests.post(f"{BASE_URL}/files/upload?key={template_s3_key}", data=t_bytes, headers=headers)
     assert res_t.status_code == 200, f"Upload template failed: {res_t.text}"
     print(f"✓ Uploaded Custom Template ({len(t_bytes)} bytes) to key: {template_s3_key}")
 
-    res_d = requests.post(f"{BASE_URL}/files/upload?key={draft_s3_key}", data=d_bytes)
+    res_d = requests.post(f"{BASE_URL}/files/upload?key={draft_s3_key}", data=d_bytes, headers=headers)
     assert res_d.status_code == 200, f"Upload draft failed: {res_d.text}"
     print(f"✓ Uploaded Draft Manuscript ({len(d_bytes)} bytes) to key: {draft_s3_key}")
 
@@ -186,9 +185,10 @@ def run_e2e_verification():
         print(f"    - {a}")
 
     # 8. Download the Reshaped Camera-Ready PDF
-    print("\n[Step 6] Downloading and verifying the Reshaped Camera-Ready PDF...")
-    download_url = f"{BASE_URL}/files/download?key={audit_data.get('annotated_pdf_s3_key')}"
-    res_dl = requests.get(download_url)
+    reshaped_pdf_key = audit_data.get('fixed_layout', {}).get('fixed_pdf_s3_key') or audit_data.get('annotated_pdf_s3_key')
+    print(f"\n[Step 6] Downloading and verifying the Reshaped Camera-Ready PDF ({reshaped_pdf_key})...")
+    download_url = f"{BASE_URL}/files/download?key={reshaped_pdf_key}"
+    res_dl = requests.get(download_url, headers=headers)
     assert res_dl.status_code == 200, f"Download failed: {res_dl.status_code}"
     reshaped_pdf_bytes = res_dl.content
     print(f"✓ Downloaded Reshaped PDF: {len(reshaped_pdf_bytes)} bytes")
