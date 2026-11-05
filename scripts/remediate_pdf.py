@@ -12,6 +12,7 @@ import os
 import json
 import argparse
 import re
+import hashlib
 from typing import Dict, Any, List, Tuple, Optional
 
 try:
@@ -30,6 +31,19 @@ class TemplateExtractor:
     def extract(template_path: str) -> Dict[str, Any]:
         if not os.path.exists(template_path) or os.path.getsize(template_path) == 0:
             return TemplateExtractor.get_default_ieee_specs()
+
+        # Kaizen Performance Optimization: Fast SHA-256 Template Geometry Cache
+        cache_path = None
+        try:
+            with open(template_path, "rb") as f:
+                thash = hashlib.sha256(f.read()).hexdigest()[:16]
+            cache_path = os.path.join(os.path.dirname(template_path) or "/tmp", f".fk_tpl_{thash}.json")
+            if os.path.exists(cache_path):
+                with open(cache_path, "r") as f:
+                    cached_specs = json.load(f)
+                    return cached_specs
+        except Exception:
+            pass
 
         try:
             doc = fitz.open(template_path)
@@ -94,7 +108,7 @@ class TemplateExtractor:
                     column_gap_mm = round((right_min_x0 - left_max_x1) * PT_TO_MM, 1)
 
             doc.close()
-            return {
+            specs = {
                 "page_format": fmt,
                 "page_width_mm": w_mm,
                 "page_height_mm": h_mm,
@@ -106,6 +120,15 @@ class TemplateExtractor:
                 "column_gap_mm": column_gap_mm,
                 "is_custom_template": True,
             }
+
+            if cache_path:
+                try:
+                    with open(cache_path, "w") as f:
+                        json.dump(specs, f)
+                except Exception:
+                    pass
+
+            return specs
         except Exception as e:
             print(f"[WARN] Error extracting template specs: {e}. Falling back to default IEEE.", file=sys.stderr)
             return TemplateExtractor.get_default_ieee_specs()
