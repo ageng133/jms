@@ -41,3 +41,55 @@ def test_anonymization_clean_document_passes():
     assert result.pass_ is True
     assert len(result.leaks_found) == 0
 
+
+
+def test_anonymization_indonesian_text_no_false_positives():
+    doc = fitz.open()
+    page = doc.new_page(width=595, height=842)
+
+    indonesian_readme = (
+        "churn-study\n\n"
+        "Kode penelitian Memprediksi Pelanggan yang Berhenti Membeli Jenis Barang Tertentu dari Riwayat Pembelian Amazon,\n"
+        "ditulis ulang sebagai paket Python yang modular. Data: Open E-Commerce 1.0 di Hugging Face.\n\n"
+        "Pemasangan\n"
+        "python -m venv .venv\n"
+        "Berkas artifacts.pkl di repositori yang sama sengaja tidak diunduh atau dimuat.\n\n"
+        "Menjalankan\n"
+        "churn-study run --quick  # uji cepat, angkanya tidak sebanding dengan naskah\n"
+        "churn-study weka --rule B_adaptif  # ekspor ARFF untuk Weka\n"
+        "Lokasi data dan hasil dapat diubah lewat variabel lingkungan CHURN_DATA.\n"
+    )
+    page.insert_text(fitz.Point(72, 100), indonesian_readme)
+
+    auditor = AnonymizationAuditor()
+    result, annotations = auditor.audit(doc)
+
+    assert result.pass_ is True
+    assert len(result.leaks_found) == 0
+    assert len(annotations) == 0
+
+
+def test_anonymization_indonesian_true_authors_and_affiliations():
+    doc = fitz.open()
+    page = doc.new_page(width=595, height=842)
+
+    academic_text = (
+        "Analisis Prediksi Churn Pelanggan Berbasis Graf Terdistribusi\n"
+        "Budi Santoso, Sri Mulyani\n"
+        "Fakultas Ilmu Komputer, Universitas Indonesia\n\n"
+        "Abstrak\n"
+        "Penelitian ini menganalisis pola churn pelanggan e-commerce.\n"
+    )
+    page.insert_text(fitz.Point(72, 100), academic_text)
+
+    auditor = AnonymizationAuditor()
+    result, annotations = auditor.audit(doc)
+
+    assert result.pass_ is False
+    leaks = {l.leak: l.type for l in result.leaks_found}
+    assert "Budi Santoso" in leaks or "Sri Mulyani" in leaks
+    assert any("Universitas Indonesia" in l.leak or "Fakultas Ilmu Komputer" in l.leak for l in result.leaks_found)
+    assert len(annotations) > 0
+    # Verify humanized notes
+    for _, _, rule, comment in annotations:
+        assert "Author byline identified" in comment or "Institutional affiliation identified" in comment

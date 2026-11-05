@@ -418,7 +418,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
                   <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Column Alignment</span>
                   <p className="text-sm font-bold text-[#1d1d1f] text-[#0071e3]">
-                    {report.template_specs?.column_count || 2} Columns ({report.template_specs?.column_gap_mm || 6.35}mm gap)
+                    {report.template_specs?.column_count === 2
+                      ? `2 Columns (${report.template_specs?.column_gap_mm || 6.35}mm gap)`
+                      : "1 Column (Single Column Grid)"}
                   </p>
                   <p className="text-[11px] text-[#86868b]">Template column grid</p>
                 </div>

@@ -65,13 +65,14 @@ class TemplateExtractor:
                 fmt = f"Custom ({w_mm}x{h_mm}mm)"
 
             # Scan text blocks to detect margins
+            # Exclude running headers / footers (< 45 pt from edges)
             body_blocks = []
             for page in doc[:3]:
                 for b in page.get_text("blocks"):
                     if b[6] != 0: continue  # text only
                     t = b[4].strip()
-                    if len(t) <= 3: continue
-                    if b[1] < 25 or b[3] > (page.rect.height - 25): continue
+                    if len(t) < 15: continue
+                    if b[1] < 45 or b[3] > (page.rect.height - 45): continue
                     body_blocks.append(b)
 
             if not body_blocks:
@@ -83,29 +84,60 @@ class TemplateExtractor:
             min_x0 = min(b[0] for b in body_blocks)
             max_x1 = max(b[2] for b in body_blocks)
 
-            margin_top_mm = max(12.0, round(min_y0 * PT_TO_MM, 1))
+            margin_top_mm = min(38.0, max(14.0, round(min_y0 * PT_TO_MM, 1)))
             bottom_pts = h_pt - max_y1
             if bottom_pts > (h_pt * 0.45):
                 margin_bottom_mm = margin_top_mm
             else:
-                margin_bottom_mm = max(12.0, round(bottom_pts * PT_TO_MM, 1))
+                margin_bottom_mm = min(38.0, max(14.0, round(bottom_pts * PT_TO_MM, 1)))
 
-            margin_left_mm = max(12.0, round(min_x0 * PT_TO_MM, 1))
-            margin_right_mm = max(12.0, round((w_pt - max_x1) * PT_TO_MM, 1))
+            margin_left_mm = min(35.0, max(14.0, round(min_x0 * PT_TO_MM, 1)))
+            margin_right_mm = min(35.0, max(14.0, round((w_pt - max_x1) * PT_TO_MM, 1)))
 
-            # Detect Column Count
+            # Detect Column Count (robust paragraph ratio detection)
             column_count = 1
             column_gap_mm = 6.35
             midpoint = w_pt / 2.0
-            left_blocks = [b for b in body_blocks if b[0] < midpoint and b[2] < (midpoint + 30)]
-            right_blocks = [b for b in body_blocks if b[0] > (midpoint - 30)]
 
-            if len(left_blocks) >= 1 and len(right_blocks) >= 1:
+            full_width_count = 0
+            col_width_count = 0
+            left_col_count = 0
+            right_col_count = 0
+
+            for b in body_blocks:
+                bw = b[2] - b[0]
+                ratio = bw / w_pt
+                if len(b[4].strip()) < 30: continue
+                if ratio >= 0.55:
+                    full_width_count += 1
+                elif 0.28 <= ratio <= 0.52:
+                    col_width_count += 1
+                    if b[0] < midpoint and b[2] < (midpoint + 40):
+                        left_col_count += 1
+                    elif b[0] > (midpoint - 40):
+                        right_col_count += 1
+
+            is_two_column = False
+            if left_col_count >= 1 and right_col_count >= 1:
+                if full_width_count == 0:
+                    is_two_column = True
+                elif (
+                    col_width_count >= 4
+                    and left_col_count >= 2
+                    and right_col_count >= 2
+                    and col_width_count > (full_width_count * 1.5)
+                ):
+                    is_two_column = True
+
+            if is_two_column:
                 column_count = 2
-                right_min_x0 = min(b[0] for b in right_blocks)
-                left_max_x1 = max(b[2] for b in left_blocks)
-                if right_min_x0 > left_max_x1:
-                    column_gap_mm = round((right_min_x0 - left_max_x1) * PT_TO_MM, 1)
+                left_blocks = [b for b in body_blocks if b[0] < midpoint and b[2] < (midpoint + 30)]
+                right_blocks = [b for b in body_blocks if b[0] > (midpoint - 30)]
+                if left_blocks and right_blocks:
+                    right_min_x0 = min(b[0] for b in right_blocks)
+                    left_max_x1 = max(b[2] for b in left_blocks)
+                    if right_min_x0 > left_max_x1:
+                        column_gap_mm = round((right_min_x0 - left_max_x1) * PT_TO_MM, 1)
 
             # Detect Typography & Spacing from template
             font_counts = {}

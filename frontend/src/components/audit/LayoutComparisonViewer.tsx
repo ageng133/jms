@@ -127,7 +127,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
             {layoutViolationsCount > 0 ? "Non-standard columns" : "Standard"}
             <ArrowRight className="w-3 h-3 text-[#86868b]" />
             <span className="text-[#0071e3] font-bold">
-              {report.template_specs?.column_count || 2} Columns
+              {report.template_specs?.column_count === 2 ? "2 Columns" : "1 Column"}
             </span>
           </span>
         </div>
