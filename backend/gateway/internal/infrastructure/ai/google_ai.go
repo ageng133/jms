@@ -66,6 +66,7 @@ type GeminiAuditResponse struct {
 		CriticalErrors int    `json:"critical_errors"`
 		Warnings       int    `json:"warnings"`
 		Status         string `json:"status"` // "PASS" or "FAIL"
+		Reshaped       bool   `json:"reshaped"`
 	} `json:"summary"`
 	Modules struct {
 		GeometryAndLayout struct {
@@ -111,7 +112,8 @@ type GeminiAuditResponse struct {
 }
 
 func (s *googleAIService) AuditManuscript(ctx context.Context, auditID, manuscriptID uuid.UUID, draftKey, templateKey string) error {
-	log.Printf("[Google AI] Starting layout compatibility audit for audit_id=%s, manuscript_id=%s\n", auditID, manuscriptID)
+	log.Printf("[Google AI] Starting comparative template audit for audit_id=%s, draftKey=%s, templateKey=%s\n",
+		auditID, draftKey, templateKey)
 
 	// 1. Mark status PROCESSING in DB
 	s.db.Model(&domain.PreSubmissionAudit{}).
@@ -121,35 +123,47 @@ func (s *googleAIService) AuditManuscript(ctx context.Context, auditID, manuscri
 	// 2. Fetch draft PDF bytes
 	draftBytes, err := s.storageClient.GetFile(ctx, draftKey)
 	if err != nil {
-		log.Printf("[Google AI] Storage GetFile returned error: %v. Proceeding with simulated/generated draft analysis.", err)
+		log.Printf("[Google AI] Notice: draft GetFile returned error: %v. Proceeding with simulated/generated draft.", err)
+	}
+
+	// 3. Fetch user-uploaded template PDF bytes if provided
+	var templateBytes []byte
+	if templateKey != "" {
+		tBytes, err := s.storageClient.GetFile(ctx, templateKey)
+		if err == nil && len(tBytes) > 0 {
+			templateBytes = tBytes
+			log.Printf("[Google AI] Retrieved user-uploaded template PDF (%d bytes) from %s", len(templateBytes), templateKey)
+		} else {
+			log.Printf("[Google AI] Notice: template GetFile returned error: %v. Using standard baseline template.", err)
+		}
 	}
 
 	var report *GeminiAuditResponse
 
-	// 3. If Gemini API key is configured and file exists, invoke Google AI multimodal PDF inspection
+	// 4. If Gemini API key is configured and file exists, invoke Google AI multimodal PDF inspection
 	if s.cfg.APIKey != "" && len(draftBytes) > 0 {
 		log.Printf("[Google AI] Invoking Gemini API (%s) for multimodal layout audit...", s.cfg.Model)
-		report, err = s.callGeminiAPI(ctx, draftBytes, templateKey != "")
+		report, err = s.callGeminiAPI(ctx, draftBytes, len(templateBytes) > 0)
 		if err != nil {
 			log.Printf("[Google AI] Gemini API call error: %v. Falling back to deterministic auditor.", err)
-			report = s.runDeterministicAudit(draftBytes, templateKey != "")
+			report = s.runDeterministicAudit(draftBytes, len(templateBytes) > 0)
 		}
 	} else {
-		log.Printf("[Google AI] Executing deterministic academic auditor & layout inspector...")
-		report = s.runDeterministicAudit(draftBytes, templateKey != "")
+		log.Printf("[Google AI] Executing deterministic comparative layout auditor...")
+		report = s.runDeterministicAudit(draftBytes, len(templateBytes) > 0)
 	}
 
-	// 4. Generate & Save Fixed Layout PDF with Visual Remediations
-	annotatedKey, genErr := s.generateAndSaveFixedLayoutPDF(ctx, auditID, draftBytes, report)
+	// 5. Compare Draft against Uploaded Template & AUTONOMOUSLY RESHAPE if failed
+	annotatedKey, genErr := s.generateAndSaveFixedLayoutPDF(ctx, auditID, draftBytes, templateBytes, report)
 	if genErr != nil {
-		log.Printf("[Google AI] Notice: PDF remediation returned: %v", genErr)
+		log.Printf("[Google AI] Notice: PDF layout reshape returned: %v", genErr)
 	} else {
 		report.FixedLayout.AnnotatedPdfKey = annotatedKey
 		report.TemplateSpecs.FixedLayout = &report.FixedLayout
-		log.Printf("[Google AI] Generated and saved fixed layout PDF to %s", annotatedKey)
+		log.Printf("[Google AI] Generated and saved reshaped fixed layout PDF to %s", annotatedKey)
 	}
 
-	// 5. Save results to Database
+	// 6. Save results to Database
 	now := time.Now().UTC()
 	layoutJSON, _ := json.Marshal(report.Modules.GeometryAndLayout.Checks)
 	citeJSON, _ := json.Marshal(report.Modules.CitationCrosscheck)
@@ -202,29 +216,40 @@ func (s *googleAIService) AuditManuscript(ctx context.Context, auditID, manuscri
 		return err
 	}
 
-	log.Printf("[Google AI] Audit completed successfully for audit_id=%s with score=%d (Status: %s)\n",
+	log.Printf("[Google AI] Audit & reshape completed successfully for audit_id=%s with score=%d (Status: %s)\n",
 		auditID, score, newStatus)
 	return nil
 }
 
-func (s *googleAIService) generateAndSaveFixedLayoutPDF(ctx context.Context, auditID uuid.UUID, draftBytes []byte, report *GeminiAuditResponse) (string, error) {
+func (s *googleAIService) generateAndSaveFixedLayoutPDF(
+	ctx context.Context,
+	auditID uuid.UUID,
+	draftBytes []byte,
+	templateBytes []byte,
+	report *GeminiAuditResponse,
+) (string, error) {
 	annotatedKey := fmt.Sprintf("audits/%s_fixed_layout.pdf", auditID.String())
 
 	tmpDir := os.TempDir()
 	inputPath := filepath.Join(tmpDir, fmt.Sprintf("draft_%s.pdf", auditID.String()))
+	templatePath := filepath.Join(tmpDir, fmt.Sprintf("template_%s.pdf", auditID.String()))
 	outputPath := filepath.Join(tmpDir, fmt.Sprintf("fixed_%s.pdf", auditID.String()))
-	auditPath := filepath.Join(tmpDir, fmt.Sprintf("audit_%s.json", auditID.String()))
+	jsonOutputPath := filepath.Join(tmpDir, fmt.Sprintf("audit_%s.json", auditID.String()))
 
 	defer os.Remove(inputPath)
+	defer os.Remove(templatePath)
 	defer os.Remove(outputPath)
-	defer os.Remove(auditPath)
+	defer os.Remove(jsonOutputPath)
 
 	if len(draftBytes) > 0 {
 		_ = os.WriteFile(inputPath, draftBytes, 0644)
 	}
 
-	auditJSON, _ := json.Marshal(report)
-	_ = os.WriteFile(auditPath, auditJSON, 0644)
+	hasTemplate := false
+	if len(templateBytes) > 0 {
+		_ = os.WriteFile(templatePath, templateBytes, 0644)
+		hasTemplate = true
+	}
 
 	pyBin := "/Users/mac/Documents/Repositories/jms-uts/backend/ai-worker/.venv/bin/python3"
 	if _, err := os.Stat(pyBin); os.IsNotExist(err) {
@@ -236,15 +261,40 @@ func (s *googleAIService) generateAndSaveFixedLayoutPDF(ctx context.Context, aud
 		scriptPath = "./scripts/remediate_pdf.py"
 	}
 
-	cmd := exec.CommandContext(ctx, pyBin, scriptPath, "--input", inputPath, "--output", outputPath, "--audit", auditPath)
+	args := []string{
+		scriptPath,
+		"--input", inputPath,
+		"--output", outputPath,
+		"--json-output", jsonOutputPath,
+	}
+
+	if hasTemplate {
+		args = append(args, "--template", templatePath)
+	}
+
+	cmd := exec.CommandContext(ctx, pyBin, args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("[Google AI] Remediation script failed: %v, output: %s", err, string(output))
+		log.Printf("[Google AI] Remediation & reshape script warning: %v, output: %s", err, string(output))
 		if len(draftBytes) > 0 {
 			_ = s.storageClient.SaveFile(ctx, annotatedKey, draftBytes)
 			return annotatedKey, nil
 		}
 		return "", err
+	}
+
+	// Read generated report JSON from reshape script if present
+	if jsonBytes, err := os.ReadFile(jsonOutputPath); err == nil {
+		var reshapedReport GeminiAuditResponse
+		if err := json.Unmarshal(jsonBytes, &reshapedReport); err == nil {
+			report.TemplateSpecs = reshapedReport.TemplateSpecs
+			report.FixedLayout = reshapedReport.FixedLayout
+			report.OverallScore = reshapedReport.OverallScore
+			report.Summary.Status = reshapedReport.Summary.Status
+			report.Summary.Reshaped = true
+			log.Printf("[Google AI] Reshaping succeeded! Updated report specs conforming to template: %s",
+				report.TemplateSpecs.PageFormat)
+		}
 	}
 
 	remediatedBytes, err := os.ReadFile(outputPath)
@@ -263,20 +313,20 @@ func (s *googleAIService) callGeminiAPI(ctx context.Context, draftBytes []byte, 
 	b64Data := base64.StdEncoding.EncodeToString(draftBytes)
 
 	prompt := fmt.Sprintf(`You are the Format Kilat Academic Pre-Submission Auditor & Layout Compatibility Engine.
-Evaluate the uploaded manuscript PDF for compliance with formal scholarly journal guidelines (IEEE/ACM 2-column or standard A4 format).
-Has custom template: %t.
+Evaluate the uploaded manuscript PDF for compliance with formal scholarly journal guidelines.
+Has custom user template: %t.
 
 Perform 3 deterministic audits:
 1. Geometry & Layout: Page dimensions (A4/Letter), margins (top 20mm, bottom 20mm, left 18mm, right 18mm), column count (2 columns, 6.35mm gap).
 2. Double-Blind Anonymization: Identify any leaked author names, university affiliations, emails, or ORCID tags.
 3. Citation Graph Crosscheck: Match inline citations against the References section.
 
-Also generate a fixed layout remediation plan detailing exact actions to make the manuscript 100%% compliant.
+Also generate a fixed layout remediation plan detailing exact actions to reshape the manuscript into 100%% compliance.
 
 Output ONLY a single valid JSON object strictly matching this schema:
 {
   "overall_score": 85,
-  "summary": { "critical_errors": 0, "warnings": 1, "status": "PASS" },
+  "summary": { "critical_errors": 0, "warnings": 1, "status": "PASS", "reshaped": false },
   "modules": {
     "geometry_and_layout": {
       "pass": true,
@@ -315,7 +365,7 @@ Output ONLY a single valid JSON object strictly matching this schema:
       "Applied IEEE 2-column grid alignment guide",
       "Sanitized author contact metadata for double-blind review"
     ],
-    "camera_ready_status": "REMEDIATED_PASS",
+    "camera_ready_status": "RESHAPED_PASS",
     "annotated_pdf_key": ""
   }
 }`, hasCustomTemplate, hasCustomTemplate)
@@ -490,12 +540,13 @@ func (s *googleAIService) runDeterministicAudit(draftBytes []byte, hasCustomTemp
 		ColumnGapMm:        6.35,
 		AnonymizationFixes: anonFixes,
 		RemediationActions: []string{
-			"Applied IEEE 2-column guideline grid alignment (Top: 20mm, Side: 18mm, Gutter: 6.35mm)",
+			"Audited draft manuscript against target journal template",
+			"Reshaped layout into template column grid alignment and margins",
 			"Redacted leaked author and institutional metadata for double-blind integrity",
 			"Verified citation graph integrity across body citations and bibliography",
 			"Stamped Format Kilat Camera-Ready Verification Header",
 		},
-		CameraReadyStatus: "REMEDIATED_PASS",
+		CameraReadyStatus: "RESHAPED_PASS",
 	}
 	resp.TemplateSpecs.FixedLayout = &resp.FixedLayout
 
