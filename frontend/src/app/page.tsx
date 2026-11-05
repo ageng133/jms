@@ -20,6 +20,9 @@ import {
   HelpCircle,
   UploadCloud,
   FileCheck2,
+  Award,
+  CreditCard,
+  Check,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { GoogleLogo } from "@/components/GoogleAuthModal";
@@ -708,7 +711,154 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          7. BOTTOM CTA BANNER (VIBRANT AURORA GRADIENT)
+          7. COMMERCIAL PRICING & GUARANTEE TIERS (READY TO SELL)
+         ===================================================================== */}
+      <section id="pricing" className="space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <Badge variant="default" className="text-xs bg-emerald-600 text-white hover:bg-emerald-700">
+            Investasi Terjangkau &bull; Garansi 100% Lolos Triage
+          </Badge>
+          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
+            Pilih Paket Format Kilat Anda
+          </h2>
+          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+            Dari mahasiswa tingkat akhir yang mengejar deadline sidang hingga laboratorium riset kampus. Hemat berminggu-minggu revisi format editorial dengan hasil instan.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+          {/* Tier 1: Mahasiswa S1 */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-apple-card hover:shadow-xl transition-all">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mahasiswa S1</span>
+                <Badge variant="outline" className="text-[10px] text-slate-600">Free Tier</Badge>
+              </div>
+              <div className="space-y-1">
+                <div className="text-3xl font-black text-slate-900">Rp 0</div>
+                <p className="text-xs text-slate-400">Gratis selamanya untuk 1 paper per hari</p>
+              </div>
+              <ul className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Audit margin standar A4 &amp; 4-4-3-3 cm</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Pemeriksaan 1 vs 2 kolom IEEE</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Deteksi kebocoran identitas penulis</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Cross-check sitasi numerik [1]</span>
+                </li>
+              </ul>
+            </div>
+            <Button
+              variant="outline"
+              onClick={openGoogleModal}
+              className="w-full rounded-full text-xs font-bold h-10 border-slate-300 hover:bg-slate-50"
+            >
+              Mulai Gratis
+            </Button>
+          </div>
+
+          {/* Tier 2: Peneliti Mandiri S2/S3 (BEST VALUE) */}
+          <div className="rounded-3xl border-2 border-indigo-600 bg-gradient-to-b from-indigo-50/50 via-white to-white p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-4 py-1 rounded-bl-2xl">
+              PALING POPULER
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">Peneliti Pro (S2 / S3 / Dosen)</span>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-slate-900">Rp 49.000</span>
+                  <span className="text-xs text-slate-500">/ naskah</span>
+                </div>
+                <p className="text-xs text-indigo-700 font-semibold">Termasuk Sertifikat Resmi &amp; Penyesuaian Otomatis</p>
+              </div>
+              <ul className="space-y-2.5 text-xs text-slate-700 pt-2 border-t border-indigo-100 font-medium">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span><strong>Semua fitur Mahasiswa S1</strong></span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span><strong>Ekstraksi Dual-Engine Template Jurnal Sasaran</strong></span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span><strong>Auto-Reshape Layout Siap Kirim (⚡ PDF)</strong></span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span><strong>Sertifikat Kepatuhan Format Resmi (QR Code)</strong></span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>Garansi lolos desk review format atau uang kembali</span>
+                </li>
+              </ul>
+            </div>
+            <Button
+              onClick={openGoogleModal}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-xs font-bold h-11 shadow-lg shadow-indigo-600/30"
+            >
+              Pilih Paket Peneliti Pro &rarr;
+            </Button>
+          </div>
+
+          {/* Tier 3: Kampus & Lab Riset Enterprise */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-apple-card hover:shadow-xl transition-all">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Laboratorium &amp; Kampus</span>
+                <Badge variant="outline" className="text-[10px] text-purple-700 border-purple-200 bg-purple-50">Enterprise</Badge>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-slate-900">Rp 499.000</span>
+                  <span className="text-xs text-slate-500">/ bulan</span>
+                </div>
+                <p className="text-xs text-slate-400">Unlimited akun &amp; batch audit satu institusi</p>
+              </div>
+              <ul className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-purple-600 shrink-0" />
+                  <span>Audit naskah tak terbatas untuk seluruh lab/prodi</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-purple-600 shrink-0" />
+                  <span>Kustomisasi logo &amp; kop sertifikat universitas</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-purple-600 shrink-0" />
+                  <span>Akses Webhook &amp; REST API terpadu</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-purple-600 shrink-0" />
+                  <span>Dedicated server &amp; prioritas antrean rendering</span>
+                </li>
+              </ul>
+            </div>
+            <Button
+              variant="outline"
+              onClick={openGoogleModal}
+              className="w-full rounded-full text-xs font-bold h-10 border-purple-300 text-purple-800 hover:bg-purple-50"
+            >
+              Hubungi Lisensi Kampus
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
+          8. BOTTOM CTA BANNER (VIBRANT AURORA GRADIENT)
          ===================================================================== */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8 sm:p-14 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
         {/* Glow Spheres */}

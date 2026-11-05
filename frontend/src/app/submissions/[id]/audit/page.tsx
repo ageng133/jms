@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { LayoutComparisonViewer } from "@/components/audit/LayoutComparisonViewer";
 import { AICopilotWidget } from "@/components/audit/AICopilotWidget";
 import { TemplateComparisonMatrix } from "@/components/audit/TemplateComparisonMatrix";
+import { ComplianceCertificateCard } from "@/components/audit/ComplianceCertificateCard";
 
 function humanizeLeakType(type: string): string {
   const map: Record<string, string> = {
@@ -341,6 +342,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               </p>
             </div>
           </div>
+
+          {/* Official Format Kilat Compliance Certificate */}
+          <ComplianceCertificateCard report={report} />
 
           {/* Interactive Format Kilat AI Academic Copilot */}
           <AICopilotWidget
