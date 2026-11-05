@@ -259,14 +259,19 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-base sm:text-lg font-bold text-[#1d1d1f] tracking-tight">
-                        ⚡ Fixed Layout &amp; Auto-Remediation Blueprint
+                        ⚡ Autonomous Layout Reshape &amp; Remediation Blueprint
                       </h2>
                       <Badge className="bg-[#34c759] text-white text-[10px] font-semibold">
-                        {report.fixed_layout.camera_ready_status || "REMEDIATED_PASS"}
+                        {report.fixed_layout.camera_ready_status || "RESHAPED_PASS"}
                       </Badge>
+                      {report.template_specs?.is_custom_template && (
+                        <Badge variant="outline" className="text-[10px] border-[#0071e3]/30 text-[#0071e3] bg-[#0071e3]/5">
+                          Uploaded Template Match
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-[#86868b] mt-0.5">
-                      Automated layout synthesis conforming to {report.fixed_layout.target_format}
+                      Draft layout audited and autonomously reshaped to conform with {report.fixed_layout.target_format}
                     </p>
                   </div>
                 </div>
@@ -279,7 +284,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   >
                     <Button size="sm" className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold rounded-full px-4 shadow-xs gap-2">
                       <Download className="w-4 h-4" />
-                      <span>Download Camera-Ready PDF</span>
+                      <span>Download Reshaped PDF (⚡)</span>
                     </Button>
                   </a>
                 )}
@@ -289,29 +294,33 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                 <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
                   <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Target Format</span>
-                  <p className="text-sm font-bold text-[#1d1d1f]">IEEE 2-Column (A4)</p>
-                  <p className="text-[11px] text-[#86868b]">210 &times; 297 mm</p>
+                  <p className="text-sm font-bold text-[#1d1d1f]">
+                    {report.template_specs?.page_format || "A4"}
+                  </p>
+                  <p className="text-[11px] text-[#86868b]">
+                    {report.template_specs?.page_width_mm || 210} &times; {report.template_specs?.page_height_mm || 297} mm
+                  </p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Remediated Margins</span>
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Reshaped Margins</span>
                   <p className="text-sm font-bold text-[#1d1d1f]">
-                    {report.fixed_layout.target_margins_mm?.top || 20}mm / {report.fixed_layout.target_margins_mm?.bottom || 20}mm
+                    {report.template_specs?.margin_top_mm ?? 20}mm / {report.template_specs?.margin_bottom_mm ?? 20}mm
                   </p>
                   <p className="text-[11px] text-[#86868b]">Top &amp; Bottom bounds</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Side Gutters</span>
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Side Margins</span>
                   <p className="text-sm font-bold text-[#1d1d1f]">
-                    {report.fixed_layout.target_margins_mm?.left || 18}mm / {report.fixed_layout.target_margins_mm?.right || 18}mm
+                    {report.template_specs?.margin_left_mm ?? 18}mm / {report.template_specs?.margin_right_mm ?? 18}mm
                   </p>
                   <p className="text-[11px] text-[#86868b]">Left &amp; Right borders</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
                   <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Column Alignment</span>
                   <p className="text-sm font-bold text-[#1d1d1f] text-[#0071e3]">
-                    {report.fixed_layout.column_count || 2} Columns ({report.fixed_layout.column_gap_mm || 6.35}mm gap)
+                    {report.template_specs?.column_count || 2} Columns ({report.template_specs?.column_gap_mm || 6.35}mm gap)
                   </p>
-                  <p className="text-[11px] text-[#86868b]">IEEE standard gutter</p>
+                  <p className="text-[11px] text-[#86868b]">Template column grid</p>
                 </div>
               </div>
 
