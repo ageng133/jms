@@ -220,3 +220,24 @@ export async function getAuditReport(auditId: string): Promise<PreSubmissionAudi
   return fetchWithAuth(`/audits/${auditId}`);
 }
 
+// 4. Interactive AI Academic Copilot
+export async function askAICopilot(
+  req: import("@/types/jms").AICopilotRequest
+): Promise<import("@/types/jms").AICopilotResponse> {
+  const res = await fetch(`${API_BASE}/ai/copilot`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(req),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData?.error?.message || "AI Copilot request failed");
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+

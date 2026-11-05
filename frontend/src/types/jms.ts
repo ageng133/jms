@@ -102,6 +102,34 @@ export interface PreSubmissionAuditReport {
   fixed_layout?: FixedLayoutRemediation;
 }
 
+export type AcademicTier = "S1" | "S2" | "S3" | "LECTURER";
+
+export type CopilotAction =
+  | "CHAT"
+  | "LATEX_FIX"
+  | "BIBTEX_FIX"
+  | "DEFENSE_PREDICTION"
+  | "MARGIN_EXPLAIN";
+
+export interface AICopilotRequest {
+  manuscript_id?: string;
+  audit_id?: string;
+  prompt: string;
+  academic_level: AcademicTier;
+  action: CopilotAction;
+}
+
+export interface AICopilotResponse {
+  response: string;
+  academic_level: AcademicTier;
+  action: CopilotAction;
+  suggested_snippets?: string[];
+  defense_predictions?: string[];
+  checklist?: string[];
+  engine_mode: string;
+  timestamp: string;
+}
+
 export interface ManuscriptFile {
   id: string;
   manuscript_id: string;

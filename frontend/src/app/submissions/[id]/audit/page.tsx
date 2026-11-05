@@ -26,6 +26,7 @@ import { AuthGateCard } from "@/components/AuthGateCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LayoutComparisonViewer } from "@/components/audit/LayoutComparisonViewer";
+import { AICopilotWidget } from "@/components/audit/AICopilotWidget";
 
 export default function AuditReportPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -192,29 +193,33 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
             <LayoutComparisonViewer report={report} />
           )}
 
-          {/* Executive Summary Card */}
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-black/[0.06] shadow-apple-card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
-            <div className="flex items-center gap-4 sm:border-r sm:border-black/[0.06] pr-4">
+          {/* Executive Summary Card with Vibrant Accents */}
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-indigo-100 shadow-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+            <div className="flex items-center gap-4 sm:border-r sm:border-slate-100 pr-4">
               <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0 ${
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shrink-0 shadow-md ${
                   report.overall_score >= 80
-                    ? "bg-[#34c759]/10 text-[#34c759] border border-[#34c759]/20"
-                    : "bg-[#ff3b30]/10 text-[#ff3b30] border border-[#ff3b30]/20"
+                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-emerald-500/10"
+                    : "bg-rose-50 text-rose-600 border border-rose-200 shadow-rose-500/10"
                 }`}
               >
                 {report.overall_score}
               </div>
               <div>
-                <p className="text-xs font-semibold text-[#86868b]">Compliance Score</p>
+                <p className="text-xs font-semibold text-slate-500">Compliance Score</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <Badge
-                    variant={report.summary.status === "PASS" ? "success" : "destructive"}
-                    className="text-[11px] gap-1"
+                    className={`text-[11px] gap-1 font-bold ${
+                      report.summary.status === "PASS"
+                        ? "bg-emerald-500/10 text-emerald-700 border-emerald-300"
+                        : "bg-rose-500/10 text-rose-700 border-rose-300"
+                    }`}
                   >
                     {report.summary.status === "PASS" ? (
-                      <CheckCircle2 className="w-3 h-3" />
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                     ) : (
-                      <XCircle className="w-3 h-3" />
+                      <XCircle className="w-3 h-3 text-rose-600" />
                     )}
                     <span>{report.summary.status}</span>
                   </Badge>
@@ -222,25 +227,40 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            <div className="space-y-0.5 sm:border-r sm:border-black/[0.06] pr-4">
-              <p className="text-xs font-semibold text-[#86868b]">Critical Errors</p>
-              <p className="text-2xl font-bold text-[#ff3b30]">{report.summary.critical_errors}</p>
-              <p className="text-xs text-[#86868b]">Requires author remediation</p>
+            <div className="space-y-0.5 sm:border-r sm:border-slate-100 pr-4">
+              <p className="text-xs font-semibold text-slate-500">Critical Errors</p>
+              <p className="text-2xl font-black text-rose-600">{report.summary.critical_errors}</p>
+              <p className="text-xs text-slate-400">Blockers to submission</p>
             </div>
 
-            <div className="space-y-0.5 lg:border-r lg:border-black/[0.06] pr-4">
-              <p className="text-xs font-semibold text-[#86868b]">Warnings</p>
-              <p className="text-2xl font-bold text-[#ff9500]">{report.summary.warnings}</p>
-              <p className="text-xs text-[#86868b]">Non-fatal advisories</p>
+            <div className="space-y-0.5 lg:border-r lg:border-slate-100 pr-4">
+              <p className="text-xs font-semibold text-slate-500">Warnings</p>
+              <p className="text-2xl font-black text-amber-500">{report.summary.warnings}</p>
+              <p className="text-xs text-slate-400">Non-fatal advisories</p>
             </div>
 
             <div className="space-y-0.5">
-              <p className="text-xs font-semibold text-[#86868b]">Desk Review Status</p>
-              <p className="text-sm font-semibold text-[#1d1d1f]">
-                {report.summary.status === "PASS" ? "Ready for Desk Review" : "Revision Required Before Review"}
+              <p className="text-xs font-semibold text-slate-500">Desk Review Status</p>
+              <p className="text-xs sm:text-sm font-bold text-slate-800">
+                {report.summary.status === "PASS" ? (
+                  <span className="text-emerald-600 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4" /> Ready for Desk Review
+                  </span>
+                ) : (
+                  <span className="text-rose-600 flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4" /> Revision Required Before Review
+                  </span>
+                )}
               </p>
             </div>
           </div>
+
+          {/* Interactive Format Kilat AI Academic Copilot */}
+          <AICopilotWidget
+            manuscriptId={resolvedParams.id}
+            auditId={report.audit_id}
+            initialTier="S1"
+          />
 
           {/* Format Kilat: Fixed Layout & Remediation Blueprint */}
           {report.fixed_layout && (

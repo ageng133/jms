@@ -41,6 +41,7 @@ func NewRouter(
 	{
 		api.GET("/health", healthHandler.HealthCheck)
 		api.GET("/system/readiness", healthHandler.SystemReadiness)
+		api.POST("/ai/copilot", submissionHandler.AskCopilot)
 
 		// Public Auth routes
 		auth := api.Group("/auth")

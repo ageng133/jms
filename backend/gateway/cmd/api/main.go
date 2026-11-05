@@ -85,7 +85,7 @@ func main() {
 	// 7. Initialize HTTP Handlers
 	healthHandler := handler.NewHealthHandler(cfg.App.Name)
 	authHandler := handler.NewAuthHandler(authUsecase)
-	submissionHandler := handler.NewSubmissionHandler(submissionUsecase, storageClient)
+	submissionHandler := handler.NewSubmissionHandler(submissionUsecase, storageClient, googleAIService)
 
 	// 7. Initialize Gin Router
 	router := httpDelivery.NewRouter(healthHandler, authHandler, submissionHandler, authUsecase)

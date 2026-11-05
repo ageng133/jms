@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jms-uts/backend/gateway/internal/delivery/http/middleware"
 	"github.com/jms-uts/backend/gateway/internal/domain"
+	"github.com/jms-uts/backend/gateway/internal/infrastructure/ai"
 	"github.com/jms-uts/backend/gateway/internal/usecase"
 	"github.com/jms-uts/backend/gateway/pkg/response"
 )
@@ -20,10 +21,11 @@ import (
 type SubmissionHandler struct {
 	usecase       usecase.SubmissionUsecase
 	storageClient domain.StorageClient
+	googleAI      ai.GoogleAIService
 }
 
-func NewSubmissionHandler(usecase usecase.SubmissionUsecase, storageClient domain.StorageClient) *SubmissionHandler {
-	return &SubmissionHandler{usecase: usecase, storageClient: storageClient}
+func NewSubmissionHandler(usecase usecase.SubmissionUsecase, storageClient domain.StorageClient, googleAI ai.GoogleAIService) *SubmissionHandler {
+	return &SubmissionHandler{usecase: usecase, storageClient: storageClient, googleAI: googleAI}
 }
 
 type CreateDraftRequest struct {
@@ -495,5 +497,22 @@ func (h *SubmissionHandler) DirectFileDownload(c *gin.Context) {
 
 	c.Header("Content-Disposition", "inline; filename="+filepath.Base(cleanKey))
 	c.Data(http.StatusOK, "application/pdf", data)
+}
+
+// AskCopilot provides interactive academic guidance, Overleaf fixes, and defense simulator advice
+func (h *SubmissionHandler) AskCopilot(c *gin.Context) {
+	var req ai.AICopilotRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request payload", err.Error())
+		return
+	}
+
+	advice, err := h.googleAI.GenerateCopilotAdvice(c.Request.Context(), req)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "INTERNAL_ERROR", "AI Copilot error", err.Error())
+		return
+	}
+
+	response.Success(c, http.StatusOK, advice)
 }
 
