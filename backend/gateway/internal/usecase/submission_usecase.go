@@ -22,6 +22,7 @@ type SubmissionUsecase interface {
 	RequestUploadURL(ctx context.Context, manuscriptID uuid.UUID, filename string, fileType domain.FileType, fileRole string) (*PresignedUploadResult, error)
 	ConfirmSubmission(ctx context.Context, req ConfirmSubmissionDTO) (*ConfirmSubmissionResult, error)
 	GetAuditReport(ctx context.Context, auditID uuid.UUID) (*domain.PreSubmissionAudit, error)
+	GetManuscriptFile(ctx context.Context, id uuid.UUID) (*domain.ManuscriptFile, error)
 
 	// Editorial triage decisions
 	UpdateManuscriptStatus(ctx context.Context, id uuid.UUID, status domain.ManuscriptStatus) error
@@ -305,6 +306,10 @@ func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, req ConfirmSu
 
 func (u *submissionUsecase) GetAuditReport(ctx context.Context, auditID uuid.UUID) (*domain.PreSubmissionAudit, error) {
 	return u.auditRepo.GetByID(ctx, auditID)
+}
+
+func (u *submissionUsecase) GetManuscriptFile(ctx context.Context, id uuid.UUID) (*domain.ManuscriptFile, error) {
+	return u.fileRepo.GetByID(ctx, id)
 }
 
 func (u *submissionUsecase) UpdateManuscriptStatus(ctx context.Context, id uuid.UUID, status domain.ManuscriptStatus) error {

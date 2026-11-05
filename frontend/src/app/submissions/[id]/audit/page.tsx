@@ -25,6 +25,7 @@ import { useAuth } from "@/context/AuthContext";
 import { AuthGateCard } from "@/components/AuthGateCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LayoutComparisonViewer } from "@/components/audit/LayoutComparisonViewer";
 
 export default function AuditReportPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -35,7 +36,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
   const [report, setReport] = useState<PreSubmissionAuditReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(true);
 
   async function fetchReport() {
     if (!user) {
@@ -139,7 +140,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 className="rounded-full text-xs gap-1.5 border-black/[0.12]"
               >
                 {showPdfPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                <span>{showPdfPreview ? "Hide PDF Preview" : "Preview Annotated PDF"}</span>
+                <span>{showPdfPreview ? "Hide Layout Comparison" : "Show Layout Comparison"}</span>
               </Button>
               <a
                 href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/files/download?key=${encodeURIComponent(report.annotated_pdf_s3_key)}`}
@@ -148,7 +149,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               >
                 <Button size="sm" className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full shadow-xs gap-1.5">
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download PDF</span>
+                  <span>Download Reshaped PDF</span>
                 </Button>
               </a>
             </>
@@ -172,30 +173,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
 
       {report && (
         <div className="space-y-8">
-          {/* Interactive Annotated PDF Visual Proof Viewer (macOS Chrome) */}
-          {showPdfPreview && report.annotated_pdf_s3_key && (
-            <div className="bg-white rounded-3xl border border-black/[0.06] shadow-apple-card overflow-hidden p-0 space-y-0 animate-in fade-in duration-200">
-              <div className="h-11 bg-[#f5f5f7] px-4 flex items-center justify-between border-b border-black/[0.06] text-xs text-[#86868b]">
-                <div className="flex items-center space-x-2">
-                  <span className="w-3 h-3 rounded-full bg-[#ff5f57] border border-[#e0443e] inline-block" />
-                  <span className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d89e24] inline-block" />
-                  <span className="w-3 h-3 rounded-full bg-[#28c840] border border-[#1aab29] inline-block" />
-                  <span className="ml-3 font-medium text-[#1d1d1f]">
-                    Visual Proof: {report.annotated_pdf_s3_key}
-                  </span>
-                </div>
-                <Badge variant="warning" className="text-[10px]">
-                  Visual Annotations
-                </Badge>
-              </div>
-              <div className="h-[650px] bg-white">
-                <iframe
-                  src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "http://localhost:9000"}/jms-manuscripts/${report.annotated_pdf_s3_key}#toolbar=1&navpanes=0`}
-                  className="w-full h-full border-0"
-                  title="Annotated Manuscript PDF Preview"
-                />
-              </div>
-            </div>
+          {/* Interactive Before-vs-After Visual Layout Comparison Engine */}
+          {showPdfPreview && (
+            <LayoutComparisonViewer report={report} />
           )}
 
           {/* Executive Summary Card */}

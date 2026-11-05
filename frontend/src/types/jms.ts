@@ -96,6 +96,7 @@ export interface PreSubmissionAuditReport {
   };
   template_specs?: TemplateSpecs;
   annotated_pdf_s3_key?: string;
+  original_pdf_s3_key?: string;
   fixed_layout?: FixedLayoutRemediation;
 }
 
