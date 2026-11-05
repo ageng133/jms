@@ -74,10 +74,17 @@ func main() {
 	fileRepo := postgres.NewManuscriptFileRepository(db)
 	auditRepo := postgres.NewAuditRepository(db)
 
-	// 5. Audit engines, tried in order: PyMuPDF worker, then Gemini fallback.
+	// 5. Audit engines, tried in order:
+	// a. External HTTP PyMuPDF Worker (if configured and running)
+	// b. Monolithic Embedded Python PyMuPDF Engine (runs directly without needing separate worker daemon!)
+	// c. Gemini Multimodal Fallback (if key is set)
 	var engines []domain.AuditEngine
 	if cfg.AuditEngine.WorkerURL != "" {
 		engines = append(engines, auditengine.NewWorkerClient(cfg.AuditEngine.WorkerURL, cfg.AuditEngine.WorkerToken, cfg.AuditEngine.Timeout))
+	}
+	if se := auditengine.NewScriptEngine(cfg.AuditEngine.ReshapePython, "", cfg.AuditEngine.Timeout); se != nil {
+		engines = append(engines, se)
+		log.Printf("[Gateway] Monolithic embedded audit engine registered: %s", se.Describe())
 	}
 	if cfg.GoogleAI.APIKey != "" {
 		engines = append(engines, ai.NewGeminiEngine(&cfg.GoogleAI))

@@ -13,7 +13,8 @@ const STORAGE_LABEL: Record<string, string> = {
 };
 
 function engineLabel(name: string): string {
-  if (name === "pymupdf-worker") return "PyMuPDF engine";
+  if (name === "pymupdf-embedded") return "Monolithic Audit Engine";
+  if (name === "pymupdf-worker") return "PyMuPDF Worker";
   if (name.startsWith("gemini:")) return "Gemini fallback";
   return name;
 }
