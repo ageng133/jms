@@ -64,6 +64,7 @@ Usually, editorial assistants check these by hand. **JMS automates this pre-chec
 
    An invalid PDF stops the run immediately, since retrying it on another engine is pointless.
 4. The gateway scores the findings (one shared rule, see below), saves the annotated PDF under `audits/annotated_<audit-id>.pdf`, and sets the audit to `COMPLETED`. The manuscript becomes `UNDER_DESK_REVIEW` (PASS) or `PRE_CHECK_FAILED` (FAIL).
+   **Reshape (optional, best effort):** when `RESHAPE_ENABLED=true` (the default outside Docker), the gateway then runs `scripts/remediate_pdf.py` on the draft. The reshaped copy is saved as `audits/<audit-id>_fixed_layout.pdf` and described in `template_specs.fixed_layout`; the report UI shows it in the "Before / After" comparison. Only the script's `fixed_layout` block is used; its own score and citation counts are ignored, so the audit score always comes from the real findings. If the script is missing or fails, the audit still completes without a reshaped PDF.
 5. If every engine fails, the audit is `FAILED` with the reason and the manuscript goes back to `DRAFT`. Audits interrupted by a gateway restart are also marked `FAILED` on startup.
 
 **Score:** `100 - 15 x (distinct failed layout rules) - 5 x (leaks + uncited + missing citations)`, clamped to 0-100. **PASS** = no failed layout rule and at most 2 warnings.
@@ -79,6 +80,7 @@ The first prototype needed MinIO, Redis, and a queue worker running at once, whi
 | Gateway cannot log in to Postgres | Another Postgres is on 5432. Start compose with `POSTGRES_PORT=5434` and the gateway with the same value. |
 | `column "summary" does not exist` | The database predates migration 000003. Run `make migrate`. |
 | Annotated PDF missing | The report came from Gemini, which does not draw annotations. |
+| No "fixed layout" PDF in the comparison view | Reshape is off or the script was not found. Check the gateway log line "Layout reshape ..." and set `RESHAPE_SCRIPT` / `RESHAPE_PYTHON` if needed (Docker sets `RESHAPE_ENABLED=false`). |
 
 ---
 

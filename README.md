@@ -88,6 +88,11 @@ If no engine can process the paper, the audit is marked **FAILED** with the reas
 - Python 3.11 (for the audit worker), or Docker
 - Docker (for PostgreSQL)
 
+> **One command instead of the steps below:** `docker compose up -d --build` from the repo root starts
+> PostgreSQL (with migrations + seed), the audit worker, the gateway and the frontend. Host ports can be
+> moved with `DB_PORT`, `GATEWAY_PORT`, `FRONTEND_PORT`. Or run `./deploy.sh --native` to start the worker,
+> gateway and frontend on the host (layout reshape only runs in this native mode).
+
 ### Step 1: Start PostgreSQL
 ```bash
 cd backend
@@ -136,6 +141,8 @@ The frontend runs at `http://localhost:3000`.
 | `AUDIT_ENGINE_URL` | gateway | PyMuPDF worker URL (default `http://127.0.0.1:8090`) |
 | `AUDIT_ENGINE_TOKEN` | gateway + worker | Optional shared secret (`X-Worker-Token`) |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | gateway | Optional fallback engine (default model `gemini-2.5-flash`) |
+| `RESHAPE_ENABLED`, `RESHAPE_PYTHON`, `RESHAPE_SCRIPT` | gateway | Optional layout reshape after an audit (`scripts/remediate_pdf.py`, default on; empty paths = auto-detect). Off in the Docker image, which does not ship the script |
+| `MAX_UPLOAD_MB` | gateway + worker | Upload size limit (default 35) |
 | `GOOGLE_CLIENT_ID` | gateway | Enables real Google ID-token verification |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | frontend | Google Identity Services button |
 | `AUTH_DEMO_LOGIN` / `NEXT_PUBLIC_DEMO_LOGIN` | gateway / frontend | Demo e-mail login; **turn off in production** |
@@ -157,7 +164,10 @@ cd frontend && pnpm exec tsc --noEmit --incremental false && pnpm build
 ```bash
 bash scripts/test_audit_flow.sh [ieee|acm|springer-lncs|uts-open]   # full audit pipeline
 bash scripts/test_e2e_google_auth.sh                                # auth, roles and access control
+bash scripts/test_security_patches.sh                               # upload/download hardening (traversal, magic bytes, 35 MB, 401/403)
+bash scripts/test_rate_limiter.sh                                   # 429 after the burst limit
 ```
+`test_audit_flow.sh` and `test_security_patches.sh` accept `BASE_URL=http://host:port/api/v1`; `test_rate_limiter.sh` accepts `GATEWAY_URL=http://host:port`.
 
 ### Manual walkthrough
 1. Open `http://localhost:3000` and click **Sign In with Google**.

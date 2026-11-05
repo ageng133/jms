@@ -24,7 +24,7 @@ NC='\033[0m'
 echo -e "${BLUE}${BOLD}"
 echo "======================================================================"
 echo "⚡ FORMAT KILAT (⚡) - PRODUCTION DEPLOYMENT ENGINE"
-echo "Target Services: PostgreSQL 16, Go Gateway (8080), Next.js UI (3000)"
+echo "Target Services: PostgreSQL 16, Audit Worker (8090), Go Gateway (8080), Next.js UI (3000)"
 echo "======================================================================"
 echo -e "${NC}"
 
@@ -44,15 +44,34 @@ run_native_deploy() {
   echo -e "${CYAN}${BOLD}[Mode: Native Host Production Orchestration]${NC}"
 
   # A. Check PostgreSQL connection
-  echo -e "\n${BOLD}[1/3] Verifying PostgreSQL database on port ${DB_PORT:-5432}...${NC}"
+  echo -e "\n${BOLD}[1/4] Verifying PostgreSQL database on port ${DB_PORT:-5432}...${NC}"
   if nc -z localhost 5432 2>/dev/null || pg_isready -h localhost -p 5432 2>/dev/null; then
     echo -e "${GREEN}✓ PostgreSQL is active and accepting connections.${NC}"
   else
     echo -e "${YELLOW}Warning: PostgreSQL port 5432 not responding. Ensure Postgres is started.${NC}"
   fi
 
-  # B. Build & Start Go Gateway
-  echo -e "\n${BOLD}[2/3] Compiling and starting Go Gateway API...${NC}"
+  # B. Start the PyMuPDF audit worker (required: without it every audit FAILS,
+  #    unless GEMINI_API_KEY is set as a fallback)
+  echo -e "\n${BOLD}[2/4] Starting PyMuPDF audit worker (port 8090)...${NC}"
+  cd "${ROOT_DIR}/backend/ai-worker"
+  WORKER_PY="python3"
+  if [ -x ".venv/bin/python" ]; then
+    WORKER_PY=".venv/bin/python"
+  elif [ -x ".venv/Scripts/python.exe" ]; then
+    WORKER_PY=".venv/Scripts/python.exe"
+  else
+    echo -e "${YELLOW}No .venv found, using system python3 (setup: python -m venv .venv && pip install -r requirements.txt)${NC}"
+  fi
+  if curl -fs http://127.0.0.1:8090/healthz >/dev/null 2>&1; then
+    echo -e "${GREEN}✓ Audit worker already running on port 8090${NC}"
+  else
+    nohup "${WORKER_PY}" -m app.server > "${ROOT_DIR}/worker.log" 2>&1 &
+    echo -e "${GREEN}✓ Audit worker started in background (PID: $!, Port: 8090, log: worker.log)${NC}"
+  fi
+
+  # C. Build & Start Go Gateway
+  echo -e "\n${BOLD}[3/4] Compiling and starting Go Gateway API...${NC}"
   cd "${ROOT_DIR}/backend/gateway"
   go build -ldflags="-w -s" -o gateway ./cmd/api
   
@@ -61,8 +80,8 @@ run_native_deploy() {
   nohup ./gateway > "${ROOT_DIR}/gateway.log" 2>&1 &
   echo -e "${GREEN}✓ Go Gateway running in background (PID: $!, Port: 8080)${NC}"
 
-  # C. Verify Next.js Frontend
-  echo -e "\n${BOLD}[3/3] Verifying Next.js Frontend on port 3000...${NC}"
+  # D. Verify Next.js Frontend
+  echo -e "\n${BOLD}[4/4] Verifying Next.js Frontend on port 3000...${NC}"
   cd "${ROOT_DIR}/frontend"
   if ! nc -z localhost 3000 2>/dev/null; then
     echo "Starting Next.js frontend in background..."
@@ -100,10 +119,18 @@ echo -e "======================================================================"
 
 sleep 2
 HEALTH_RESP=$(curl -s http://localhost:8080/api/v1/health || echo "FAIL")
-if [[ "${HEALTH_RESP}" == *"ok"* ]]; then
+if [[ "${HEALTH_RESP}" == *"HEALTHY"* ]]; then
   echo -e "  • Gateway Health Check   : ${GREEN}${BOLD}✓ HEALTHY (200 OK)${NC}"
 else
   echo -e "  • Gateway Health Check   : ${YELLOW}Online (Status: ${HEALTH_RESP})${NC}"
+fi
+
+# In Docker mode the worker has no host port, so read the container healthcheck.
+if curl -fs http://127.0.0.1:8090/healthz >/dev/null 2>&1 || \
+   docker inspect -f '{{.State.Health.Status}}' format_kilat_ai_worker 2>/dev/null | grep -q '^healthy$'; then
+  echo -e "  • Audit Worker (PyMuPDF) : ${GREEN}${BOLD}✓ HEALTHY${NC}"
+else
+  echo -e "  • Audit Worker (PyMuPDF) : ${RED}${BOLD}✗ NOT READY (audits fail until it is up)${NC}"
 fi
 
 UI_RESP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || echo "000")

@@ -1,3 +1,6 @@
+# Format Kilat - full stack (database, audit worker, gateway, frontend).
+#   docker compose up -d --build
+# Every host port can be changed (e.g. DB_PORT=5434 if 5432 is already taken).
 services:
   postgres:
     image: postgres:16-alpine
@@ -11,11 +14,35 @@ services:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Schema + dev seed, applied on the first start only (empty volume).
+      - ./backend/db/migrations/000001_init_schema.up.sql:/docker-entrypoint-initdb.d/001_init_schema.sql:ro
+      - ./backend/db/migrations/000002_add_template_support.up.sql:/docker-entrypoint-initdb.d/002_add_template_support.sql:ro
+      - ./backend/db/migrations/000003_audit_summary_engine.up.sql:/docker-entrypoint-initdb.d/003_audit_summary_engine.sql:ro
+      - ./backend/db/seeds/001_seed_dev_data.sql:/docker-entrypoint-initdb.d/004_seed_dev_data.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-jms} -d ${DB_NAME:-jms_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # PyMuPDF audit engine. Required: without it every audit is marked FAILED
+  # (unless GEMINI_API_KEY is set as a fallback).
+  ai-worker:
+    build:
+      context: ./backend/ai-worker
+      dockerfile: Dockerfile
+    container_name: format_kilat_ai_worker
+    restart: unless-stopped
+    environment:
+      AUDIT_ENGINE_HOST: 0.0.0.0
+      AUDIT_ENGINE_PORT: "8090"
+      AUDIT_ENGINE_TOKEN: ${AUDIT_ENGINE_TOKEN:-}
+      AUDIT_MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-35}
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8090/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
 
   gateway:
     build:
@@ -26,20 +53,40 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      ai-worker:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${GATEWAY_PORT:-8080}:8080"
     environment:
+      APP_ENV: ${APP_ENV:-development}
       APP_PORT: "8080"
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USER: ${DB_USER:-jms}
-      DB_PASSWORD: ${DB_PASSWORD:-jms_secret_pass}
-      DB_NAME: ${DB_NAME:-jms_db}
+      GATEWAY_PUBLIC_URL: ${GATEWAY_PUBLIC_URL:-http://localhost:8080}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-35}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${DB_USER:-jms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-jms_secret_pass}
+      POSTGRES_DB: ${DB_NAME:-jms_db}
+      POSTGRES_SSLMODE: disable
       JWT_SECRET: ${JWT_SECRET:-format-kilat-production-jwt-secret-key-2026}
+      # Auth: demo login is on by default in development; set AUTH_DEMO_LOGIN=false
+      # and GOOGLE_CLIENT_ID for a public deployment.
+      AUTH_DEMO_LOGIN: ${AUTH_DEMO_LOGIN:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      EDITOR_EMAILS: ${EDITOR_EMAILS:-}
       STORAGE_DRIVER: box
-      BOX_LOCAL_DIR: /app/storage/box
+      BOX_LOCAL_FALLBACK_DIR: /app/storage/box
+      BOX_DEVELOPER_TOKEN: ${BOX_DEVELOPER_TOKEN:-}
+      BOX_FOLDER_ID: ${BOX_FOLDER_ID:-0}
+      AUDIT_ENGINE_URL: http://ai-worker:8090
+      AUDIT_ENGINE_TOKEN: ${AUDIT_ENGINE_TOKEN:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      # The layout reshape script (scripts/remediate_pdf.py) is not part of the
+      # gateway image; it runs in native/dev mode (deploy.sh --native, make run-gateway).
+      RESHAPE_ENABLED: ${RESHAPE_ENABLED:-false}
     volumes:
       - box_storage:/app/storage/box
 
@@ -55,7 +102,7 @@ services:
     depends_on:
       - gateway
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       NODE_ENV: production
       PORT: 3000

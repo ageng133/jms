@@ -1,0 +1,6 @@
+gateway
+gateway.exe
+*.exe
+storage
+.env
+*.log

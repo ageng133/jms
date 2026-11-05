@@ -1,84 +1,104 @@
 #!/usr/bin/env bash
-set -e
+# ==============================================================================
+# Format Kilat - Security regression tests for the file upload/download API.
+#
+# The file endpoints require a signed-in user and only accept storage keys that
+# belong to that user's manuscripts (raw/<manuscript-id>/...). This script signs
+# in with demo login, creates a draft and gets a real upload key, then checks:
+#   1. path traversal in the upload key            -> 400
+#   2. path traversal in the download key          -> 400
+#   3. fake PDF (wrong magic bytes)                -> 400
+#   4. valid PDF upload + download round trip      -> 200, body starts with %PDF
+#   5. upload larger than MAX_UPLOAD_MB (35 MB)    -> 413 PAYLOAD_TOO_LARGE
+#   6. anonymous upload/download                   -> 401
+#   7. another user downloading the file           -> 403
+#
+# Requirements: gateway running with AUTH_DEMO_LOGIN=true (the dev default).
+# Usage: scripts/test_security_patches.sh
+#        BASE_URL=http://host:8080/api/v1 scripts/test_security_patches.sh
+# ==============================================================================
+set -euo pipefail
 
-GATEWAY_URL="http://localhost:8080"
-echo "=== 🔒 Format Kilat Security Regression Test Suite ==="
+BASE_URL="${BASE_URL:-http://localhost:8080/api/v1}"
+TS=$(date +%s)
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "${TMP_DIR}"' EXIT
 
-# 1. Test Path Traversal in Upload Key
-echo -n "[1/5] Testing Path Traversal rejection in upload key... "
-TRAVERSAL_RESP=$(curl -s -w "\n%{http_code}" -X PUT "${GATEWAY_URL}/api/v1/files/upload?key=../../secret.txt" -d "malicious content")
-TRAVERSAL_CODE=$(echo "$TRAVERSAL_RESP" | tail -n1)
-if [ "$TRAVERSAL_CODE" -eq 400 ]; then
-  echo "✅ PASSED (HTTP 400 Bad Request returned as expected)"
-else
-  echo "❌ FAILED (Expected 400, got $TRAVERSAL_CODE)"
-  exit 1
-fi
+pass() { echo "✅ PASSED ($*)"; }
+fail() { echo "❌ FAILED ($*)"; exit 1; }
+json_str() { echo "$1" | grep -o "\"$2\":\"[^\"]*\"" | head -1 | sed "s/\"$2\":\"\\([^\"]*\\)\"/\\1/"; }
+# http_code <curl args...> -> prints only the HTTP status
+http_code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
 
-# 2. Test Path Traversal in Download Key
-echo -n "[2/5] Testing Path Traversal rejection in download key... "
-DOWNLOAD_TRAVERSAL_RESP=$(curl -s -w "\n%{http_code}" "${GATEWAY_URL}/api/v1/files/download?key=../../.env")
-DOWNLOAD_TRAVERSAL_CODE=$(echo "$DOWNLOAD_TRAVERSAL_RESP" | tail -n1)
-if [ "$DOWNLOAD_TRAVERSAL_CODE" -eq 400 ]; then
-  echo "✅ PASSED (HTTP 400 Bad Request returned as expected)"
-else
-  echo "❌ FAILED (Expected 400, got $DOWNLOAD_TRAVERSAL_CODE)"
-  exit 1
-fi
+login() {
+  local resp
+  resp=$(curl -s -X POST "${BASE_URL}/auth/google" -H "Content-Type: application/json" \
+    -d "{\"email\":\"$1@uts.edu.au\",\"full_name\":\"Security Test $1\"}")
+  json_str "$resp" token
+}
 
-# 3. Test Invalid PDF Header Magic Bytes
-echo -n "[3/5] Testing Magic Bytes validation (fake PDF payload)... "
-FAKE_PDF_RESP=$(curl -s -w "\n%{http_code}" -X PUT "${GATEWAY_URL}/api/v1/files/upload?key=test_submissions/fake.pdf" -d "This is plain text pretending to be a PDF")
-FAKE_PDF_CODE=$(echo "$FAKE_PDF_RESP" | tail -n1)
-if [ "$FAKE_PDF_CODE" -eq 400 ]; then
-  echo "✅ PASSED (HTTP 400 Bad Request returned, non-PDF rejected)"
-else
-  echo "❌ FAILED (Expected 400, got $FAKE_PDF_CODE)"
-  exit 1
-fi
+echo "=== 🔒 Format Kilat Security Regression Test Suite (${BASE_URL}) ==="
 
-# 4. Test Valid PDF Upload & Download
-echo -n "[4/5] Testing Valid PDF Upload with %PDF header... "
-VALID_PDF_KEY="test_submissions/valid_test.pdf"
-VALID_PAYLOAD=$(printf "%%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%%%EOF")
-VALID_UPLOAD_RESP=$(curl -s -w "\n%{http_code}" -X PUT "${GATEWAY_URL}/api/v1/files/upload?key=${VALID_PDF_KEY}" --data-binary "$VALID_PAYLOAD")
-VALID_UPLOAD_CODE=$(echo "$VALID_UPLOAD_RESP" | tail -n1)
-if [ "$VALID_UPLOAD_CODE" -eq 200 ]; then
-  echo "✅ Upload PASSED"
-else
-  echo "❌ Upload FAILED (Expected 200, got $VALID_UPLOAD_CODE)"
-  exit 1
-fi
+# Setup: user, draft manuscript and a legitimate upload key ---------------------
+TOKEN=$(login "sec.owner.${TS}")
+[ -n "$TOKEN" ] || { echo "❌ demo login failed (is AUTH_DEMO_LOGIN enabled?)"; exit 1; }
+AUTH="Authorization: Bearer ${TOKEN}"
+DRAFT=$(curl -s -X POST "${BASE_URL}/manuscripts" -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"title":"Security regression draft","abstract":"Automated security test.","keywords":["security"]}')
+MID=$(json_str "$DRAFT" id)
+[ -n "$MID" ] || { echo "❌ could not create draft: $DRAFT"; exit 1; }
+PRESIGN=$(curl -s -X POST "${BASE_URL}/manuscripts/${MID}/files/presign" -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"filename":"draft.pdf","file_type":"PDF","file_role":"MANUSCRIPT"}')
+KEY=$(json_str "$PRESIGN" s3_key)
+[ -n "$KEY" ] || { echo "❌ presign failed: $PRESIGN"; exit 1; }
+echo "    setup: manuscript ${MID}, key ${KEY}"
 
-echo -n "      Testing Valid PDF Download... "
-DOWNLOAD_CONTENT=$(curl -s "${GATEWAY_URL}/api/v1/files/download?key=${VALID_PDF_KEY}")
-if echo "$DOWNLOAD_CONTENT" | grep -q "%PDF-1.4"; then
-  echo "✅ Download PASSED (Magic byte verified in downloaded content)"
-else
-  echo "❌ Download FAILED"
-  exit 1
-fi
+# 1. Path traversal in the upload key -----------------------------------------
+echo -n "[1/7] Path traversal rejected in upload key... "
+CODE=$(http_code -X PUT "${BASE_URL}/files/upload?key=raw/${MID}/../../secret.txt" -H "$AUTH" -d "malicious content")
+[ "$CODE" = "400" ] && pass "HTTP 400" || fail "expected 400, got $CODE"
 
-# 5. Test Maximum Upload Size Limit Enforcement (>35MB)
-echo -n "[5/5] Testing 35MB Upload Limit enforcement... "
-# Create a 36MB sparse/dummy file starting with %PDF-1.4 to test size boundary
-TEMP_OVERSIZED="/tmp/oversized_test.pdf"
-python3 -c "
-with open('$TEMP_OVERSIZED', 'wb') as f:
-    f.write(b'%PDF-1.4\n' + b'0' * (36 * 1024 * 1024))
-"
-OVERSIZED_RESP=$(curl -s -w "\n%{http_code}" -X PUT "${GATEWAY_URL}/api/v1/files/upload?key=test_submissions/oversized.pdf" --data-binary "@$TEMP_OVERSIZED")
-OVERSIZED_CODE=$(echo "$OVERSIZED_RESP" | tail -n1)
-rm -f "$TEMP_OVERSIZED"
+# 2. Path traversal in the download key ---------------------------------------
+echo -n "[2/7] Path traversal rejected in download key... "
+CODE=$(http_code "${BASE_URL}/files/download?key=../../.env" -H "$AUTH")
+[ "$CODE" = "400" ] && pass "HTTP 400" || fail "expected 400, got $CODE"
 
-if [ "$OVERSIZED_CODE" -eq 400 ]; then
-  echo "✅ PASSED (HTTP 400 Bad Request returned, oversized payload rejected)"
-else
-  echo "❌ FAILED (Expected 400, got $OVERSIZED_CODE)"
-  exit 1
-fi
+# 3. Fake PDF (wrong magic bytes) ---------------------------------------------
+echo -n "[3/7] Magic bytes validation (fake PDF payload)... "
+CODE=$(http_code -X PUT "${BASE_URL}/files/upload?key=${KEY}" -H "$AUTH" -H "Content-Type: application/pdf" \
+  -d "This is plain text pretending to be a PDF")
+[ "$CODE" = "400" ] && pass "HTTP 400, non-PDF rejected" || fail "expected 400, got $CODE"
+
+# 4. Valid PDF upload + download ----------------------------------------------
+echo -n "[4/7] Valid PDF upload with %PDF header... "
+VALID="${TMP_DIR}/valid.pdf"
+printf '%%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%%%EOF\n' > "$VALID"
+CODE=$(http_code -X PUT "${BASE_URL}/files/upload?key=${KEY}" -H "$AUTH" -H "Content-Type: application/pdf" --data-binary "@${VALID}")
+[ "$CODE" = "200" ] && pass "HTTP 200" || fail "expected 200, got $CODE"
+
+echo -n "      Valid PDF download... "
+curl -s "${BASE_URL}/files/download?key=${KEY}" -H "$AUTH" -o "${TMP_DIR}/down.pdf"
+head -c 8 "${TMP_DIR}/down.pdf" | grep -q "%PDF-1.4" && pass "magic bytes verified" || fail "downloaded content is not the uploaded PDF"
+
+# 5. Upload size limit ----------------------------------------------------------
+echo -n "[5/7] Upload limit enforcement (36 MB > MAX_UPLOAD_MB=35)... "
+BIG="${TMP_DIR}/oversized.pdf"
+{ printf '%%PDF-1.4\n'; head -c $((36 * 1024 * 1024)) /dev/zero; } > "$BIG"
+CODE=$(http_code -X PUT "${BASE_URL}/files/upload?key=${KEY}" -H "$AUTH" -H "Content-Type: application/pdf" --data-binary "@${BIG}" || true)
+[ "$CODE" = "413" ] && pass "HTTP 413 PAYLOAD_TOO_LARGE" || fail "expected 413, got $CODE"
+
+# 6. Anonymous access -----------------------------------------------------------
+echo -n "[6/7] Anonymous upload/download blocked... "
+UP=$(http_code -X PUT "${BASE_URL}/files/upload?key=${KEY}" --data-binary "@${VALID}")
+DOWN=$(http_code "${BASE_URL}/files/download?key=${KEY}")
+[ "$UP" = "401" ] && [ "$DOWN" = "401" ] && pass "HTTP 401 / 401" || fail "expected 401/401, got $UP/$DOWN"
+
+# 7. Another user cannot read the file ----------------------------------------
+echo -n "[7/7] Other user cannot download someone else's file... "
+OTHER=$(login "sec.intruder.${TS}")
+CODE=$(http_code "${BASE_URL}/files/download?key=${KEY}" -H "Authorization: Bearer ${OTHER}")
+[ "$CODE" = "403" ] || [ "$CODE" = "404" ] && pass "HTTP $CODE" || fail "expected 403, got $CODE"
 
 echo "========================================================"
-echo "🎉 ALL 5 SECURITY REGRESSION TESTS PASSED DETERMINISTICALLY!"
+echo "🎉 ALL 7 SECURITY REGRESSION TESTS PASSED"
 echo "========================================================"
-
