@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, ArrowRight, ShieldCheck, Sparkles, Box, Activity } from "lucide-react";
+import { Menu, X, LogOut, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { GoogleAuthModal, GoogleLogo } from "@/components/GoogleAuthModal";
 import { Button } from "@/components/ui/button";
@@ -43,10 +43,6 @@ function AppShell({ children }: { children: React.ReactNode }) {
                 <a href="/#ai-copilot" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
                   <span>AI Copilot</span>
-                </a>
-                <a href="/#virtual-office" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5">
-                  <Activity className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-                  <span>Pipeline Telemetry</span>
                 </a>
                 <a href="/#how-it-works" className="hover:text-indigo-600 transition-colors">
                   How It Works
@@ -134,14 +130,6 @@ function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   <Sparkles className="w-4 h-4 text-purple-600 animate-pulse" />
                   <span>AI Copilot (Interactive)</span>
-                </a>
-                <a
-                  href="/#virtual-office"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-800 hover:bg-indigo-50 hover:text-indigo-600 transition"
-                >
-                  <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
-                  <span>Pipeline Telemetry Monitor</span>
                 </a>
                 <a
                   href="/#how-it-works"

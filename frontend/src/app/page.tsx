@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -709,108 +708,7 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          7. 3D ISOMETRIC VIRTUAL OFFICE: PIPELINE MONITORING & OBSERVABILITY
-         ===================================================================== */}
-      <section id="virtual-office" className="space-y-6 scroll-mt-20">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <Badge variant="default" className="text-xs bg-slate-800 text-white font-bold border-slate-700 hover:bg-slate-700">
-            Pipeline Observability &bull; Real-Time Telemetry Monitor
-          </Badge>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            3D Autonomous Pipeline Telemetry &amp; System Monitor
-          </h2>
-          <p className="text-slate-600 text-xs sm:text-sm">
-            Digital twin cutaway for operations monitoring and background telemetry — visualizes the active pipeline stations (Ingestion, Vision Pod, Auto-Fix, Deploy) without interfering with academic project submissions.
-          </p>
-        </div>
-
-        {/* 3D Isometric Virtual Office Display */}
-        <div className="rounded-3xl border border-indigo-100 bg-white shadow-2xl overflow-hidden">
-          <div className="h-11 bg-slate-100/80 px-4 flex items-center justify-between border-b border-indigo-100 text-xs text-slate-500">
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-3 rounded-full bg-rose-500 border border-rose-600 inline-block" />
-              <span className="w-3 h-3 rounded-full bg-amber-400 border border-amber-500 inline-block" />
-              <span className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-600 inline-block" />
-              <span className="ml-3 font-semibold text-slate-800">
-                Format Kilat 3D Pipeline Telemetry &amp; Background Station Monitor
-              </span>
-            </div>
-            <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Active System Telemetry
-            </span>
-          </div>
-
-          <div className="relative bg-slate-100 border-b border-indigo-100">
-            <Image
-              src="/illustrations/isometric-virtual-office-3d.jpg"
-              alt="Format Kilat 3D Isometric Virtual Office"
-              width={1600}
-              height={900}
-              className="w-full h-auto object-cover"
-              priority
-            />
-          </div>
-
-          {/* 4 Station Breakdown Cards */}
-          <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-white border border-indigo-100 space-y-1.5 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-md shadow-indigo-600/20">
-                  01
-                </span>
-                <span className="text-[10px] text-indigo-700 font-bold uppercase tracking-wider">Ingestion</span>
-              </div>
-              <h4 className="text-xs font-bold text-slate-900">Conveyor &amp; Storage Vault</h4>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                Direct streaming with Box Cloud synchronizer, presigned S3 tokens, and zero SerDe deserialization.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-50/70 to-white border border-purple-100 space-y-1.5 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs font-bold shadow-md shadow-purple-600/20">
-                  02
-                </span>
-                <span className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">Vision Pod</span>
-              </div>
-              <h4 className="text-xs font-bold text-slate-900">Gemini Multimodal Auditor</h4>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                Holographic layout scanner verifying millimeter margins, IEEE column grids, and citation graphs.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-white border border-emerald-100 space-y-1.5 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-md shadow-emerald-600/20">
-                  03
-                </span>
-                <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Auto-Fix</span>
-              </div>
-              <h4 className="text-xs font-bold text-slate-900">Remediation &amp; Layout Desk</h4>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                PyMuPDF engine stamping redactions on leaked emails and generating camera-ready fixed layout PDFs.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/70 to-white border border-amber-100 space-y-1.5 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="w-7 h-7 rounded-xl bg-amber-600 text-white flex items-center justify-center text-xs font-bold shadow-md shadow-amber-600/20">
-                  04
-                </span>
-                <span className="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Deploy</span>
-              </div>
-              <h4 className="text-xs font-bold text-slate-900">Telemetry &amp; Release Wall</h4>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                Turnkey Docker Compose orchestration with live status indicators and instant author notification.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================================================
-          8. BOTTOM CTA BANNER (VIBRANT AURORA GRADIENT)
+          7. BOTTOM CTA BANNER (VIBRANT AURORA GRADIENT)
          ===================================================================== */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8 sm:p-14 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
         {/* Glow Spheres */}

@@ -26,7 +26,6 @@ import {
   UserCheck,
   PanelLeft,
   X,
-  Activity,
 } from "lucide-react";
 import {
   listManuscripts,
@@ -415,20 +414,6 @@ export default function AdminPortalPage() {
                 Gemini AI
               </span>
               <span className="text-[#34c759] font-medium">Active</span>
-            </div>
-
-            <div className="pt-2 border-t border-black/[0.04]">
-              <Link
-                href="/#virtual-office"
-                target="_blank"
-                className="flex items-center justify-between text-slate-500 hover:text-indigo-600 transition"
-              >
-                <span className="flex items-center gap-1.5 text-[10px] font-semibold">
-                  <Activity className="w-3 h-3 text-emerald-500 animate-pulse" />
-                  Pipeline Telemetry (3D Monitor)
-                </span>
-                <ExternalLink className="w-2.5 h-2.5" />
-              </Link>
             </div>
           </div>
         </div>
