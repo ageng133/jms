@@ -709,18 +709,18 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          7. 3D ISOMETRIC VIRTUAL OFFICE: THE AUTONOMOUS AI LAB
+          7. 3D ISOMETRIC VIRTUAL OFFICE: PIPELINE MONITORING & OBSERVABILITY
          ===================================================================== */}
       <section id="virtual-office" className="space-y-6 scroll-mt-20">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <Badge variant="default" className="text-xs bg-purple-100 text-purple-700 font-bold border-purple-200 hover:bg-purple-200">
-            3D Digital Twin Architecture
+          <Badge variant="default" className="text-xs bg-slate-800 text-white font-bold border-slate-700 hover:bg-slate-700">
+            Pipeline Observability &bull; Real-Time Telemetry Monitor
           </Badge>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Inside the Format Kilat Autonomous AI Lab
+            3D Autonomous Pipeline Telemetry &amp; System Monitor
           </h2>
           <p className="text-slate-600 text-xs sm:text-sm">
-            Experience our 4-station virtual organism that automates manuscript ingestion, Gemini vision audit, camera-ready remediation, and cloud deployment:
+            Digital twin cutaway for operations monitoring and background telemetry — visualizes the active pipeline stations (Ingestion, Vision Pod, Auto-Fix, Deploy) without interfering with academic project submissions.
           </p>
         </div>
 
@@ -732,12 +732,12 @@ export default function HomePage() {
               <span className="w-3 h-3 rounded-full bg-amber-400 border border-amber-500 inline-block" />
               <span className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-600 inline-block" />
               <span className="ml-3 font-semibold text-slate-800">
-                Format Kilat 3D Autonomous AI Virtual Office Cutaway
+                Format Kilat 3D Pipeline Telemetry &amp; Background Station Monitor
               </span>
             </div>
             <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live Autonomous Pipeline Active
+              Active System Telemetry
             </span>
           </div>
 

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, ArrowRight, ShieldCheck, Sparkles, Box } from "lucide-react";
+import { Menu, X, LogOut, ArrowRight, ShieldCheck, Sparkles, Box, Activity } from "lucide-react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { GoogleAuthModal, GoogleLogo } from "@/components/GoogleAuthModal";
 import { Button } from "@/components/ui/button";
@@ -45,8 +45,8 @@ function AppShell({ children }: { children: React.ReactNode }) {
                   <span>AI Copilot</span>
                 </a>
                 <a href="/#virtual-office" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5">
-                  <Box className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>3D Lab</span>
+                  <Activity className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+                  <span>Pipeline Telemetry</span>
                 </a>
                 <a href="/#how-it-works" className="hover:text-indigo-600 transition-colors">
                   How It Works
@@ -140,8 +140,8 @@ function AppShell({ children }: { children: React.ReactNode }) {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-800 hover:bg-indigo-50 hover:text-indigo-600 transition"
                 >
-                  <Box className="w-4 h-4 text-indigo-500" />
-                  <span>3D Autonomous AI Lab</span>
+                  <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
+                  <span>Pipeline Telemetry Monitor</span>
                 </a>
                 <a
                   href="/#how-it-works"
