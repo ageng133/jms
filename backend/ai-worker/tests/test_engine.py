@@ -86,7 +86,7 @@ def test_dirty_manuscript_flags_everything_and_annotates(engine):
 
     rules = {c["rule"] for c in d["modules"]["geometry_and_layout"]["checks"]}
     assert "MARGIN_TOP" in rules
-    assert any(l["type"] == "EMAIL" for l in d["modules"]["anonymization"]["leaks_found"])
+    assert any(l["type"] in ("EMAIL", "Author Email") for l in d["modules"]["anonymization"]["leaks_found"])
     assert d["modules"]["citation_crosscheck"]["missing_citations"] == ["[3]"]
     assert d["modules"]["citation_crosscheck"]["uncited_references"][0].startswith("[2]")
     # JSON contract uses "pass", not the pydantic field name "pass_"

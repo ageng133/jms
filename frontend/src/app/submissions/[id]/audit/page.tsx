@@ -28,6 +28,44 @@ import { Badge } from "@/components/ui/badge";
 import { LayoutComparisonViewer } from "@/components/audit/LayoutComparisonViewer";
 import { AICopilotWidget } from "@/components/audit/AICopilotWidget";
 
+function humanizeLeakType(type: string): string {
+  const map: Record<string, string> = {
+    NER_PERSON: "Author Name",
+    NER_ORG: "University / Institution",
+    EMAIL: "Author Email",
+    ORCID: "ORCID Identifier",
+    PDF_METADATA_AUTHOR: "Document Metadata Author",
+    FUNDING_LEAK: "Grant / Funding Mention",
+    "Author Name": "Author Name",
+    "University / Affiliation": "University / Institution",
+    "Author / Person Name": "Author Name",
+    "University / Institution": "University / Institution",
+    "Author Email": "Author Email",
+    "ORCID Identifier": "ORCID Identifier",
+    "Research Grant / Funding": "Grant / Funding Mention",
+  };
+  return map[type] || type.replace(/^NER_/, "").replace(/_/g, " ");
+}
+
+function humanizeRuleName(rule: string): string {
+  const map: Record<string, string> = {
+    PAGE_DIMENSIONS: "Page Format / Paper Size",
+    MARGIN_TOP: "Top Margin",
+    MARGIN_BOTTOM: "Bottom Margin",
+    MARGIN_LEFT: "Left Margin",
+    MARGIN_RIGHT: "Right Margin",
+    COLUMN_LAYOUT: "Column Layout",
+    page_size: "Page Format / Paper Size",
+    margin_top: "Top Margin",
+    margin_bottom: "Bottom Margin",
+    margin_left: "Left Margin",
+    margin_right: "Right Margin",
+    column_count: "Column Count",
+    column_gap: "Column Spacing",
+  };
+  return map[rule] || rule.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export default function AuditReportPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const searchParams = useSearchParams();
@@ -466,9 +504,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   <FileText className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 1: Geometry &amp; Layout Inspection</h2>
+                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 1: Page Layout &amp; Margins</h2>
                   <p className="text-xs text-[#86868b]">
-                    Draft layout compared against {report.template_specs ? "uploaded template specifications" : "standard margins"}
+                    Checks page dimensions, margins, and column layouts against {report.template_specs ? "target template specifications" : "standard guidelines"}
                   </p>
                 </div>
               </div>
@@ -476,25 +514,25 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 variant={report.modules.geometry_and_layout.pass ? "success" : "destructive"}
                 className="text-[10px]"
               >
-                {report.modules.geometry_and_layout.pass ? "PASSED" : "FAILED"}
+                {report.modules.geometry_and_layout.pass ? "PASSED" : "NEEDS FIX"}
               </Badge>
             </div>
 
             {report.modules.geometry_and_layout.checks.length === 0 ? (
               <div className="p-6 text-xs text-[#34c759] bg-[#34c759]/5 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>All margins, page dimensions, and column grids strictly conform to the target Journal Template.</span>
+                <span>All page dimensions, margins, and column layouts match the journal guidelines perfectly.</span>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#f5f5f7] text-[#86868b] font-semibold border-b border-black/[0.06]">
                     <tr>
-                      <th className="px-6 py-3">Rule / Constraint</th>
+                      <th className="px-6 py-3">Formatting Rule</th>
                       <th className="px-6 py-3">Page</th>
-                      <th className="px-6 py-3">Template Expected</th>
-                      <th className="px-6 py-3">Draft Actual</th>
-                      <th className="px-6 py-3">Violation Box</th>
+                      <th className="px-6 py-3">Required by Journal</th>
+                      <th className="px-6 py-3">Found in Your Draft</th>
+                      <th className="px-6 py-3">Detected Area [x, y, w, h]</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-black/[0.06]">
@@ -502,7 +540,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                       <tr key={idx} className="hover:bg-black/[0.02]">
                         <td className="px-6 py-3.5 font-semibold text-[#ff3b30] flex items-center gap-1.5">
                           <XCircle className="w-3.5 h-3.5 shrink-0" />
-                          <span>{c.rule}</span>
+                          <span>{humanizeRuleName(c.rule)}</span>
                         </td>
                         <td className="px-6 py-3.5 font-medium text-[#1d1d1f]">{c.page}</td>
                         <td className="px-6 py-3.5 text-[#86868b] font-mono">{c.expected}</td>
@@ -526,30 +564,32 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   <Shield className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 2: Double-Blind Anonymization</h2>
-                  <p className="text-xs text-[#86868b]">spaCy Named Entity Recognition &amp; regex identifier sweep</p>
+                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 2: Blind Review Anonymity</h2>
+                  <p className="text-xs text-[#86868b]">Ensures author names, university affiliations, emails, and grant mentions are removed for fair peer review</p>
                 </div>
               </div>
               <Badge
                 variant={report.modules.anonymization.pass ? "success" : "warning"}
                 className="text-[10px]"
               >
-                {report.modules.anonymization.pass ? "PASSED" : "LEAKS DETECTED"}
+                {report.modules.anonymization.pass ? "PASSED" : "AUTHOR INFO FOUND"}
               </Badge>
             </div>
 
             {report.modules.anonymization.leaks_found.length === 0 ? (
               <div className="p-6 text-xs text-[#34c759] bg-[#34c759]/5 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>No author names, affiliations, emails, ORCID numbers, or metadata tags detected.</span>
+                <span>No author names, university affiliations, emails, ORCID numbers, or metadata tags found.</span>
               </div>
             ) : (
               <div className="p-6 space-y-3">
                 {report.modules.anonymization.leaks_found.map((l, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3.5 rounded-2xl bg-[#ff9500]/10 border border-[#ff9500]/20 text-xs">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <AlertTriangle className="w-4 h-4 text-[#ff9500] shrink-0" />
-                      <span className="font-semibold text-[#1d1d1f]">[{l.type}]</span>
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white border border-[#ff9500]/30 text-[#1d1d1f] shadow-xs">
+                        {humanizeLeakType(l.type)}
+                      </span>
                       <span className="text-[#1d1d1f] font-mono font-medium">{l.leak}</span>
                     </div>
                     <span className="text-[#86868b] font-medium">Page {l.page}</span>
@@ -567,9 +607,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 3: Citation Graph Crosscheck</h2>
+                  <h2 className="text-sm sm:text-base font-bold text-[#1d1d1f]">Module 3: Citations &amp; References Check</h2>
                   <p className="text-xs text-[#86868b]">
-                    Bidirectional mapping between body citations and bibliography items ({report.modules.citation_crosscheck.total_cited} cited)
+                    Matches in-text citations against the reference list ({report.modules.citation_crosscheck.total_cited} references found)
                   </p>
                 </div>
               </div>
@@ -577,7 +617,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 variant={report.modules.citation_crosscheck.pass ? "success" : "warning"}
                 className="text-[10px]"
               >
-                {report.modules.citation_crosscheck.pass ? "PASSED" : "DISCREPANCIES"}
+                {report.modules.citation_crosscheck.pass ? "PASSED" : "ISSUES FOUND"}
               </Badge>
             </div>
 
@@ -585,11 +625,11 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               {/* Uncited references */}
               <div className="space-y-2">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[#86868b]">
-                  Uncited References in Bibliography ({report.modules.citation_crosscheck.uncited_references.length})
+                  References Never Cited in Body Text ({report.modules.citation_crosscheck.uncited_references.length})
                 </h3>
                 {report.modules.citation_crosscheck.uncited_references.length === 0 ? (
                   <p className="text-xs text-[#34c759] flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> All bibliography entries are cited.
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Every reference in the bibliography is cited in the paper.
                   </p>
                 ) : (
                   <ul className="space-y-1.5">
@@ -605,11 +645,11 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               {/* Missing citations */}
               <div className="space-y-2">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[#86868b]">
-                  Missing in Bibliography ({report.modules.citation_crosscheck.missing_citations.length})
+                  Citations Missing from Bibliography ({report.modules.citation_crosscheck.missing_citations.length})
                 </h3>
                 {report.modules.citation_crosscheck.missing_citations.length === 0 ? (
                   <p className="text-xs text-[#34c759] flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> All inline citations exist in bibliography.
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Every inline citation exists in the bibliography.
                   </p>
                 ) : (
                   <ul className="space-y-1.5">

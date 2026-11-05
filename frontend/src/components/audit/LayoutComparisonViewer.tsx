@@ -122,12 +122,12 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
       <div className="px-5 py-3.5 bg-gradient-to-r from-[#f5f5f7] via-white to-[#f5f5f7] border-b border-black/[0.06] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#ff9500] shrink-0" />
-          <span className="text-[#86868b] font-medium">Layout Grid:</span>
+          <span className="text-[#86868b] font-medium">Columns:</span>
           <span className="text-[#1d1d1f] font-semibold flex items-center gap-1">
-            {layoutViolationsCount > 0 ? "Single-Col Violation" : "Standard"}
+            {layoutViolationsCount > 0 ? "Non-standard columns" : "Standard"}
             <ArrowRight className="w-3 h-3 text-[#86868b]" />
             <span className="text-[#0071e3] font-bold">
-              {report.template_specs?.column_count || 2}-Column Reflow
+              {report.template_specs?.column_count || 2} Columns
             </span>
           </span>
         </div>
@@ -142,10 +142,10 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
 
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#0071e3] shrink-0" />
-          <span className="text-[#86868b] font-medium">Double-Blind NER:</span>
+          <span className="text-[#86868b] font-medium">Blind Review Anonymity:</span>
           <span className="text-[#1d1d1f] font-semibold flex items-center gap-1">
             {anonymizationLeaksCount > 0 ? (
-              <span className="text-[#ff3b30]">{anonymizationLeaksCount} Leaks Sanitized</span>
+              <span className="text-[#ff3b30]">{anonymizationLeaksCount} Author Details Found</span>
             ) : (
               <span className="text-[#34c759]">Protected &amp; Clean</span>
             )}
@@ -240,8 +240,8 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
 
             {/* Panel Footer */}
             <div className="p-3 bg-[#fbfbfd] border-t border-black/[0.06] flex items-center justify-between text-[11px] text-[#86868b]">
-              <span>Geometry: Unstandardized single/hybrid column</span>
-              <span>Anonymity: Leaked contacts checked</span>
+              <span>Layout: Single column draft</span>
+              <span>Blind Review: Author details scanned</span>
             </div>
           </div>
         )}

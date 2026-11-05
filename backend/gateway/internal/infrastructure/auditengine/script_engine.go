@@ -193,3 +193,4 @@ func tailStr(s string, max int) string {
 	}
 	return s[len(s)-max:]
 }
+

@@ -81,10 +81,15 @@ class AnonymizationAuditor(BaseAuditModule):
                 if clean_ent.lower() in FILTER_TOKENS:
                     continue
 
-                if ent.label_ in ("PERSON", "ORG"):
-                    # Check if entity is really an author or university name
+                if ent.label_ == "PERSON":
                     leaks.append(AnonymizationLeak(
-                        type=f"NER_{ent.label_}",
+                        type="Author Name",
+                        leak=clean_ent,
+                        page=1,
+                    ))
+                elif ent.label_ == "ORG":
+                    leaks.append(AnonymizationLeak(
+                        type="University / Affiliation",
                         leak=clean_ent,
                         page=1,
                     ))
