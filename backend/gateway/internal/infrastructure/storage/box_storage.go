@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/jms-uts/backend/gateway/config"
@@ -25,7 +26,6 @@ type BoxStorage struct {
 }
 
 func NewBoxStorage(cfg *config.BoxConfig, appPort string) (domain.StorageClient, error) {
-	// Ensure local fallback storage directory exists
 	dir := cfg.LocalFallbackDir
 	if dir == "" {
 		dir = "./storage/box"
@@ -46,8 +46,32 @@ func NewBoxStorage(cfg *config.BoxConfig, appPort string) (domain.StorageClient,
 	}, nil
 }
 
+func (b *BoxStorage) resolveSafePath(key string) (string, error) {
+	cleanKey := filepath.Clean(key)
+	if strings.HasPrefix(cleanKey, "..") || strings.Contains(cleanKey, "/../") || filepath.IsAbs(cleanKey) {
+		return "", fmt.Errorf("security violation: path traversal detected in key '%s'", key)
+	}
+
+	absBase, err := filepath.Abs(b.cfg.LocalFallbackDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve storage base directory: %w", err)
+	}
+
+	targetPath := filepath.Join(absBase, cleanKey)
+	absTarget, err := filepath.Abs(targetPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve target path: %w", err)
+	}
+
+	rel, err := filepath.Rel(absBase, absTarget)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return "", fmt.Errorf("security violation: path traversal attempted beyond storage root")
+	}
+
+	return absTarget, nil
+}
+
 func (b *BoxStorage) GeneratePresignedPutURL(ctx context.Context, key string, contentType string, expiry time.Duration) (string, error) {
-	// Direct upload route routed through Gateway Box Handler which streams directly to Box.com
 	return fmt.Sprintf("%s/api/v1/files/upload?key=%s", b.gatewayBaseURL, url.QueryEscape(key)), nil
 }
 
@@ -56,8 +80,11 @@ func (b *BoxStorage) GeneratePresignedGetURL(ctx context.Context, key string, ex
 }
 
 func (b *BoxStorage) SaveFile(ctx context.Context, key string, data []byte) error {
-	// 1. Save to local box cache directory
-	localPath := filepath.Join(b.cfg.LocalFallbackDir, key)
+	localPath, err := b.resolveSafePath(key)
+	if err != nil {
+		return err
+	}
+
 	if err := os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory for local box file: %w", err)
 	}
@@ -67,7 +94,6 @@ func (b *BoxStorage) SaveFile(ctx context.Context, key string, data []byte) erro
 	}
 	log.Printf("[BoxStorage] Saved file locally to %s (%d bytes)", localPath, len(data))
 
-	// 2. Stream to Box.com Cloud Storage if DeveloperToken or Client credentials provided
 	if b.cfg.DeveloperToken != "" {
 		go func() {
 			err := b.uploadToBoxCloud(key, data)
@@ -83,13 +109,16 @@ func (b *BoxStorage) SaveFile(ctx context.Context, key string, data []byte) erro
 }
 
 func (b *BoxStorage) GetFile(ctx context.Context, key string) ([]byte, error) {
-	localPath := filepath.Join(b.cfg.LocalFallbackDir, key)
+	localPath, err := b.resolveSafePath(key)
+	if err != nil {
+		return nil, err
+	}
+
 	data, err := os.ReadFile(localPath)
 	if err == nil {
 		return data, nil
 	}
 
-	// If not in local cache, could download from Box.com
 	return nil, fmt.Errorf("file not found in box storage: %w", err)
 }
 
@@ -97,7 +126,6 @@ func (b *BoxStorage) uploadToBoxCloud(key string, data []byte) error {
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
 
-	// Box API attributes part
 	filename := filepath.Base(key)
 	attributes := map[string]interface{}{
 		"name": fmt.Sprintf("%d_%s", time.Now().Unix(), filename),
@@ -108,7 +136,6 @@ func (b *BoxStorage) uploadToBoxCloud(key string, data []byte) error {
 	attrJSON, _ := json.Marshal(attributes)
 	_ = writer.WriteField("attributes", string(attrJSON))
 
-	// File data part
 	part, err := writer.CreateFormFile("file", filename)
 	if err != nil {
 		return err
@@ -143,4 +170,3 @@ func (b *BoxStorage) uploadToBoxCloud(key string, data []byte) error {
 
 	return nil
 }
-

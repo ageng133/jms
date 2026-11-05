@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -285,6 +287,11 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 		}
 	}
 
+	var originalPdfS3Key string
+	if file, err := h.usecase.GetManuscriptFile(c.Request.Context(), audit.ManuscriptFileID); err == nil && file != nil {
+		originalPdfS3Key = file.S3Key
+	}
+
 	respPayload := gin.H{
 		"id":                   audit.ID,
 		"audit_id":             audit.ID.String(),
@@ -311,6 +318,7 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 		"template_specs":       templateSpecsMap,
 		"fixed_layout":         fixedLayout,
 		"annotated_pdf_s3_key": audit.AnnotatedPdfS3Key,
+		"original_pdf_s3_key":  originalPdfS3Key,
 		"error_message":        audit.ErrorMessage,
 		"created_at":           audit.CreatedAt,
 		"completed_at":         audit.CompletedAt,
@@ -356,24 +364,53 @@ func (h *SubmissionHandler) DirectFileUpload(c *gin.Context) {
 		return
 	}
 
+	cleanKey := filepath.Clean(key)
+	if strings.HasPrefix(cleanKey, "..") || strings.Contains(cleanKey, "/../") || filepath.IsAbs(cleanKey) || strings.HasPrefix(cleanKey, "/") || strings.HasPrefix(cleanKey, "\\") {
+		response.BadRequest(c, "Security violation: path traversal detected in file key", "")
+		return
+	}
+
+	const maxUploadSize = 35 * 1024 * 1024 // 35MB limit
+
 	var fileData []byte
 	var err error
 
-	// 1. Try reading from multipart file
-	fileHeader, fileErr := c.FormFile("file")
-	if fileErr == nil && fileHeader != nil {
-		src, err := fileHeader.Open()
-		if err == nil {
-			defer src.Close()
-			fileData, _ = io.ReadAll(src)
+	contentType := c.ContentType()
+	// 1. Try reading from multipart file if multipart content-type
+	if strings.HasPrefix(contentType, "multipart/form-data") {
+		fileHeader, fileErr := c.FormFile("file")
+		if fileErr == nil && fileHeader != nil {
+			if fileHeader.Size > maxUploadSize {
+				response.BadRequest(c, "File size exceeds maximum allowed limit of 35MB", "")
+				return
+			}
+			src, err := fileHeader.Open()
+			if err == nil {
+				defer src.Close()
+				limitedReader := io.LimitReader(src, maxUploadSize+1)
+				fileData, err = io.ReadAll(limitedReader)
+				if err != nil {
+					response.BadRequest(c, "Failed to read upload file", err.Error())
+					return
+				}
+				if int64(len(fileData)) > maxUploadSize {
+					response.BadRequest(c, "File size exceeds maximum allowed limit of 35MB", "")
+					return
+				}
+			}
 		}
 	}
 
-	// 2. Otherwise read raw request body (PUT direct stream)
-	if len(fileData) == 0 {
-		fileData, err = io.ReadAll(c.Request.Body)
+	// 2. Otherwise read raw request body (PUT direct stream / binary data)
+	if len(fileData) == 0 && c.Request.Body != nil {
+		limitedReader := io.LimitReader(c.Request.Body, maxUploadSize+1)
+		fileData, err = io.ReadAll(limitedReader)
 		if err != nil {
 			response.BadRequest(c, "Failed to read upload body", err.Error())
+			return
+		}
+		if int64(len(fileData)) > maxUploadSize {
+			response.BadRequest(c, "File size exceeds maximum allowed limit of 35MB", "")
 			return
 		}
 	}
@@ -383,14 +420,22 @@ func (h *SubmissionHandler) DirectFileUpload(c *gin.Context) {
 		return
 	}
 
-	if err := h.storageClient.SaveFile(c.Request.Context(), key, fileData); err != nil {
+	// Magic byte verification for PDF files
+	if strings.HasSuffix(strings.ToLower(cleanKey), ".pdf") {
+		if len(fileData) < 4 || !bytes.HasPrefix(fileData, []byte("%PDF")) {
+			response.BadRequest(c, "Security violation: invalid file content, missing %PDF magic bytes signature", "")
+			return
+		}
+	}
+
+	if err := h.storageClient.SaveFile(c.Request.Context(), cleanKey, fileData); err != nil {
 		response.InternalError(c, "Failed to save file to Box storage: "+err.Error())
 		return
 	}
 
 	response.Success(c, http.StatusOK, gin.H{
 		"message": "File uploaded successfully to Box storage",
-		"key":     key,
+		"key":     cleanKey,
 		"bytes":   len(fileData),
 	})
 }
@@ -403,13 +448,19 @@ func (h *SubmissionHandler) DirectFileDownload(c *gin.Context) {
 		return
 	}
 
-	data, err := h.storageClient.GetFile(c.Request.Context(), key)
+	cleanKey := filepath.Clean(key)
+	if strings.HasPrefix(cleanKey, "..") || strings.Contains(cleanKey, "/../") || filepath.IsAbs(cleanKey) || strings.HasPrefix(cleanKey, "/") || strings.HasPrefix(cleanKey, "\\") {
+		response.BadRequest(c, "Security violation: path traversal detected in file key", "")
+		return
+	}
+
+	data, err := h.storageClient.GetFile(c.Request.Context(), cleanKey)
 	if err != nil {
 		response.NotFound(c, "File not found in Box storage")
 		return
 	}
 
-	c.Header("Content-Disposition", "inline; filename="+filepath.Base(key))
+	c.Header("Content-Disposition", "inline; filename="+filepath.Base(cleanKey))
 	c.Data(http.StatusOK, "application/pdf", data)
 }
 
