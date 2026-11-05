@@ -246,7 +246,7 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 	if citationMap == nil {
 		citationMap = map[string]interface{}{
 			"pass":              true,
-			"total_cited":        18,
+			"total_cited":        0,
 			"uncited_references": []string{},
 			"missing_citations":  []string{},
 		}
@@ -271,9 +271,16 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 		}
 	}
 
-	score := 85
+	score := 0
 	if audit.ScoreOverall != nil {
 		score = *audit.ScoreOverall
+	} else if len(layoutChecks) == 0 && len(anonLeaks) == 0 {
+		score = 98
+	} else {
+		score = 100 - (len(layoutChecks)*15 + len(anonLeaks)*5)
+		if score < 0 {
+			score = 0
+		}
 	}
 
 	summaryStatus := "FAIL"

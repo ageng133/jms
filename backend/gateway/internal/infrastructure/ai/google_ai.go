@@ -13,6 +13,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -305,6 +307,7 @@ func (s *googleAIService) generateAndSaveFixedLayoutPDF(
 			report.OverallScore = reshapedReport.OverallScore
 			report.Summary.Status = reshapedReport.Summary.Status
 			report.Summary.Reshaped = true
+			report.Modules = reshapedReport.Modules
 			log.Printf("[Google AI] Reshaping succeeded! Updated report specs conforming to template: %s",
 				report.TemplateSpecs.PageFormat)
 		}
@@ -525,10 +528,65 @@ func (s *googleAIService) runDeterministicAudit(draftBytes []byte, hasCustomTemp
 	resp.Modules.Anonymization.Pass = len(leaks) == 0
 	resp.Modules.Anonymization.LeaksFound = leaks
 
-	resp.Modules.CitationCrosscheck.Pass = true
-	resp.Modules.CitationCrosscheck.TotalCited = 18
-	resp.Modules.CitationCrosscheck.UncitedReferences = []string{}
-	resp.Modules.CitationCrosscheck.MissingCitations = []string{}
+	// Dynamic Citation Analysis from draft text
+	refRegex := regexp.MustCompile(`(?i)\n(?:References|Bibliography)\b[^\n]*\n`)
+	refLoc := refRegex.FindIndex(draftBytes)
+	var bodyText, bibText string
+	if refLoc != nil {
+		bodyText = string(draftBytes[:refLoc[0]])
+		bibText = string(draftBytes[refLoc[1]:])
+	} else {
+		bodyText = string(draftBytes)
+		bibText = ""
+	}
+
+	bracketRegex := regexp.MustCompile(`\[(\d+(?:[,\s–-]+\d+)*)\]`)
+	bracketMatches := bracketRegex.FindAllStringSubmatch(bodyText, -1)
+	citedNums := make(map[int]bool)
+	for _, m := range bracketMatches {
+		if len(m) > 1 {
+			parts := regexp.MustCompile(`[,\s–-]+`).Split(m[1], -1)
+			for _, p := range parts {
+				if num, err := strconv.Atoi(strings.TrimSpace(p)); err == nil {
+					citedNums[num] = true
+				}
+			}
+		}
+	}
+
+	bibRegex := regexp.MustCompile(`\[(\d+)\]\s*([^\[\n]+)`)
+	bibMatches := bibRegex.FindAllStringSubmatch(bibText, -1)
+	bibNums := make(map[int]bool)
+	for _, m := range bibMatches {
+		if len(m) > 1 {
+			if num, err := strconv.Atoi(m[1]); err == nil {
+				bibNums[num] = true
+			}
+		}
+	}
+
+	var uncitedRefs []string
+	for n := range bibNums {
+		if !citedNums[n] {
+			uncitedRefs = append(uncitedRefs, fmt.Sprintf("[%d]", n))
+		}
+	}
+	sort.Strings(uncitedRefs)
+
+	var missingCitations []string
+	for n := range citedNums {
+		if !bibNums[n] {
+			missingCitations = append(missingCitations, fmt.Sprintf("[%d]", n))
+		}
+	}
+	sort.Strings(missingCitations)
+
+	citationPass := len(missingCitations) == 0
+
+	resp.Modules.CitationCrosscheck.Pass = citationPass
+	resp.Modules.CitationCrosscheck.TotalCited = len(citedNums)
+	resp.Modules.CitationCrosscheck.UncitedReferences = uncitedRefs
+	resp.Modules.CitationCrosscheck.MissingCitations = missingCitations
 
 	resp.TemplateSpecs.PageFormat = "A4"
 	resp.TemplateSpecs.PageWidthMm = 210.0
