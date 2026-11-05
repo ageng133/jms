@@ -20,6 +20,10 @@ func NewRouter(
 	r.Use(gin.Recovery())
 	r.Use(gin.Logger())
 
+	// IP Rate Limiting Guard (600 req/min, burst 100)
+	rateLimiter := middleware.NewRateLimiter(600, 100)
+	r.Use(rateLimiter.Middleware())
+
 	// Configure CORS for Next.js frontend
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"},
@@ -36,6 +40,7 @@ func NewRouter(
 	api := r.Group("/api/v1")
 	{
 		api.GET("/health", healthHandler.HealthCheck)
+		api.GET("/system/readiness", healthHandler.SystemReadiness)
 
 		// Public Auth routes
 		auth := api.Group("/auth")
