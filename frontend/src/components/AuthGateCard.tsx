@@ -51,7 +51,7 @@ export function AuthGateCard({
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#34c759] shrink-0 mt-0.5" />
-                <span>Enables Google Gemini visual audit and comparison reporting</span>
+                <span>Links each audit report and annotated PDF to your account</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#34c759] shrink-0 mt-0.5" />

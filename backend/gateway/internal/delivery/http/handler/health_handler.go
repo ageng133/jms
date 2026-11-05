@@ -1,23 +1,35 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jms-uts/backend/gateway/internal/domain"
 	"github.com/jms-uts/backend/gateway/pkg/response"
 	"github.com/joho/godotenv"
 )
 
+// EngineStatusReporter reports audit engine liveness (implemented by usecase.AuditRunner).
+type EngineStatusReporter interface {
+	EngineStatuses(ctx context.Context) []domain.EngineStatus
+}
+
 type HealthHandler struct {
 	appName string
+	storage string
+	engines EngineStatusReporter
 }
 
-func NewHealthHandler(appName string) *HealthHandler {
-	return &HealthHandler{appName: appName}
+// NewHealthHandler builds the health handler. storageMode describes the active
+// storage driver ("box-cloud", "local-disk", "minio"); engines may be nil.
+func NewHealthHandler(appName, storageMode string, engines EngineStatusReporter) *HealthHandler {
+	return &HealthHandler{appName: appName, storage: storageMode, engines: engines}
 }
 
+// HealthCheck is the public liveness probe. It deliberately exposes no internals.
 func (h *HealthHandler) HealthCheck(c *gin.Context) {
 	response.Success(c, http.StatusOK, gin.H{
 		"service":   h.appName,
@@ -26,6 +38,28 @@ func (h *HealthHandler) HealthCheck(c *gin.Context) {
 	})
 }
 
+// SystemStatus (authenticated) reports the storage driver and audit engine
+// liveness so the dashboard can show real status instead of placeholders.
+// status is "DEGRADED" when no audit engine is reachable.
+func (h *HealthHandler) SystemStatus(c *gin.Context) {
+	engines := []domain.EngineStatus{}
+	if h.engines != nil {
+		engines = h.engines.EngineStatuses(c.Request.Context())
+	}
+	status := "DEGRADED"
+	for _, e := range engines {
+		if e.Status != "offline" {
+			status = "HEALTHY"
+			break
+		}
+	}
+	response.Success(c, http.StatusOK, gin.H{
+		"status":    status,
+		"storage":   h.storage,
+		"engines":   engines,
+		"timestamp": time.Now().UTC(),
+	})
+}
 func (h *HealthHandler) SystemReadiness(c *gin.Context) {
 	_ = godotenv.Load(".env", "../.env", "../../.env")
 
@@ -50,10 +84,10 @@ func (h *HealthHandler) SystemReadiness(c *gin.Context) {
 					if geminiKey != "" {
 						return "LIVE_GEMINI_MULTIMODAL"
 					}
-					return "DETERMINISTIC_AUTONOMOUS_ENGINE"
+					return "PYMUPDF_WORKER_ONLY"
 				}(),
 				"status":      "READY",
-				"instruction": "Optional: Add GEMINI_API_KEY in backend/.env for live cloud vision model",
+				"instruction": "Optional: Add GEMINI_API_KEY in backend/.env to enable the Gemini fallback engine (primary engine is the PyMuPDF worker)",
 			},
 			"box_storage": gin.H{
 				"key_configured": boxToken != "" || boxClientID != "",

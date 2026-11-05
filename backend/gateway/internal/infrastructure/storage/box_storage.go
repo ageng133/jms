@@ -26,7 +26,10 @@ type BoxStorage struct {
 	gatewayBaseURL string
 }
 
-func NewBoxStorage(cfg *config.BoxConfig, appPort string) (domain.StorageClient, error) {
+// NewBoxStorage creates the Box driver. publicBaseURL is the externally
+// reachable gateway origin (e.g. http://localhost:8080) used in upload URLs.
+func NewBoxStorage(cfg *config.BoxConfig, publicBaseURL string) (domain.StorageClient, error) {
+	// Ensure local fallback storage directory exists
 	dir := cfg.LocalFallbackDir
 	if dir == "" {
 		dir = "./storage/box"
@@ -35,7 +38,10 @@ func NewBoxStorage(cfg *config.BoxConfig, appPort string) (domain.StorageClient,
 		return nil, fmt.Errorf("failed to create box storage directory: %w", err)
 	}
 
-	gatewayBase := fmt.Sprintf("http://localhost:%s", appPort)
+	if cfg.LocalFallbackDir == "" {
+		cfg.LocalFallbackDir = dir
+	}
+	gatewayBase := strings.TrimRight(publicBaseURL, "/")
 
 	log.Printf("[BoxStorage] Initialized Box.com Cloud Storage Driver (Folder ID: %s, Local Cache: %s)\n",
 		cfg.FolderID, dir)
@@ -80,12 +86,30 @@ func (b *BoxStorage) GeneratePresignedGetURL(ctx context.Context, key string, ex
 	return fmt.Sprintf("%s/api/v1/files/download?key=%s", b.gatewayBaseURL, url.QueryEscape(key)), nil
 }
 
+// localPath resolves key inside the storage root and refuses anything that
+// would escape it (defence in depth on top of domain.ValidateStorageKey).
+func (b *BoxStorage) localPath(key string) (string, error) {
+	if err := domain.ValidateStorageKey(key); err != nil {
+		return "", err
+	}
+	root, err := filepath.Abs(b.cfg.LocalFallbackDir)
+	if err != nil {
+		return "", err
+	}
+	full := filepath.Join(root, filepath.FromSlash(key))
+	rel, err := filepath.Rel(root, full)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("%w: storage key escapes storage root", domain.ErrInvalidInput)
+	}
+	return full, nil
+}
+
 func (b *BoxStorage) SaveFile(ctx context.Context, key string, data []byte) error {
-	localPath, err := b.resolveSafePath(key)
+	// 1. Save to local box cache directory
+	localPath, err := b.localPath(key)
 	if err != nil {
 		return err
 	}
-
 	if err := os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory for local box file: %w", err)
 	}
@@ -121,11 +145,10 @@ func (b *BoxStorage) SaveFile(ctx context.Context, key string, data []byte) erro
 }
 
 func (b *BoxStorage) GetFile(ctx context.Context, key string) ([]byte, error) {
-	localPath, err := b.resolveSafePath(key)
+	localPath, err := b.localPath(key)
 	if err != nil {
 		return nil, err
 	}
-
 	data, err := os.ReadFile(localPath)
 	if err == nil {
 		return data, nil

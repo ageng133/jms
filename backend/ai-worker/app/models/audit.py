@@ -60,6 +60,10 @@ class TemplateSpecs(BaseModel):
     column_count: int = 1
     column_gap_mm: Optional[float] = None
     is_custom_template: bool = False
+    # Human-readable label and where the specs came from:
+    # "uploaded_template" | "preset:<id>" | "default"
+    name: Optional[str] = None
+    source: Optional[str] = None
 
 
 class AuditReport(BaseModel):

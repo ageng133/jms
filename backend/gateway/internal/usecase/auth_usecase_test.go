@@ -45,40 +45,50 @@ func (m *mockUserRepo) GetByEmail(ctx context.Context, email string) (*domain.Us
 	return u, nil
 }
 
-func (m *mockUserRepo) Update(ctx context.Context, user *domain.User) error {
-	m.users[user.Email] = user
-	return nil
+// fakeVerifier stands in for the real Google JWKS verifier.
+type fakeVerifier struct {
+	identity *domain.GoogleIdentity
+	err      error
 }
 
-func TestLoginWithGoogle_DirectPayload(t *testing.T) {
-	repo := newMockUserRepo()
-	jwtCfg := config.JWTConfig{
-		Secret:      "test-secret-key-12345678901234567890",
-		ExpiryHours: 24,
-	}
-	uc := usecase.NewAuthUsecase(repo, jwtCfg)
+func (f *fakeVerifier) Verify(ctx context.Context, rawToken string) (*domain.GoogleIdentity, error) {
+	return f.identity, f.err
+}
 
-	dto := usecase.GoogleLoginDTO{
-		Email:       "researcher@uts.edu.au",
+var testJWT = config.JWTConfig{
+	Secret:      "test-secret-key-12345678901234567890",
+	ExpiryHours: 24,
+}
+
+// forgedGoogleToken builds an unsigned token like the one the old code accepted.
+func forgedGoogleToken(email string) string {
+	payload, _ := json.Marshal(map[string]interface{}{
+		"email":          email,
+		"email_verified": true,
+		"name":           "Mallory",
+		"sub":            "forged",
+	})
+	return "eyJhbGciOiJSUzI1NiJ9." + base64.RawURLEncoding.EncodeToString(payload) + ".mockSignatureBytes"
+}
+
+func TestLoginWithGoogle_DemoPayloadWhenEnabled(t *testing.T) {
+	uc := usecase.NewAuthUsecase(newMockUserRepo(), testJWT, usecase.WithDemoLogin(true))
+
+	result, err := uc.LoginWithGoogle(context.Background(), usecase.GoogleLoginDTO{
+		Email:       "Researcher@UTS.edu.au ",
 		FullName:    "Dr. Test Researcher",
-		Role:        domain.RoleAuthor,
 		Affiliation: "UTS Faculty of Engineering & IT",
-	}
-
-	result, err := uc.LoginWithGoogle(context.Background(), dto)
+	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	if result.Token == "" {
-		t.Fatal("expected non-empty token")
-	}
-
 	if result.User.Email != "researcher@uts.edu.au" {
-		t.Errorf("expected email researcher@uts.edu.au, got %s", result.User.Email)
+		t.Errorf("expected normalised email, got %s", result.User.Email)
+	}
+	if result.User.Role != domain.RoleAuthor {
+		t.Errorf("expected AUTHOR, got %s", result.User.Role)
 	}
 
-	// Validate the issued JWT token
 	claims, err := uc.ValidateToken(result.Token)
 	if err != nil {
 		t.Fatalf("failed to validate generated token: %v", err)
@@ -88,42 +98,118 @@ func TestLoginWithGoogle_DirectPayload(t *testing.T) {
 	}
 }
 
-func TestLoginWithGoogle_WithIDToken(t *testing.T) {
+func TestLoginWithGoogle_DemoPayloadRejectedByDefault(t *testing.T) {
+	uc := usecase.NewAuthUsecase(newMockUserRepo(), testJWT)
+
+	_, err := uc.LoginWithGoogle(context.Background(), usecase.GoogleLoginDTO{Email: "anyone@uts.edu.au"})
+	if err == nil {
+		t.Fatal("expected email-only sign-in to be rejected when demo login is disabled")
+	}
+}
+
+func TestLoginWithGoogle_RoleComesFromAllowlistOnly(t *testing.T) {
+	uc := usecase.NewAuthUsecase(newMockUserRepo(), testJWT,
+		usecase.WithDemoLogin(true),
+		usecase.WithRoleAllowlists([]string{"chief@uts.edu.au"}, []string{"editor@uts.edu.au"}),
+	)
+
+	cases := map[string]domain.Role{
+		"chief@uts.edu.au":  domain.RoleAdmin,
+		"editor@uts.edu.au": domain.RoleEditor,
+		"author@uts.edu.au": domain.RoleAuthor,
+	}
+	for email, want := range cases {
+		res, err := uc.LoginWithGoogle(context.Background(), usecase.GoogleLoginDTO{Email: email})
+		if err != nil {
+			t.Fatalf("%s: unexpected error: %v", email, err)
+		}
+		if res.User.Role != want {
+			t.Errorf("%s: expected %s, got %s", email, want, res.User.Role)
+		}
+	}
+}
+
+func TestLoginWithGoogle_ForgedTokenRejectedWithoutVerifier(t *testing.T) {
+	uc := usecase.NewAuthUsecase(newMockUserRepo(), testJWT, usecase.WithDemoLogin(true))
+
+	_, err := uc.LoginWithGoogle(context.Background(), usecase.GoogleLoginDTO{
+		Credential: forgedGoogleToken("editor.google@uts.edu.au"),
+	})
+	if err == nil {
+		t.Fatal("expected unverifiable Google token to be rejected")
+	}
+}
+
+func TestLoginWithGoogle_VerifierErrorRejected(t *testing.T) {
+	uc := usecase.NewAuthUsecase(newMockUserRepo(), testJWT,
+		usecase.WithGoogleVerifier(&fakeVerifier{err: errors.New("bad signature")}),
+	)
+
+	_, err := uc.LoginWithGoogle(context.Background(), usecase.GoogleLoginDTO{
+		Credential: forgedGoogleToken("victim@uts.edu.au"),
+	})
+	if err == nil {
+		t.Fatal("expected token with invalid signature to be rejected")
+	}
+}
+
+func TestLoginWithGoogle_VerifiedTokenUsesVerifiedIdentity(t *testing.T) {
 	repo := newMockUserRepo()
-	jwtCfg := config.JWTConfig{
-		Secret:      "test-secret-key-12345678901234567890",
-		ExpiryHours: 24,
-	}
-	uc := usecase.NewAuthUsecase(repo, jwtCfg)
+	uc := usecase.NewAuthUsecase(repo, testJWT,
+		usecase.WithGoogleVerifier(&fakeVerifier{identity: &domain.GoogleIdentity{
+			Subject:       "google-sub-id-998877",
+			Email:         "prof.connor@uts.edu.au",
+			EmailVerified: true,
+			Name:          "Prof. Sarah Connor",
+			HostedDomain:  "uts.edu.au",
+		}}),
+	)
 
-	// Build a mock Google ID token payload
-	claimsMap := map[string]interface{}{
-		"email":          "prof.connor@uts.edu.au",
-		"email_verified": true,
-		"name":           "Prof. Sarah Connor",
-		"sub":            "google-sub-id-998877",
-		"hd":             "uts.edu.au",
-	}
-	payloadBytes, _ := json.Marshal(claimsMap)
-	mockJWT := "eyJhbGciOiJSUzI1NiJ9." + base64.RawURLEncoding.EncodeToString(payloadBytes) + ".mockSignatureBytes"
-
-	dto := usecase.GoogleLoginDTO{
-		Credential: mockJWT,
-		Role:       domain.RoleEditor,
-	}
-
-	result, err := uc.LoginWithGoogle(context.Background(), dto)
+	// Client-supplied email must be ignored in favour of the verified one.
+	res, err := uc.LoginWithGoogle(context.Background(), usecase.GoogleLoginDTO{
+		Credential: "header.payload.signature",
+		Email:      "someone-else@uts.edu.au",
+	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	if res.User.Email != "prof.connor@uts.edu.au" {
+		t.Errorf("expected verified email, got %s", res.User.Email)
+	}
+	if res.User.FullName != "Prof. Sarah Connor" {
+		t.Errorf("expected verified name, got %s", res.User.FullName)
+	}
+	if res.User.Role != domain.RoleAuthor {
+		t.Errorf("expected AUTHOR (no self-assigned roles), got %s", res.User.Role)
+	}
+}
 
-	if result.User.Email != "prof.connor@uts.edu.au" {
-		t.Errorf("expected extracted email prof.connor@uts.edu.au, got %s", result.User.Email)
+func TestLoginWithGoogle_UnverifiedEmailRejected(t *testing.T) {
+	uc := usecase.NewAuthUsecase(newMockUserRepo(), testJWT,
+		usecase.WithGoogleVerifier(&fakeVerifier{identity: &domain.GoogleIdentity{
+			Email:         "x@example.com",
+			EmailVerified: false,
+		}}),
+	)
+
+	_, err := uc.LoginWithGoogle(context.Background(), usecase.GoogleLoginDTO{Credential: "a.b.c"})
+	if err == nil {
+		t.Fatal("expected unverified Google email to be rejected")
 	}
-	if result.User.FullName != "Prof. Sarah Connor" {
-		t.Errorf("expected extracted name Prof. Sarah Connor, got %s", result.User.FullName)
+}
+
+func TestRegister_AlwaysAuthor(t *testing.T) {
+	uc := usecase.NewAuthUsecase(newMockUserRepo(), testJWT)
+
+	user, err := uc.Register(context.Background(), usecase.RegisterDTO{
+		Email:    "new@uts.edu.au",
+		Password: "password123",
+		FullName: "New Person",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if result.User.Role != domain.RoleEditor {
-		t.Errorf("expected role EDITOR, got %s", result.User.Role)
+	if user.Role != domain.RoleAuthor {
+		t.Errorf("expected AUTHOR, got %s", user.Role)
 	}
 }

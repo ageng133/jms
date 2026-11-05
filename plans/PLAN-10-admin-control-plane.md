@@ -9,6 +9,8 @@
 
 ---
 
+> **Status update (PLAN-14):** The audit is no longer Gemini-only. The gateway now calls the PyMuPDF worker (`backend/ai-worker`, `python -m app.server`) first and uses Gemini only as an optional fallback; failed audits are marked FAILED instead of returning placeholder scores. See [PLAN-14](./PLAN-14-poc-hardening-real-audit-engine.md) for the current architecture. The text below is kept as the original plan.
+
 ## 1. Plan Objective
 Deliver a unified editorial management, triage, and submission control plane for Authors and Managing Editors signed in with Google SSO. The admin panel integrates executive KPI metrics, live microservice telemetry, a rich data table for desk triage decisions (`ACCEPT`, `REVISION_REQUIRED`, `REJECT`), and an embedded In-Admin Submission Studio for dual-upload to Box Cloud.
 

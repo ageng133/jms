@@ -1,6 +1,6 @@
 import logging
 from typing import Optional
-import fitz
+import pymupdf as fitz
 
 from app.models.audit import TemplateSpecs
 

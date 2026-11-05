@@ -3,22 +3,12 @@ import logging
 import signal
 import sys
 import time
-import fitz
 import redis
 
 from app.config import settings
 from app.db.repository import DBRepository
-from app.models.audit import (
-    AuditModules,
-    AuditReport,
-    AuditSummary,
-    WorkerJobPayload,
-)
-from app.modules.annotator import VisualPDFAnnotator
-from app.modules.anonymization import AnonymizationAuditor
-from app.modules.citation import CitationAuditor
-from app.modules.layout import LayoutAuditor
-from app.modules.template import TemplateExtractor
+from app.engine import AuditEngine
+from app.models.audit import AuditReport, WorkerJobPayload
 from app.storage.s3 import S3Client
 
 logging.basicConfig(
@@ -29,14 +19,12 @@ logger = logging.getLogger("jms-ai-worker")
 
 
 class PreSubmissionAuditEngine:
+    """Redis/S3 job adapter around the storage-agnostic AuditEngine."""
+
     def __init__(self):
         self.s3 = S3Client()
         self.db = DBRepository()
-        self.template_extractor = TemplateExtractor()
-        self.layout_auditor = LayoutAuditor()
-        self.anonymization_auditor = AnonymizationAuditor()
-        self.citation_auditor = CitationAuditor()
-        self.annotator = VisualPDFAnnotator()
+        self.engine = AuditEngine()
 
     def execute_audit(self, payload: WorkerJobPayload) -> AuditReport:
         logger.info(
@@ -45,82 +33,34 @@ class PreSubmissionAuditEngine:
         )
         self.db.mark_audit_processing(payload.audit_id)
 
-        # 1. Extract specs from reference journal template if provided
-        template_specs = None
+        template_bytes = None
         if payload.template_s3_key:
             try:
-                logger.info(f"Downloading reference template: {payload.template_s3_key}")
                 template_bytes = self.s3.download_file_bytes(payload.template_s3_key)
-                template_doc = fitz.open(stream=template_bytes, filetype="pdf")
-                template_specs = self.template_extractor.extract_specs(template_doc)
-                template_doc.close()
             except Exception as e:
-                logger.warning(f"Could not parse template PDF: {e}. Falling back to default layout specs.")
+                logger.warning(f"Could not download template PDF: {e}. Falling back to default layout specs.")
 
-        # 2. Fetch draft manuscript from S3
-        file_bytes = self.s3.download_file_bytes(payload.s3_key)
-        doc = fitz.open(stream=file_bytes, filetype="pdf")
+        draft_bytes = self.s3.download_file_bytes(payload.s3_key)
+        result = self.engine.run(draft_bytes, template_bytes)
 
-        all_annotations = []
-
-        # 3. Run Module 1: Layout & Geometry against Template Specs
-        layout_res, layout_annots = self.layout_auditor.audit(doc, template_specs=template_specs)
-        all_annotations.extend(layout_annots)
-
-        # 4. Run Module 2: Anonymization Double-Blind
-        anon_res, anon_annots = self.anonymization_auditor.audit(doc)
-        all_annotations.extend(anon_annots)
-
-        # 5. Run Module 3: Citation Integrity
-        cite_res, cite_annots = self.citation_auditor.audit(doc)
-        all_annotations.extend(cite_annots)
-
-        # 6. Run Module 4: Visual PDF Annotations
         annotated_pdf_s3_key = None
-        if len(all_annotations) > 0:
-            annotated_bytes = self.annotator.annotate_document(doc, all_annotations)
+        if result.annotated_pdf:
             annotated_pdf_s3_key = f"audits/annotated_{payload.audit_id}.pdf"
-            self.s3.upload_file_bytes(annotated_pdf_s3_key, annotated_bytes, "application/pdf")
-            logger.info(f"Uploaded annotated PDF with {len(all_annotations)} annotations to {annotated_pdf_s3_key}")
-
-        doc.close()
-
-        # 7. Score & Summary Computation
-        critical_errors = len([c for c in layout_res.checks if not c.passed])
-        warnings = (
-            len(anon_res.leaks_found)
-            + len(cite_res.uncited_references)
-            + len(cite_res.missing_citations)
-        )
-
-        overall_score = max(0, 100 - (critical_errors * 15 + warnings * 5))
-        status = "PASS" if critical_errors == 0 and warnings <= 2 else "FAIL"
-
-        summary = AuditSummary(
-            critical_errors=critical_errors,
-            warnings=warnings,
-            status=status,
-        )
-
-        modules = AuditModules(
-            geometry_and_layout=layout_res,
-            anonymization=anon_res,
-            citation_crosscheck=cite_res,
-        )
+            self.s3.upload_file_bytes(annotated_pdf_s3_key, result.annotated_pdf, "application/pdf")
+            logger.info(f"Uploaded annotated PDF with {result.annotation_count} annotations to {annotated_pdf_s3_key}")
 
         report = AuditReport(
             audit_id=payload.audit_id,
             manuscript_id=payload.manuscript_id,
-            overall_score=overall_score,
-            summary=summary,
-            modules=modules,
-            template_specs=template_specs,
+            overall_score=result.overall_score,
+            summary=result.summary,
+            modules=result.modules,
+            template_specs=result.template_specs,
             annotated_pdf_s3_key=annotated_pdf_s3_key,
         )
 
-        # 8. Persist to DB
         self.db.save_audit_report(report, payload.manuscript_id)
-        logger.info(f"Audit completed: audit_id={payload.audit_id}, score={overall_score}, status={status}")
+        logger.info(f"Audit completed: audit_id={payload.audit_id}, score={report.overall_score}, status={report.summary.status}")
         return report
 
 

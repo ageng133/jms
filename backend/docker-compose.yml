@@ -11,7 +11,12 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./db/migrations:/docker-entrypoint-initdb.d
+      # Only the *.up.sql files (in order) + dev seed. Mounting the whole migrations
+      # folder also ran the *.down.sql files and aborted the init.
+      - ./db/migrations/000001_init_schema.up.sql:/docker-entrypoint-initdb.d/001_init_schema.sql:ro
+      - ./db/migrations/000002_add_template_support.up.sql:/docker-entrypoint-initdb.d/002_add_template_support.sql:ro
+      - ./db/migrations/000003_audit_summary_engine.up.sql:/docker-entrypoint-initdb.d/003_audit_summary_engine.sql:ro
+      - ./db/seeds/001_seed_dev_data.sql:/docker-entrypoint-initdb.d/004_seed_dev_data.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jms_user} -d ${POSTGRES_DB:-jms_db}"]
       interval: 5s
@@ -64,6 +69,25 @@ services:
       /usr/bin/mc anonymous set download local/${S3_BUCKET_NAME:-jms-manuscripts}/audits;
       exit 0;
       "
+
+  # PyMuPDF audit engine (HTTP). The gateway calls it at AUDIT_ENGINE_URL.
+  # Start with: docker compose up -d ai-worker   (or run locally: make run-worker)
+  ai-worker:
+    build: ./ai-worker
+    container_name: jms-ai-worker
+    restart: unless-stopped
+    environment:
+      AUDIT_ENGINE_HOST: 0.0.0.0
+      AUDIT_ENGINE_PORT: 8090
+      AUDIT_ENGINE_TOKEN: ${AUDIT_ENGINE_TOKEN:-}
+      AUDIT_MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-35}
+    ports:
+      - "${AUDIT_ENGINE_PORT:-8090}:8090"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8090/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 volumes:
   pgdata:

@@ -1,5 +1,5 @@
 from typing import List, Tuple, Optional
-import fitz
+import pymupdf as fitz
 
 from app.config import settings
 from app.models.audit import GeometryCheck, GeometryModule, TemplateSpecs

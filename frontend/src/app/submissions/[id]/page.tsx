@@ -15,7 +15,7 @@ import {
   User,
 } from "lucide-react";
 import { Manuscript } from "@/types/jms";
-import { listManuscripts } from "@/lib/api";
+import { getLatestAudit, getManuscript } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { AuthGateCard } from "@/components/AuthGateCard";
 import { Button } from "@/components/ui/button";
@@ -41,9 +41,8 @@ export default function ManuscriptDetailPage({
     async function load() {
       try {
         setLoading(true);
-        const list = await listManuscripts();
-        const found = list.find((m) => m.id === resolvedParams.id);
-        setManuscript(found || null);
+        const found = await getManuscript(resolvedParams.id);
+        setManuscript(found);
       } catch (err) {
         console.error(err);
       } finally {
@@ -109,7 +108,13 @@ export default function ManuscriptDetailPage({
                 </span>
               </div>
 
-              <Link href={`/submissions/${manuscript.id}/audit`}>
+              <Link
+                href={
+                  getLatestAudit(manuscript)
+                    ? `/submissions/${manuscript.id}/audit?audit_id=${getLatestAudit(manuscript)!.id}`
+                    : `/submissions/${manuscript.id}/audit`
+                }
+              >
                 <Button className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full shadow-xs gap-1.5">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Inspect Audit Report</span>

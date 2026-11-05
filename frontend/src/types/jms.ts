@@ -50,6 +50,25 @@ export interface TemplateSpecs {
   column_count: number;
   column_gap_mm?: number;
   is_custom_template?: boolean;
+  /** Human-readable template name, e.g. "IEEE Conference (A4)". */
+  name?: string;
+  /** "uploaded_template" | "preset:<id>" | "default" */
+  source?: string;
+}
+
+export interface AuditSummary {
+  overall_score: number;
+  critical_errors: number;
+  warnings: number;
+  status: "PASS" | "FAIL";
+}
+
+export interface TemplatePreset {
+  id: string;
+  name: string;
+  description: string;
+  font: string;
+  specs: TemplateSpecs;
 }
 
 export interface FixedLayoutRemediation {
@@ -67,11 +86,17 @@ export interface FixedLayoutRemediation {
   camera_ready_status: string;
   annotated_pdf_key?: string;
   download_key?: string;
+  /** Storage key of the reshaped (fixed layout) PDF produced by the reshape step. */
+  fixed_pdf_s3_key?: string;
 }
 
 export interface PreSubmissionAuditReport {
   audit_id: string;
   manuscript_id: string;
+  status?: AuditStatus;
+  error_message?: string;
+  /** Engine that produced the report, e.g. "pymupdf-worker" or "gemini:gemini-2.5-flash". */
+  engine?: string;
   overall_score: number;
   summary: {
     critical_errors: number;
@@ -98,7 +123,7 @@ export interface PreSubmissionAuditReport {
   annotated_pdf_s3_key?: string;
   original_pdf_s3_key?: string;
   ai_engine?: string;
-  ai_mode?: "LIVE_GEMINI_AI" | "DETERMINISTIC_LOCAL_RECOVERY";
+  ai_mode?: "LIVE_GEMINI_AI" | "PYMUPDF_WORKER";
   fixed_layout?: FixedLayoutRemediation;
 }
 
@@ -130,6 +155,9 @@ export interface PreSubmissionAudit {
   };
   anonymization_flags?: AnonymizationLeak[];
   template_specs?: TemplateSpecs;
+  summary?: Partial<AuditSummary>;
+  engine?: string;
+  template_preset?: string;
   annotated_pdf_s3_key?: string;
   error_message?: string;
   created_at: string;

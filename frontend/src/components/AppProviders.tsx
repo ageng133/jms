@@ -38,11 +38,8 @@ function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href="/" className="hover:text-[#1d1d1f] transition-colors">
                   Overview
                 </Link>
-                <a href="#how-it-works" className="hover:text-[#1d1d1f] transition-colors">
+                <Link href="/#how-it-works" className="hover:text-[#1d1d1f] transition-colors">
                   How It Works
-                </a>
-                <Link href="/admin" className="hover:text-[#1d1d1f] transition-colors">
-                  Editorial Portal
                 </Link>
                 <span
                   title="Zero-Configuration Turnkey Architecture: All audit, format evaluation, and local storage engines run out-of-the-box. Add keys to .env to activate live Google Gemini & Box Cloud sync."
@@ -51,6 +48,11 @@ function AppShell({ children }: { children: React.ReactNode }) {
                   <span className="w-1.5 h-1.5 rounded-full bg-[#34c759] animate-pulse" />
                   <span>⚡ Turnkey Ready</span>
                 </span>
+                {user && (
+                  <Link href="/admin" className="hover:text-[#1d1d1f] transition-colors">
+                    Editorial Portal
+                  </Link>
+                )}
               </nav>
             </div>
 
@@ -117,20 +119,22 @@ function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   Overview
                 </Link>
-                <a
-                  href="#how-it-works"
+                <Link
+                  href="/#how-it-works"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block px-3 py-2 rounded-xl text-[#1d1d1f] hover:bg-black/[0.04] transition"
                 >
                   How It Works
-                </a>
-                <Link
-                  href="/admin"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-xl text-[#1d1d1f] hover:bg-black/[0.04] transition"
-                >
-                  Editorial Portal
                 </Link>
+                {user && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-[#1d1d1f] hover:bg-black/[0.04] transition"
+                  >
+                    Editorial Portal
+                  </Link>
+                )}
               </nav>
 
               <div className="pt-3 border-t border-black/[0.06]">
@@ -186,12 +190,12 @@ function AppShell({ children }: { children: React.ReactNode }) {
         <footer className="border-t border-black/[0.06] bg-white/60 py-6 text-center text-xs text-[#86868b]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div>
-              Journal Management System (JMS) &bull; University of Technology Sydney (UTS)
+              Format Kilat &bull; Journal Management System (JMS) &bull; University of Technology Sydney (UTS)
             </div>
             <div className="flex items-center gap-4 text-[11px] text-[#a1a1a6]">
               <span>Box Cloud Storage</span>
               <span>&bull;</span>
-              <span>Google Gemini AI</span>
+              <span>PyMuPDF Audit Engine</span>
               <span>&bull;</span>
               <span>Apple HIG Responsive</span>
             </div>

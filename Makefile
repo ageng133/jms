@@ -26,7 +26,9 @@ logs-worker:
 	cd backend && docker compose logs -f ai-worker
 
 migrate:
-	docker exec -i jms-postgres psql -U jms_user -d jms_db < backend/db/migrations/000001_init_schema.up.sql
+	docker exec -i jms-postgres psql -v ON_ERROR_STOP=1 -U jms_user -d jms_db < backend/db/migrations/000001_init_schema.up.sql
+	docker exec -i jms-postgres psql -v ON_ERROR_STOP=1 -U jms_user -d jms_db < backend/db/migrations/000002_add_template_support.up.sql
+	docker exec -i jms-postgres psql -v ON_ERROR_STOP=1 -U jms_user -d jms_db < backend/db/migrations/000003_audit_summary_engine.up.sql
 
 seed:
 	docker exec -i jms-postgres psql -U jms_user -d jms_db < backend/db/seeds/001_seed_dev_data.sql
@@ -35,7 +37,7 @@ run-gateway:
 	cd backend/gateway && go run ./cmd/api
 
 run-worker:
-	cd backend/ai-worker && python3.11 -m app.worker
+	cd backend/ai-worker && python3.11 -m app.server
 
 run-frontend:
 	cd frontend && pnpm dev

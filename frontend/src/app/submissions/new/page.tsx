@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthGateCard } from "@/components/AuthGateCard";
+import { TemplatePresetSelect } from "@/components/TemplatePresetSelect";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input, Textarea, Label } from "@/components/ui/input";
@@ -40,6 +41,7 @@ export default function NewSubmissionPage() {
   // Dual File State
   const [draftFile, setDraftFile] = useState<File | null>(null);
   const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [templatePreset, setTemplatePreset] = useState<string>("");
   const [templateDragOver, setTemplateDragOver] = useState(false);
   const [draftDragOver, setDraftDragOver] = useState(false);
 
@@ -131,6 +133,7 @@ export default function NewSubmissionPage() {
       const confirmResult = await confirmSubmission(manuscriptId, {
         draft_file: draftMeta,
         template_file: templateMeta,
+        template_preset: templatePreset || undefined,
       });
 
       setStep(3);
@@ -310,6 +313,12 @@ export default function NewSubmissionPage() {
                 <p className="text-xs text-[#86868b]">
                   Target style guide defining margins, page bounds, and multi-column grids.
                 </p>
+
+                <TemplatePresetSelect
+                  value={templatePreset}
+                  onChange={setTemplatePreset}
+                  hasUploadedTemplate={!!templateFile}
+                />
 
                 {/* Hidden File Input */}
                 <input

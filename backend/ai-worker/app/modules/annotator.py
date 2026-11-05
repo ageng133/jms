@@ -1,6 +1,6 @@
 import io
 from typing import List, Tuple
-import fitz
+import pymupdf as fitz
 
 from app.modules.base import BaseAuditModule
 

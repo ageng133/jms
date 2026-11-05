@@ -16,6 +16,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { PreSubmissionAuditReport } from "@/types/jms";
+import { getFileDownloadUrl } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -27,18 +28,14 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
   const [viewMode, setViewMode] = useState<"split" | "before" | "after">("split");
   const [expanded, setExpanded] = useState(false);
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-
   const originalKey = report.original_pdf_s3_key || "";
-  const reshapedKey = report.annotated_pdf_s3_key || "";
+  // "After" pane: the reshaped PDF when the reshape step ran, otherwise the annotated proof.
+  const reshapedKey = report.fixed_layout?.fixed_pdf_s3_key || report.annotated_pdf_s3_key || "";
 
-  const originalUrl = originalKey
-    ? `${apiBase}/files/download?key=${encodeURIComponent(originalKey)}#toolbar=1&navpanes=0`
-    : "";
-
-  const reshapedUrl = reshapedKey
-    ? `${apiBase}/files/download?key=${encodeURIComponent(reshapedKey)}#toolbar=1&navpanes=0`
-    : "";
+  // Downloads require auth: getFileDownloadUrl appends the session token.
+  const downloadUrl = (key: string) => (key ? getFileDownloadUrl(key) : "");
+  const originalUrl = originalKey ? `${downloadUrl(originalKey)}#toolbar=1&navpanes=0` : "";
+  const reshapedUrl = reshapedKey ? `${downloadUrl(reshapedKey)}#toolbar=1&navpanes=0` : "";
 
   const layoutViolationsCount = report.modules.geometry_and_layout.checks.filter(
     (c) => !c.passed
@@ -190,7 +187,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                 )}
                 {originalKey && (
                   <a
-                    href={`${apiBase}/files/download?key=${encodeURIComponent(originalKey)}`}
+                    href={downloadUrl(originalKey)}
                     target="_blank"
                     rel="noreferrer"
                     className="text-[#86868b] hover:text-[#0071e3] transition"
@@ -227,7 +224,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                   </div>
                   {originalKey && (
                     <a
-                      href={`${apiBase}/files/download?key=${encodeURIComponent(originalKey)}`}
+                      href={downloadUrl(originalKey)}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -270,7 +267,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
                 </Badge>
                 {reshapedKey && (
                   <a
-                    href={`${apiBase}/files/download?key=${encodeURIComponent(reshapedKey)}`}
+                    href={downloadUrl(reshapedKey)}
                     target="_blank"
                     rel="noreferrer"
                     className="text-[#86868b] hover:text-[#0071e3] transition"
@@ -317,7 +314,7 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
               </span>
               {reshapedKey && (
                 <a
-                  href={`${apiBase}/files/download?key=${encodeURIComponent(reshapedKey)}`}
+                  href={downloadUrl(reshapedKey)}
                   target="_blank"
                   rel="noreferrer"
                 >

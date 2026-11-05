@@ -15,7 +15,7 @@ VALUES
     ('55555555-5555-5555-5555-555555555555', '11111111-1111-1111-1111-111111111111', 
      'Deep Learning Approaches in Autonomous Manuscript Formatting Compliance',
      'Pre-submission desk reviews suffer from substantial overhead due to manual formatting audits. In this work, we propose a multi-stage layout parser with deep vision-language alignment.',
-     ARRAY['artificial intelligence', 'document layout analysis', 'scholarly publishing'],
+     '["artificial intelligence", "document layout analysis", "scholarly publishing"]'::jsonb,
      'DRAFT')
 ON CONFLICT (id) DO NOTHING;
 

@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -14,17 +14,22 @@ import (
 
 type SubmissionUsecase interface {
 	CreateDraftManuscript(ctx context.Context, authorID uuid.UUID, title, abstract string, keywords []string) (*domain.Manuscript, error)
-	GetManuscript(ctx context.Context, id uuid.UUID) (*domain.Manuscript, error)
+	GetManuscript(ctx context.Context, actor Actor, id uuid.UUID) (*domain.Manuscript, error)
 	ListManuscriptsByAuthor(ctx context.Context, authorID uuid.UUID) ([]domain.Manuscript, error)
 	ListAllManuscripts(ctx context.Context) ([]domain.Manuscript, error)
 
-	// Ingestion 3-step pipeline
-	RequestUploadURL(ctx context.Context, manuscriptID uuid.UUID, filename string, fileType domain.FileType, fileRole string) (*PresignedUploadResult, error)
-	ConfirmSubmission(ctx context.Context, req ConfirmSubmissionDTO) (*ConfirmSubmissionResult, error)
-	GetAuditReport(ctx context.Context, auditID uuid.UUID) (*domain.PreSubmissionAudit, error)
+	// Ingestion 3-step pipeline (owner only)
+	RequestUploadURL(ctx context.Context, actor Actor, manuscriptID uuid.UUID, filename string, fileType domain.FileType, fileRole string) (*PresignedUploadResult, error)
+	ConfirmSubmission(ctx context.Context, actor Actor, req ConfirmSubmissionDTO) (*ConfirmSubmissionResult, error)
+	// GetAuditReport accepts an audit ID or a manuscript ID (resolves its latest audit).
+	GetAuditReport(ctx context.Context, actor Actor, id uuid.UUID) (*domain.PreSubmissionAudit, error)
+	// GetManuscriptFile is internal: callers must have authorized access first.
 	GetManuscriptFile(ctx context.Context, id uuid.UUID) (*domain.ManuscriptFile, error)
 
-	// Editorial triage decisions
+	// Storage object access check for the direct upload/download endpoints
+	AuthorizeFileAccess(ctx context.Context, actor Actor, key string, write bool) error
+
+	// Editorial triage decisions (role is enforced by the router)
 	UpdateManuscriptStatus(ctx context.Context, id uuid.UUID, status domain.ManuscriptStatus) error
 }
 
@@ -52,6 +57,9 @@ type ConfirmSubmissionDTO struct {
 	FileSizeBytes    int64              `json:"file_size_bytes"`
 	DraftFile        *FileUploadMetaDTO `json:"draft_file,omitempty"`
 	TemplateFile     *FileUploadMetaDTO `json:"template_file,omitempty"`
+	// TemplatePreset selects a built-in layout (see domain.TemplatePresets)
+	// when no template PDF is uploaded. Defaults to IEEE.
+	TemplatePreset string `json:"template_preset,omitempty"`
 }
 
 type ConfirmSubmissionResult struct {
@@ -111,8 +119,8 @@ func (u *submissionUsecase) CreateDraftManuscript(ctx context.Context, authorID 
 	return m, nil
 }
 
-func (u *submissionUsecase) GetManuscript(ctx context.Context, id uuid.UUID) (*domain.Manuscript, error) {
-	return u.manuscriptRepo.GetByID(ctx, id)
+func (u *submissionUsecase) GetManuscript(ctx context.Context, actor Actor, id uuid.UUID) (*domain.Manuscript, error) {
+	return u.loadManuscriptFor(ctx, actor, id, false)
 }
 
 func (u *submissionUsecase) ListManuscriptsByAuthor(ctx context.Context, authorID uuid.UUID) ([]domain.Manuscript, error) {
@@ -124,18 +132,22 @@ func (u *submissionUsecase) ListAllManuscripts(ctx context.Context) ([]domain.Ma
 }
 
 // Step 1: Request presigned S3 upload URL
-func (u *submissionUsecase) RequestUploadURL(ctx context.Context, manuscriptID uuid.UUID, filename string, fileType domain.FileType, fileRole string) (*PresignedUploadResult, error) {
-	// Verify manuscript exists
-	if _, err := u.manuscriptRepo.GetByID(ctx, manuscriptID); err != nil {
-		return nil, fmt.Errorf("manuscript not found: %w", err)
+func (u *submissionUsecase) RequestUploadURL(ctx context.Context, actor Actor, manuscriptID uuid.UUID, filename string, fileType domain.FileType, fileRole string) (*PresignedUploadResult, error) {
+	// Only the manuscript's own author may upload files to it.
+	if _, err := u.loadManuscriptFor(ctx, actor, manuscriptID, true); err != nil {
+		return nil, err
 	}
 
 	cleanRole := strings.ToUpper(strings.TrimSpace(fileRole))
 	if cleanRole == "" {
 		cleanRole = domain.FileRoleManuscript
 	}
+	if cleanRole != domain.FileRoleManuscript && cleanRole != domain.FileRoleTemplate {
+		return nil, fmt.Errorf("%w: file_role must be MANUSCRIPT or TEMPLATE", domain.ErrInvalidInput)
+	}
 
-	cleanExt := filepath.Ext(filename)
+	// The extension comes from the declared type, never from the client filename.
+	cleanExt := extensionFor(fileType)
 	prefix := "draft"
 	if cleanRole == domain.FileRoleTemplate {
 		prefix = "template"
@@ -165,7 +177,11 @@ func (u *submissionUsecase) RequestUploadURL(ctx context.Context, manuscriptID u
 }
 
 // Step 2 & 3: Confirm file metadata in DB and push event to Redis queue:ai_audit
-func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, req ConfirmSubmissionDTO) (*ConfirmSubmissionResult, error) {
+func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, actor Actor, req ConfirmSubmissionDTO) (*ConfirmSubmissionResult, error) {
+	if _, err := u.loadManuscriptFor(ctx, actor, req.ManuscriptID, true); err != nil {
+		return nil, err
+	}
+
 	draftFileID := uuid.New()
 	var templateFileIDPtr *uuid.UUID
 	var templateS3Key string
@@ -186,7 +202,24 @@ func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, req ConfirmSu
 	}
 
 	if draftS3Key == "" {
-		return nil, fmt.Errorf("draft manuscript file is required")
+		return nil, fmt.Errorf("%w: draft manuscript file is required", domain.ErrInvalidInput)
+	}
+	if err := validateSubmittedKey(req.ManuscriptID, draftS3Key); err != nil {
+		return nil, err
+	}
+	if req.TemplateFile != nil && req.TemplateFile.S3Key != "" {
+		if err := validateSubmittedKey(req.ManuscriptID, req.TemplateFile.S3Key); err != nil {
+			return nil, err
+		}
+	}
+
+	presetID := strings.TrimSpace(req.TemplatePreset)
+	if presetID == "" {
+		presetID = domain.DefaultTemplatePresetID
+	}
+	preset, ok := domain.FindTemplatePreset(presetID)
+	if !ok {
+		return nil, fmt.Errorf("%w: unknown template preset %q", domain.ErrInvalidInput, presetID)
 	}
 
 	err := u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -241,6 +274,7 @@ func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, req ConfirmSu
 			ManuscriptFileID: draftFileID,
 			TemplateFileID:   templateFileIDPtr,
 			Status:           domain.AuditStatusQueued,
+			TemplatePreset:   &preset.ID,
 			CreatedAt:        now,
 		}
 		if err := tx.Create(&audit).Error; err != nil {
@@ -264,33 +298,37 @@ func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, req ConfirmSu
 		return nil, err
 	}
 
-	// 5. Push event to Redis queue:ai_audit
-	var templateFileIDStr string
-	if templateFileIDPtr != nil {
-		templateFileIDStr = templateFileIDPtr.String()
-	}
-
-	eventPayload := domain.AuditEventPayload{
-		AuditID:        auditID.String(),
-		FileID:         draftFileID.String(),
-		TemplateFileID: templateFileIDStr,
-		ManuscriptID:   req.ManuscriptID.String(),
-		S3Key:          draftS3Key,
-		TemplateS3Key:  templateS3Key,
-		FileType:       string(draftFileType),
-	}
-
-	// 5. Trigger Google AI audit directly in Go goroutine (Eliminates Redis dependency!)
-	if u.aiAuditor != nil {
-		go func() {
-			bgCtx := context.Background()
-			_ = u.aiAuditor.AuditManuscript(bgCtx, auditID, req.ManuscriptID, draftS3Key, templateS3Key)
-		}()
-	}
-
-	// 6. Optional publish to Redis queue if eventPublisher is present
+	// 5. Dispatch the audit: either to the Redis queue (external worker) or,
+	// by default, to the in-process audit runner. Never both, otherwise the
+	// same audit would be processed twice.
 	if u.eventPublisher != nil {
-		_ = u.eventPublisher.PublishAuditJob(ctx, eventPayload)
+		var templateFileIDStr string
+		if templateFileIDPtr != nil {
+			templateFileIDStr = templateFileIDPtr.String()
+		}
+		if err := u.eventPublisher.PublishAuditJob(ctx, domain.AuditEventPayload{
+			AuditID:        auditID.String(),
+			FileID:         draftFileID.String(),
+			TemplateFileID: templateFileIDStr,
+			ManuscriptID:   req.ManuscriptID.String(),
+			S3Key:          draftS3Key,
+			TemplateS3Key:  templateS3Key,
+			FileType:       string(draftFileType),
+		}); err != nil {
+			return nil, fmt.Errorf("failed to enqueue audit job: %w", err)
+		}
+	} else if u.aiAuditor != nil {
+		job := domain.AuditJob{
+			AuditID:      auditID,
+			ManuscriptID: req.ManuscriptID,
+			DraftKey:     draftS3Key,
+			TemplateKey:  templateS3Key,
+			Specs:        preset.Specs,
+		}
+		go func() {
+			// The runner owns timeouts, panic recovery and FAILED marking.
+			_ = u.aiAuditor.AuditManuscript(context.Background(), job)
+		}()
 	}
 
 	return &ConfirmSubmissionResult{
@@ -304,8 +342,38 @@ func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, req ConfirmSu
 	}, nil
 }
 
-func (u *submissionUsecase) GetAuditReport(ctx context.Context, auditID uuid.UUID) (*domain.PreSubmissionAudit, error) {
-	return u.auditRepo.GetByID(ctx, auditID)
+func (u *submissionUsecase) GetAuditReport(ctx context.Context, actor Actor, auditID uuid.UUID) (*domain.PreSubmissionAudit, error) {
+	audit, manuscriptID, err := u.manuscriptIDForAudit(ctx, auditID)
+	if errors.Is(err, domain.ErrNotFound) {
+		// Not an audit ID: treat it as a manuscript ID and return its latest audit.
+		m, merr := u.loadManuscriptFor(ctx, actor, auditID, false)
+		if merr != nil {
+			if errors.Is(merr, domain.ErrForbidden) {
+				return nil, merr
+			}
+			return nil, err
+		}
+		var latest *domain.PreSubmissionAudit
+		for fi := range m.Files {
+			for ai := range m.Files[fi].Audits {
+				a := &m.Files[fi].Audits[ai]
+				if latest == nil || a.CreatedAt.After(latest.CreatedAt) {
+					latest = a
+				}
+			}
+		}
+		if latest == nil {
+			return nil, fmt.Errorf("manuscript %s has no audit yet: %w", auditID, domain.ErrNotFound)
+		}
+		return latest, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if _, err := u.loadManuscriptFor(ctx, actor, manuscriptID, false); err != nil {
+		return nil, err
+	}
+	return audit, nil
 }
 
 func (u *submissionUsecase) GetManuscriptFile(ctx context.Context, id uuid.UUID) (*domain.ManuscriptFile, error) {
@@ -313,6 +381,11 @@ func (u *submissionUsecase) GetManuscriptFile(ctx context.Context, id uuid.UUID)
 }
 
 func (u *submissionUsecase) UpdateManuscriptStatus(ctx context.Context, id uuid.UUID, status domain.ManuscriptStatus) error {
+	if !editorialStatuses[status] {
+		return fmt.Errorf("%w: status %q cannot be set manually", domain.ErrInvalidInput, status)
+	}
+	if _, err := u.manuscriptRepo.GetByID(ctx, id); err != nil {
+		return fmt.Errorf("manuscript %s: %w", id, domain.ErrNotFound)
+	}
 	return u.manuscriptRepo.UpdateStatus(ctx, id, status)
 }
-

@@ -15,7 +15,19 @@ const (
 	ContextEmailKey  = "user_email"
 )
 
+// AuthMiddleware requires an `Authorization: Bearer <jwt>` header.
 func AuthMiddleware(authUsecase usecase.AuthUsecase) gin.HandlerFunc {
+	return authMiddleware(authUsecase, false)
+}
+
+// AuthMiddlewareAllowQueryToken additionally accepts `?token=<jwt>`.
+// Only use it for GET endpoints that are opened by the browser directly
+// (e.g. an <iframe> or download link) where headers cannot be set.
+func AuthMiddlewareAllowQueryToken(authUsecase usecase.AuthUsecase) gin.HandlerFunc {
+	return authMiddleware(authUsecase, true)
+}
+
+func authMiddleware(authUsecase usecase.AuthUsecase, allowQueryToken bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Pass preflight OPTIONS requests without auth check
 		if c.Request.Method == "OPTIONS" {
@@ -35,8 +47,8 @@ func AuthMiddleware(authUsecase usecase.AuthUsecase) gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-		} else if qToken := c.Query("token"); qToken != "" {
-			tokenString = qToken
+		} else if allowQueryToken {
+			tokenString = c.Query("token")
 		}
 
 		if tokenString == "" {
@@ -62,28 +74,21 @@ func AuthMiddleware(authUsecase usecase.AuthUsecase) gin.HandlerFunc {
 func RequireRoles(roles ...domain.Role) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roleVal, exists := c.Get(ContextRoleKey)
-		if !exists {
+		userRole, ok := roleVal.(domain.Role)
+		if !exists || !ok {
 			response.Forbidden(c, "Access denied: missing role")
 			c.Abort()
 			return
 		}
 
-		userRole := roleVal.(domain.Role)
-		allowed := false
 		for _, r := range roles {
 			if userRole == r {
-				allowed = true
-				break
+				c.Next()
+				return
 			}
 		}
 
-		if !allowed {
-			response.Forbidden(c, "Access denied: insufficient permissions")
-			c.Abort()
-			return
-		}
-
-		c.Next()
+		response.Forbidden(c, "Access denied: insufficient permissions")
+		c.Abort()
 	}
 }
-

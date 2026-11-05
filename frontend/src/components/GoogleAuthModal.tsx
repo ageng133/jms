@@ -49,6 +49,9 @@ export function GoogleAuthModal() {
 
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  // Demo (unverified) quick accounts. Must match AUTH_DEMO_LOGIN on the gateway;
+  // set NEXT_PUBLIC_DEMO_LOGIN=false in production.
+  const demoLoginEnabled = process.env.NEXT_PUBLIC_DEMO_LOGIN !== "false";
 
   // Initialize real Google Identity Services (GSI) if client ID is configured
   useEffect(() => {
@@ -184,8 +187,20 @@ export function GoogleAuthModal() {
           </div>
         )}
 
+        {!googleClientId && !demoLoginEnabled && (
+          <div className="my-3 p-3.5 rounded-2xl bg-[#ff9500]/10 border border-[#ff9500]/20 text-[#c76f00] text-xs">
+            Google sign-in is not configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID (frontend) and GOOGLE_CLIENT_ID (gateway).
+          </div>
+        )}
+
+        {demoLoginEnabled && (
+        <>
+        <div className="mt-3 text-[10px] font-semibold uppercase tracking-wide text-[#ff9500]">
+          Demo mode &bull; unverified test accounts
+        </div>
+
         {/* Apple Segmented Control */}
-        <div className="p-1 bg-black/[0.04] rounded-xl flex gap-1 mt-3 mb-4 text-xs font-medium">
+        <div className="p-1 bg-black/[0.04] rounded-xl flex gap-1 mt-2 mb-4 text-xs font-medium">
           <button
             type="button"
             onClick={() => setActiveTab("quick")}
@@ -313,6 +328,8 @@ export function GoogleAuthModal() {
               )}
             </Button>
           </form>
+        )}
+        </>
         )}
 
         <div className="pt-4 mt-3 border-t border-black/[0.06] flex items-center justify-between text-[11px] text-[#86868b]">
