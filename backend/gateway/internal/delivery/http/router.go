@@ -35,6 +35,8 @@ func NewRouter(
 
 	api := r.Group("/api/v1")
 	{
+		api.GET("/health", healthHandler.HealthCheck)
+
 		// Public Auth routes
 		auth := api.Group("/auth")
 		{

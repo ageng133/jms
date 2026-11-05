@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: format_kilat_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-jms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-jms_secret_pass}
+      POSTGRES_DB: ${DB_NAME:-jms_db}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-jms} -d ${DB_NAME:-jms_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: ./backend/gateway
+      dockerfile: Dockerfile
+    container_name: format_kilat_gateway
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      APP_PORT: "8080"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:-jms}
+      DB_PASSWORD: ${DB_PASSWORD:-jms_secret_pass}
+      DB_NAME: ${DB_NAME:-jms_db}
+      JWT_SECRET: ${JWT_SECRET:-format-kilat-production-jwt-secret-key-2026}
+      STORAGE_DRIVER: box
+      BOX_LOCAL_DIR: /app/storage/box
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+    volumes:
+      - box_storage:/app/storage/box
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+    container_name: format_kilat_frontend
+    restart: unless-stopped
+    depends_on:
+      - gateway
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+
+volumes:
+  postgres_data:
+  box_storage:

@@ -248,6 +248,92 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
+          {/* Format Kilat: Fixed Layout & Remediation Blueprint */}
+          {report.fixed_layout && (
+            <div className="bg-gradient-to-br from-white via-white to-[#0071e3]/[0.03] rounded-3xl p-6 sm:p-8 border border-[#0071e3]/20 shadow-apple-card space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/[0.06] pb-5">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#0071e3] text-white flex items-center justify-center shadow-xs">
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base sm:text-lg font-bold text-[#1d1d1f] tracking-tight">
+                        ⚡ Fixed Layout &amp; Auto-Remediation Blueprint
+                      </h2>
+                      <Badge className="bg-[#34c759] text-white text-[10px] font-semibold">
+                        {report.fixed_layout.camera_ready_status || "REMEDIATED_PASS"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-[#86868b] mt-0.5">
+                      Automated layout synthesis conforming to {report.fixed_layout.target_format}
+                    </p>
+                  </div>
+                </div>
+
+                {report.annotated_pdf_s3_key && (
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/files/download?key=${encodeURIComponent(report.annotated_pdf_s3_key)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Button size="sm" className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold rounded-full px-4 shadow-xs gap-2">
+                      <Download className="w-4 h-4" />
+                      <span>Download Camera-Ready PDF</span>
+                    </Button>
+                  </a>
+                )}
+              </div>
+
+              {/* Target Geometry Specs */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Target Format</span>
+                  <p className="text-sm font-bold text-[#1d1d1f]">IEEE 2-Column (A4)</p>
+                  <p className="text-[11px] text-[#86868b]">210 &times; 297 mm</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Remediated Margins</span>
+                  <p className="text-sm font-bold text-[#1d1d1f]">
+                    {report.fixed_layout.target_margins_mm?.top || 20}mm / {report.fixed_layout.target_margins_mm?.bottom || 20}mm
+                  </p>
+                  <p className="text-[11px] text-[#86868b]">Top &amp; Bottom bounds</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Side Gutters</span>
+                  <p className="text-sm font-bold text-[#1d1d1f]">
+                    {report.fixed_layout.target_margins_mm?.left || 18}mm / {report.fixed_layout.target_margins_mm?.right || 18}mm
+                  </p>
+                  <p className="text-[11px] text-[#86868b]">Left &amp; Right borders</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-white border border-black/[0.06] shadow-xs space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider">Column Alignment</span>
+                  <p className="text-sm font-bold text-[#1d1d1f] text-[#0071e3]">
+                    {report.fixed_layout.column_count || 2} Columns ({report.fixed_layout.column_gap_mm || 6.35}mm gap)
+                  </p>
+                  <p className="text-[11px] text-[#86868b]">IEEE standard gutter</p>
+                </div>
+              </div>
+
+              {/* Remediation Action Steps Applied */}
+              {report.fixed_layout.remediation_actions && report.fixed_layout.remediation_actions.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#86868b]">
+                    Automated Corrective Actions Applied Today ({report.fixed_layout.remediation_actions.length})
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {report.fixed_layout.remediation_actions.map((act, i) => (
+                      <div key={i} className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-white border border-black/[0.06] text-xs">
+                        <CheckCircle2 className="w-4 h-4 text-[#34c759] shrink-0 mt-0.5" />
+                        <span className="text-[#1d1d1f] font-medium leading-relaxed">{act}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Reference Journal Template Specifications Card */}
           {report.template_specs && (
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-black/[0.06] shadow-apple-card space-y-4">

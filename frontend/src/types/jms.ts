@@ -52,6 +52,23 @@ export interface TemplateSpecs {
   is_custom_template?: boolean;
 }
 
+export interface FixedLayoutRemediation {
+  target_format: string;
+  target_margins_mm: {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+  };
+  column_count: number;
+  column_gap_mm: number;
+  anonymization_fixes?: string[];
+  remediation_actions: string[];
+  camera_ready_status: string;
+  annotated_pdf_key?: string;
+  download_key?: string;
+}
+
 export interface PreSubmissionAuditReport {
   audit_id: string;
   manuscript_id: string;
@@ -79,6 +96,7 @@ export interface PreSubmissionAuditReport {
   };
   template_specs?: TemplateSpecs;
   annotated_pdf_s3_key?: string;
+  fixed_layout?: FixedLayoutRemediation;
 }
 
 export interface ManuscriptFile {

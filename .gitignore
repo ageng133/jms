@@ -64,5 +64,7 @@ Thumbs.db
 
 # Storage Local Fallback
 backend/gateway/storage/
+output/
+*.log
 
 

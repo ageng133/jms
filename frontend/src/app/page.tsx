@@ -607,6 +607,107 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
+          6. 3D ISOMETRIC VIRTUAL OFFICE: THE AUTONOMOUS AI LAB
+         ===================================================================== */}
+      <section className="space-y-6">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <Badge variant="default" className="text-xs">
+            3D Digital Twin Architecture
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1d1d1f]">
+            Inside the Format Kilat Autonomous AI Lab
+          </h2>
+          <p className="text-[#86868b] text-xs sm:text-sm">
+            Experience our 4-station virtual organism that automates manuscript ingestion, Gemini vision audit, camera-ready remediation, and cloud deployment:
+          </p>
+        </div>
+
+        {/* 3D Isometric Virtual Office Display */}
+        <div className="rounded-3xl border border-black/[0.06] bg-white shadow-apple-card overflow-hidden">
+          <div className="h-11 bg-[#f5f5f7] px-4 flex items-center justify-between border-b border-black/[0.06] text-xs text-[#86868b]">
+            <div className="flex items-center space-x-2">
+              <span className="w-3 h-3 rounded-full bg-[#ff5f57] border border-[#e0443e] inline-block" />
+              <span className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d89e24] inline-block" />
+              <span className="w-3 h-3 rounded-full bg-[#28c840] border border-[#1aab29] inline-block" />
+              <span className="ml-3 font-medium text-[#1d1d1f]">
+                Format Kilat 3D Autonomous AI Virtual Office Cutaway
+              </span>
+            </div>
+            <span className="text-[11px] font-medium text-[#0071e3] flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[#34c759] animate-pulse" />
+              Live Autonomous Pipeline Active
+            </span>
+          </div>
+
+          <div className="relative bg-[#f5f5f7] border-b border-black/[0.06]">
+            <Image
+              src="/illustrations/isometric-virtual-office-3d.jpg"
+              alt="Format Kilat 3D Isometric Virtual Office"
+              width={1600}
+              height={900}
+              className="w-full h-auto object-cover"
+              priority
+            />
+          </div>
+
+          {/* 4 Station Breakdown Cards */}
+          <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="w-7 h-7 rounded-xl bg-[#0071e3] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  01
+                </span>
+                <span className="text-[10px] text-[#0071e3] font-bold uppercase">Ingestion</span>
+              </div>
+              <h4 className="text-xs font-bold text-[#1d1d1f]">Conveyor &amp; Storage Vault</h4>
+              <p className="text-[11px] text-[#86868b] leading-relaxed">
+                Direct streaming with Box Cloud synchronizer, presigned S3 tokens, and zero SerDe deserialization.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="w-7 h-7 rounded-xl bg-[#af52de] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  02
+                </span>
+                <span className="text-[10px] text-[#af52de] font-bold uppercase">Vision Pod</span>
+              </div>
+              <h4 className="text-xs font-bold text-[#1d1d1f]">Gemini Multimodal Auditor</h4>
+              <p className="text-[11px] text-[#86868b] leading-relaxed">
+                Holographic layout scanner verifying millimeter margins, IEEE column grids, and citation graphs.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="w-7 h-7 rounded-xl bg-[#34c759] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  03
+                </span>
+                <span className="text-[10px] text-[#34c759] font-bold uppercase">Auto-Fix</span>
+              </div>
+              <h4 className="text-xs font-bold text-[#1d1d1f]">Remediation &amp; Layout Desk</h4>
+              <p className="text-[11px] text-[#86868b] leading-relaxed">
+                PyMuPDF engine stamping redactions on leaked emails and generating camera-ready fixed layout PDFs.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="w-7 h-7 rounded-xl bg-[#ff9500] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  04
+                </span>
+                <span className="text-[10px] text-[#ff9500] font-bold uppercase">Deploy</span>
+              </div>
+              <h4 className="text-xs font-bold text-[#1d1d1f]">Telemetry &amp; Release Wall</h4>
+              <p className="text-[11px] text-[#86868b] leading-relaxed">
+                Turnkey Docker Compose orchestration with live status indicators and instant author notification.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
           6. BOTTOM CTA BANNER
          ===================================================================== */}
       <section className="rounded-3xl bg-[#0071e3] p-8 sm:p-14 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-apple-card">
