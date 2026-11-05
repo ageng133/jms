@@ -64,6 +64,10 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
+*config.json
+*_config.json
+box_config.json
+backend/*config.json
 
 # OS
 .DS_Store
