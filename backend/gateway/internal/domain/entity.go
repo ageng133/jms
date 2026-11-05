@@ -99,9 +99,11 @@ type PreSubmissionAudit struct {
 	CitationIssues     json.RawMessage `json:"citation_issues" gorm:"type:jsonb;default:'{}'"`
 	AnonymizationFlags json.RawMessage `json:"anonymization_flags" gorm:"type:jsonb;default:'[]'"`
 	TemplateSpecs      json.RawMessage `json:"template_specs" gorm:"type:jsonb;default:'{}'"`
+	Summary            json.RawMessage `json:"summary" gorm:"type:jsonb;default:'{}'"`
+	Engine             *string         `json:"engine"`
+	TemplatePreset     *string         `json:"template_preset"`
 	AnnotatedPdfS3Key  *string         `json:"annotated_pdf_s3_key"`
 	ErrorMessage       *string         `json:"error_message"`
 	CreatedAt          time.Time       `json:"created_at"`
 	CompletedAt        *time.Time      `json:"completed_at"`
 }
-

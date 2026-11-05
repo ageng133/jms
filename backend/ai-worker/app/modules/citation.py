@@ -1,6 +1,6 @@
 import re
 from typing import List, Tuple, Set, Dict, Optional
-import fitz
+import pymupdf as fitz
 
 from app.models.audit import CitationCrosscheckModule
 from app.modules.base import BaseAuditModule

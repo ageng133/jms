@@ -35,13 +35,55 @@ import {
   uploadDirectToS3,
   confirmSubmission,
   FileMetadataInput,
+  getAuditReport,
+  getLatestAudit,
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { SystemStatusPanel } from "@/components/SystemStatusPanel";
 import { AuthGateCard } from "@/components/AuthGateCard";
+import { TemplatePresetSelect, useTemplatePresets } from "@/components/TemplatePresetSelect";
 import { GoogleLogo } from "@/components/GoogleAuthModal";
-import { Manuscript } from "@/types/jms";
+import { Manuscript, PreSubmissionAuditReport } from "@/types/jms";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
+/** Link to the audit report of the manuscript's latest audit. */
+function auditHref(m: Manuscript): string {
+  const audit = getLatestAudit(m);
+  return audit ? `/submissions/${m.id}/audit?audit_id=${audit.id}` : `/submissions/${m.id}/audit`;
+}
+
+/** Real score badge derived from the latest audit (replaces the old hardcoded 95/100). */
+function ScoreBadge({ manuscript }: { manuscript: Manuscript }) {
+  const audit = getLatestAudit(manuscript);
+  if (!audit) {
+    return (
+      <Badge variant="secondary" className="text-[10px]">
+        No audit yet
+      </Badge>
+    );
+  }
+  if (audit.status === "QUEUED" || audit.status === "PROCESSING") {
+    return (
+      <Badge variant="warning" className="text-[10px]">
+        Checking...
+      </Badge>
+    );
+  }
+  if (audit.status === "FAILED" || audit.score_overall == null) {
+    return (
+      <Badge variant="destructive" className="text-[10px]">
+        Audit failed
+      </Badge>
+    );
+  }
+  const passed = audit.summary?.status ? audit.summary.status === "PASS" : audit.score_overall >= 80;
+  return (
+    <Badge variant={passed ? "success" : "destructive"} className="text-[10px]">
+      Score: {audit.score_overall}/100
+    </Badge>
+  );
+}
 import {
   Card,
   CardHeader,
@@ -80,9 +122,43 @@ export default function AdminPortalPage() {
   const [keywordsInput, setKeywordsInput] = useState("");
   const [draftFile, setDraftFile] = useState<File | null>(null);
   const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [templatePreset, setTemplatePreset] = useState<string>("");
   const [manuscriptId, setManuscriptId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [submittedAuditId, setSubmittedAuditId] = useState<string | null>(null);
+  const [submittedReport, setSubmittedReport] = useState<PreSubmissionAuditReport | null>(null);
+
+  // Poll the freshly submitted audit so step 3 shows the real score, not a placeholder.
+  useEffect(() => {
+    setSubmittedReport(null);
+    if (!submittedAuditId) return;
+
+    const auditId = submittedAuditId;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    async function tick() {
+      try {
+        const r = await getAuditReport(auditId);
+        if (cancelled) return;
+        setSubmittedReport(r);
+        if (r.status === "QUEUED" || r.status === "PROCESSING") {
+          timer = setTimeout(tick, 2000);
+        } else {
+          fetchSubmissions();
+        }
+      } catch {
+        if (!cancelled) timer = setTimeout(tick, 4000);
+      }
+    }
+    tick();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submittedAuditId]);
 
   async function fetchSubmissions() {
     try {
@@ -220,10 +296,11 @@ export default function AdminPortalPage() {
         file_role: "MANUSCRIPT",
       };
 
-      setUploadProgress("Running Google Gemini AI format review...");
+      setUploadProgress("Starting the automated format check...");
       const confirmRes = await confirmSubmission(manuscriptId, {
         draft_file: draftMeta,
         template_file: templateMeta,
+        template_preset: templatePreset || undefined,
       });
 
       setSubmittedAuditId(confirmRes.audit_id);
@@ -396,26 +473,8 @@ export default function AdminPortalPage() {
             </button>
           </nav>
 
-          {/* System Telemetry */}
-          <div className="px-4 py-3 mx-3 my-2 rounded-2xl bg-black/[0.02] border border-black/[0.04] text-[11px] space-y-1.5">
-            <div className="font-semibold text-[#86868b] uppercase tracking-wider text-[10px]">
-              System Status
-            </div>
-            <div className="flex items-center justify-between text-[#1d1d1f]">
-              <span className="flex items-center gap-1.5">
-                <Box className="w-3 h-3 text-[#0071e3]" />
-                Box Cloud
-              </span>
-              <span className="text-[#34c759] font-medium">Online</span>
-            </div>
-            <div className="flex items-center justify-between text-[#1d1d1f]">
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-[#af52de]" />
-                Gemini AI
-              </span>
-              <span className="text-[#34c759] font-medium">Active</span>
-            </div>
-          </div>
+          {/* System Telemetry (live from GET /system/status) */}
+          <SystemStatusPanel />
         </div>
 
         {/* User Profile Card at Bottom */}
@@ -629,7 +688,7 @@ export default function AdminPortalPage() {
                         >
                           <div className="space-y-0.5 min-w-0">
                             <Link
-                              href={`/submissions/${m.id}/audit`}
+                              href={auditHref(m)}
                               className="font-semibold text-[#1d1d1f] hover:text-[#0071e3] transition line-clamp-1"
                             >
                               {m.title}
@@ -639,10 +698,8 @@ export default function AdminPortalPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2.5 shrink-0">
-                            <Badge variant="default" className="text-[10px]">
-                              Score: 95/100
-                            </Badge>
-                            <Link href={`/submissions/${m.id}/audit`}>
+                            <ScoreBadge manuscript={m} />
+                            <Link href={auditHref(m)}>
                               <Button variant="ghost" size="sm" className="h-7 text-xs rounded-full">
                                 View Report &rarr;
                               </Button>
@@ -771,7 +828,7 @@ export default function AdminPortalPage() {
                                 </span>
                               </div>
                               <Link
-                                href={`/submissions/${m.id}/audit`}
+                                href={auditHref(m)}
                                 className="font-semibold text-sm text-[#1d1d1f] hover:text-[#0071e3] transition line-clamp-2"
                               >
                                 {m.title}
@@ -791,12 +848,7 @@ export default function AdminPortalPage() {
                                   Standard IEEE
                                 </Badge>
                               )}
-                              <Badge
-                                variant={m.status === "PRE_CHECK_FAILED" ? "destructive" : "success"}
-                                className="text-[10px]"
-                              >
-                                Score: 95/100
-                              </Badge>
+                              <ScoreBadge manuscript={m} />
                               <Badge
                                 variant={
                                   m.status === "ACCEPTED"
@@ -812,7 +864,7 @@ export default function AdminPortalPage() {
                             </div>
 
                             <div className="pt-1 flex items-center justify-between gap-2">
-                              <Link href={`/submissions/${m.id}/audit`} className="flex-1">
+                              <Link href={auditHref(m)} className="flex-1">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -872,7 +924,7 @@ export default function AdminPortalPage() {
                                 <TableCell className="max-w-md">
                                   <div className="space-y-0.5">
                                     <Link
-                                      href={`/submissions/${m.id}/audit`}
+                                      href={auditHref(m)}
                                       className="font-semibold text-[#1d1d1f] hover:text-[#0071e3] transition flex items-center gap-1.5"
                                     >
                                       <span>{m.title}</span>
@@ -906,16 +958,7 @@ export default function AdminPortalPage() {
                                 </TableCell>
 
                                 <TableCell>
-                                  <Badge
-                                    variant={
-                                      m.status === "PRE_CHECK_FAILED"
-                                        ? "destructive"
-                                        : "success"
-                                    }
-                                    className="text-[10px]"
-                                  >
-                                    Score: 95 / 100
-                                  </Badge>
+                                  <ScoreBadge manuscript={m} />
                                 </TableCell>
 
                                 <TableCell>
@@ -935,7 +978,7 @@ export default function AdminPortalPage() {
 
                                 <TableCell className="text-right">
                                   <div className="flex items-center justify-end gap-1.5">
-                                    <Link href={`/submissions/${m.id}/audit`}>
+                                    <Link href={auditHref(m)}>
                                       <Button variant="outline" size="sm" className="h-7 text-xs rounded-full gap-1">
                                         <Sparkles className="w-3 h-3 text-[#0071e3]" />
                                         <span>Report</span>
@@ -1130,7 +1173,7 @@ export default function AdminPortalPage() {
                         </div>
 
                         <p className="text-[11px] text-[#86868b]">
-                          The journal&apos;s official styling template (e.g. IEEE or ACM). Defaults to IEEE if omitted.
+                          The journal&apos;s official styling template. If you don&apos;t have it, pick a built-in layout below.
                         </p>
 
                         <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-black/[0.12] rounded-xl bg-white text-center">
@@ -1153,6 +1196,12 @@ export default function AdminPortalPage() {
                             }}
                           />
                         </div>
+
+                        <TemplatePresetSelect
+                          value={templatePreset}
+                          onChange={setTemplatePreset}
+                          hasUploadedTemplate={!!templateFile}
+                        />
                       </div>
 
                       {/* Dropzone B: Draft */}
@@ -1247,21 +1296,45 @@ export default function AdminPortalPage() {
                         Upload &amp; Review Completed
                       </h3>
                       <p className="text-xs text-[#86868b] max-w-sm mx-auto">
-                        Your files were uploaded to Box Cloud Storage and checked with Google Gemini AI.
+                        Your files were uploaded and checked against the journal layout, double-blind and citation rules.
                       </p>
                     </div>
 
                     <div className="max-w-xs mx-auto p-4 rounded-2xl bg-[#f5f5f7] border border-black/[0.06] space-y-1.5">
                       <div className="text-xs text-[#86868b]">Compliance Score</div>
-                      <div className="text-2xl font-bold text-[#34c759]">
-                        95 / 100
-                      </div>
-                      <Badge variant="success">Compliant &amp; Ready for Review</Badge>
+                      {!submittedReport ||
+                      submittedReport.status === "QUEUED" ||
+                      submittedReport.status === "PROCESSING" ? (
+                        <div className="flex items-center justify-center gap-2 py-1 text-sm font-semibold text-[#86868b]">
+                          <Loader2 className="w-4 h-4 animate-spin text-[#0071e3]" />
+                          <span>Checking format...</span>
+                        </div>
+                      ) : submittedReport.status === "FAILED" ? (
+                        <>
+                          <div className="text-2xl font-bold text-[#ff3b30]">&ndash;</div>
+                          <Badge variant="destructive">Audit failed</Badge>
+                        </>
+                      ) : (
+                        <>
+                          <div
+                            className={`text-2xl font-bold ${
+                              submittedReport.summary.status === "PASS" ? "text-[#34c759]" : "text-[#ff3b30]"
+                            }`}
+                          >
+                            {submittedReport.overall_score} / 100
+                          </div>
+                          {submittedReport.summary.status === "PASS" ? (
+                            <Badge variant="success">Compliant &amp; Ready for Review</Badge>
+                          ) : (
+                            <Badge variant="destructive">Revision Required</Badge>
+                          )}
+                        </>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-2.5 pt-3">
                       {submittedAuditId && (
-                        <Link href={`/submissions/${manuscriptId}/audit`}>
+                        <Link href={`/submissions/${manuscriptId}/audit?audit_id=${submittedAuditId}`}>
                           <Button className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full gap-1.5 shadow-xs">
                             <Sparkles className="w-3.5 h-3.5" />
                             View Detailed Report
@@ -1305,62 +1378,62 @@ export default function AdminPortalPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base text-[#1d1d1f]">IEEE Transactions</CardTitle>
-                      <Badge variant="default">Double Column</Badge>
-                    </div>
-                    <CardDescription className="text-xs text-[#86868b]">
-                      Standard for computer science and engineering transactions.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-1.5 text-xs text-[#86868b]">
-                    <div>Font: Times New Roman 10pt</div>
-                    <div>Columns: 2 Columns</div>
-                    <div>Margins: 19mm top, 14.3mm side</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base text-[#1d1d1f]">ACM SIGCOMM</CardTitle>
-                      <Badge variant="default">Double Column</Badge>
-                    </div>
-                    <CardDescription className="text-xs text-[#86868b]">
-                      Conference format for systems and networking papers.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-1.5 text-xs text-[#86868b]">
-                    <div>Font: Libertine 9pt</div>
-                    <div>Columns: 2 Columns</div>
-                    <div>Margins: 20mm uniform</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base text-[#1d1d1f]">UTS Open Journal</CardTitle>
-                      <Badge variant="secondary">Single Column</Badge>
-                    </div>
-                    <CardDescription className="text-xs text-[#86868b]">
-                      Institutional publication format for faculty technical reports.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-1.5 text-xs text-[#86868b]">
-                    <div>Font: SF Pro / Inter 11pt</div>
-                    <div>Columns: 1 Column</div>
-                    <div>Margins: 25mm uniform</div>
-                  </CardContent>
-                </Card>
-              </div>
+              <TemplateVault />
             </div>
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+/** Template Vault: built-in layouts served by the gateway (GET /api/v1/templates). */
+function TemplateVault() {
+  const { presets, defaultId, loading, error } = useTemplatePresets();
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-xs text-[#86868b]">
+        <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#0071e3]" />
+        Loading templates...
+      </div>
+    );
+  }
+  if (error) {
+    return <div className="p-4 rounded-2xl bg-[#ff3b30]/10 text-[#ff3b30] text-xs">{error}</div>;
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      {presets.map((p) => (
+        <Card key={p.id}>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-base text-[#1d1d1f]">{p.name}</CardTitle>
+              <Badge variant={p.specs.column_count === 2 ? "default" : "secondary"}>
+                {p.specs.column_count === 2 ? "Double Column" : "Single Column"}
+              </Badge>
+            </div>
+            <CardDescription className="text-xs text-[#86868b]">{p.description}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1.5 text-xs text-[#86868b]">
+            <div>Font: {p.font}</div>
+            <div>
+              Page: {p.specs.page_format} ({p.specs.page_width_mm} &times; {p.specs.page_height_mm} mm)
+            </div>
+            <div>
+              Margins: top {p.specs.margin_top_mm}, bottom {p.specs.margin_bottom_mm}, left {p.specs.margin_left_mm},
+              right {p.specs.margin_right_mm} mm
+            </div>
+            {p.specs.column_gap_mm != null && <div>Column gap: {p.specs.column_gap_mm} mm</div>}
+            {p.id === defaultId && (
+              <Badge variant="info" className="text-[10px] mt-1">
+                Default when no template is uploaded
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

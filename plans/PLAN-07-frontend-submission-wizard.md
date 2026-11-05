@@ -9,6 +9,8 @@
 
 ---
 
+> **Status update (PLAN-14):** The audit is no longer Gemini-only. The gateway now calls the PyMuPDF worker (`backend/ai-worker`, `python -m app.server`) first and uses Gemini only as an optional fallback; failed audits are marked FAILED instead of returning placeholder scores. See [PLAN-14](./PLAN-14-poc-hardening-real-audit-engine.md) for the current architecture. The text below is kept as the original plan.
+
 ## 1. Architectural Realization & Separation Boundary
 
 Submissions are decoupled from public marketing pages and consolidated inside the **Authenticated Admin Panel (`/admin`)**:

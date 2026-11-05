@@ -54,6 +54,9 @@ export function GoogleAuthModal() {
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const isDevMode = process.env.NODE_ENV === "development";
+  // The e-mail form is the demo (unverified) login. It must match AUTH_DEMO_LOGIN
+  // on the gateway; set NEXT_PUBLIC_DEMO_LOGIN=false in production.
+  const demoLoginEnabled = process.env.NEXT_PUBLIC_DEMO_LOGIN !== "false";
 
   // Derive academic affiliation dynamically from email domain
   const detectedAffiliation = React.useMemo(() => {
@@ -165,7 +168,7 @@ export function GoogleAuthModal() {
 
   // Developer mode simulation helper
   async function applyDevSandboxIdentity(devRole: "AUTHOR" | "ADMIN") {
-    const devEmail = devRole === "ADMIN" ? "editor.test@uts.edu.au" : "author.test@uts.edu.au";
+    const devEmail = devRole === "ADMIN" ? "editor.google@uts.edu.au" : "author.google@uts.edu.au";
     const devName = devRole === "ADMIN" ? "Prof. Dr. Sarah Connor" : "Dr. Alexander Wright";
     setEmail(devEmail);
     setFullName(devName);
@@ -206,15 +209,24 @@ export function GoogleAuthModal() {
         {googleClientId && (
           <div className="my-3 flex flex-col items-center gap-2">
             <div ref={googleBtnRef} className="w-full flex justify-center" />
+            {demoLoginEnabled && (
             <div className="flex items-center gap-2 w-full my-1">
               <div className="flex-1 h-px bg-black/[0.06]" />
               <span className="text-[11px] uppercase font-semibold text-[#86868b]">Or continue with email</span>
               <div className="flex-1 h-px bg-black/[0.06]" />
             </div>
+            )}
           </div>
         )}
 
-        {/* Standard Enterprise Academic Sign-In Form */}
+        {!googleClientId && !demoLoginEnabled && (
+          <div className="my-3 p-3.5 rounded-2xl bg-[#ff9500]/10 border border-[#ff9500]/20 text-[#c76f00] text-xs">
+            Google sign-in is not configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID (frontend) and GOOGLE_CLIENT_ID (gateway).
+          </div>
+        )}
+
+        {/* Standard Enterprise Academic Sign-In Form (demo login) */}
+        {demoLoginEnabled && (
         <form onSubmit={handleEnterpriseSignIn} className="space-y-3.5 mt-2">
           <div className="space-y-1">
             <Label htmlFor="auth-email" className="text-xs font-semibold text-[#1d1d1f] flex items-center gap-1.5">
@@ -259,7 +271,7 @@ export function GoogleAuthModal() {
               </div>
             </div>
             <Badge variant="secondary" className="text-[10px] text-[#0071e3] bg-[#0071e3]/10">
-              Verified
+              Auto-detected
             </Badge>
           </div>
 
@@ -299,6 +311,9 @@ export function GoogleAuthModal() {
                 <div className="text-[10px] text-[#86868b] font-normal mt-0.5">Desk Review Portal</div>
               </button>
             </div>
+            <p className="text-[10px] text-[#86868b]">
+              Editor access is granted by the server (ADMIN_EMAILS / EDITOR_EMAILS); other accounts sign in as Author.
+            </p>
           </div>
 
           <Button
@@ -319,9 +334,10 @@ export function GoogleAuthModal() {
             )}
           </Button>
         </form>
+        )}
 
         {/* Developer Sandbox Options: Strictly sequestered and collapsible, visible in dev only */}
-        {isDevMode && (
+        {isDevMode && demoLoginEnabled && (
           <details className="mt-4 pt-3 border-t border-black/[0.06] text-xs group">
             <summary className="cursor-pointer text-[11px] font-medium text-[#86868b] hover:text-[#1d1d1f] flex items-center justify-between transition-colors">
               <span>Developer Sandbox Diagnostics (Local Dev Only)</span>

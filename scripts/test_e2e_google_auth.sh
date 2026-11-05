@@ -156,6 +156,37 @@ STATUS_CODE=$(curl -s -o "${TMP_DIR}/status.json" -w "%{http_code}" -X PATCH "${
 assert_status "Editor updates manuscript status to ACCEPTED" "$STATUS_CODE" 200
 
 # ------------------------------------------------------------------------------
+# TEST 6b: Authorization guards (P1 hardening)
+# ------------------------------------------------------------------------------
+echo ""
+echo "[Test 6b] Verifying role, ownership and storage guards..."
+AUTHOR_PATCH_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH "${BASE_URL}/manuscripts/${MANUSCRIPT_ID}/status" \
+  -H "Authorization: Bearer ${AUTHOR_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "ACCEPTED"}')
+assert_status "Author cannot accept own manuscript" "$AUTHOR_PATCH_CODE" 403
+
+ANON_DOWNLOAD_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/files/download?key=raw/${MANUSCRIPT_ID}/x.pdf")
+assert_status "Anonymous file download rejected" "$ANON_DOWNLOAD_CODE" 401
+
+TRAVERSAL_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+  "${BASE_URL}/files/upload?key=raw/${MANUSCRIPT_ID}/../../../../evil.pdf" \
+  -H "Authorization: Bearer ${AUTHOR_TOKEN}" \
+  --data-binary "%PDF-1.4 test")
+assert_status "Path traversal upload rejected" "$TRAVERSAL_CODE" 400
+
+ROLE_ESCALATION_ROLE=$(curl -s -X POST "${BASE_URL}/auth/google" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "escalation.test.'"$(date +%s)"'@uts.edu.au", "full_name": "Mallory", "role": "ADMIN"}' \
+  | grep -o '"role":"[^"]*' | cut -d'"' -f4)
+if [ "$ROLE_ESCALATION_ROLE" = "AUTHOR" ]; then
+  echo "  ✅ PASS: Client-supplied role is ignored (got AUTHOR)"
+else
+  echo "  ❌ FAIL: Role escalation possible, got ${ROLE_ESCALATION_ROLE}"
+  exit 1
+fi
+
+# ------------------------------------------------------------------------------
 # TEST 7: Tampered Token Rejection
 # ------------------------------------------------------------------------------
 echo ""

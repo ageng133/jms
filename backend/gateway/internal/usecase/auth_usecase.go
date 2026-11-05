@@ -2,8 +2,6 @@ package usecase
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -24,23 +22,29 @@ type AuthUsecase interface {
 	GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 }
 
+// GoogleLoginDTO is the body of POST /auth/google.
+//
+// Production path: `credential` (or `id_token`) carries a Google Identity
+// Services ID token which is cryptographically verified.
+// Demo path (only when demo login is enabled): plain `email`/`full_name`.
+//
+// The role is NEVER taken from the client; it is resolved server-side from
+// the ADMIN_EMAILS / EDITOR_EMAILS allowlists (default AUTHOR).
 type GoogleLoginDTO struct {
-	Credential  string      `json:"credential"` // Google ID token from GSI
-	IDToken     string      `json:"id_token"`
-	Email       string      `json:"email"`
-	FullName    string      `json:"full_name"`
-	GoogleID    string      `json:"google_id"`
-	Role        domain.Role `json:"role"`
-	Affiliation string      `json:"affiliation"`
+	Credential  string `json:"credential"`
+	IDToken     string `json:"id_token"`
+	Email       string `json:"email"`
+	FullName    string `json:"full_name"`
+	Affiliation string `json:"affiliation"`
 }
 
+// RegisterDTO: self-registration always creates an AUTHOR account.
 type RegisterDTO struct {
-	Email       string      `json:"email" binding:"required,email"`
-	Password    string      `json:"password" binding:"required,min=8"`
-	FullName    string      `json:"full_name" binding:"required"`
-	Affiliation string      `json:"affiliation"`
-	OrcidID     *string     `json:"orcid_id"`
-	Role        domain.Role `json:"role" binding:"required,oneof=AUTHOR EDITOR REVIEWER ADMIN"`
+	Email       string  `json:"email" binding:"required,email"`
+	Password    string  `json:"password" binding:"required,min=8"`
+	FullName    string  `json:"full_name" binding:"required"`
+	Affiliation string  `json:"affiliation"`
+	OrcidID     *string `json:"orcid_id"`
 }
 
 type AuthResult struct {
@@ -57,18 +61,77 @@ type Claims struct {
 }
 
 type authUsecase struct {
-	userRepo domain.UserRepository
-	jwtCfg   config.JWTConfig
+	userRepo       domain.UserRepository
+	jwtCfg         config.JWTConfig
+	googleVerifier domain.GoogleTokenVerifier
+	allowDemoLogin bool
+	adminEmails    map[string]bool
+	editorEmails   map[string]bool
 }
 
-func NewAuthUsecase(userRepo domain.UserRepository, jwtCfg config.JWTConfig) AuthUsecase {
-	return &authUsecase{
-		userRepo: userRepo,
-		jwtCfg:   jwtCfg,
+// AuthOption configures optional behaviour of the auth usecase.
+type AuthOption func(*authUsecase)
+
+// WithGoogleVerifier enables verified Google ID token sign-in.
+func WithGoogleVerifier(v domain.GoogleTokenVerifier) AuthOption {
+	return func(a *authUsecase) { a.googleVerifier = v }
+}
+
+// WithDemoLogin enables the unverified email-only sign-in used for local demos.
+// Never enable this in production: anyone can sign in as any email.
+func WithDemoLogin(enabled bool) AuthOption {
+	return func(a *authUsecase) { a.allowDemoLogin = enabled }
+}
+
+// WithRoleAllowlists sets which emails are provisioned as ADMIN / EDITOR.
+func WithRoleAllowlists(adminEmails, editorEmails []string) AuthOption {
+	return func(a *authUsecase) {
+		a.adminEmails = toEmailSet(adminEmails)
+		a.editorEmails = toEmailSet(editorEmails)
+	}
+}
+
+func NewAuthUsecase(userRepo domain.UserRepository, jwtCfg config.JWTConfig, opts ...AuthOption) AuthUsecase {
+	a := &authUsecase{
+		userRepo:     userRepo,
+		jwtCfg:       jwtCfg,
+		adminEmails:  map[string]bool{},
+		editorEmails: map[string]bool{},
+	}
+	for _, opt := range opts {
+		opt(a)
+	}
+	return a
+}
+
+func toEmailSet(emails []string) map[string]bool {
+	set := make(map[string]bool, len(emails))
+	for _, e := range emails {
+		if e = normalizeEmail(e); e != "" {
+			set[e] = true
+		}
+	}
+	return set
+}
+
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
+// resolveRole decides the role for a newly provisioned account.
+func (a *authUsecase) resolveRole(email string) domain.Role {
+	switch {
+	case a.adminEmails[email]:
+		return domain.RoleAdmin
+	case a.editorEmails[email]:
+		return domain.RoleEditor
+	default:
+		return domain.RoleAuthor
 	}
 }
 
 func (a *authUsecase) Register(ctx context.Context, req RegisterDTO) (*domain.User, error) {
+	req.Email = normalizeEmail(req.Email)
 	existing, _ := a.userRepo.GetByEmail(ctx, req.Email)
 	if existing != nil {
 		return nil, errors.New("user with this email already exists")
@@ -87,7 +150,7 @@ func (a *authUsecase) Register(ctx context.Context, req RegisterDTO) (*domain.Us
 		FullName:     req.FullName,
 		Affiliation:  req.Affiliation,
 		OrcidID:      req.OrcidID,
-		Role:         req.Role,
+		Role:         domain.RoleAuthor, // privileged roles are never self-assigned
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
@@ -100,7 +163,7 @@ func (a *authUsecase) Register(ctx context.Context, req RegisterDTO) (*domain.Us
 }
 
 func (a *authUsecase) Login(ctx context.Context, email, password string) (*AuthResult, error) {
-	user, err := a.userRepo.GetByEmail(ctx, email)
+	user, err := a.userRepo.GetByEmail(ctx, normalizeEmail(email))
 	if err != nil {
 		return nil, errors.New("invalid email or password")
 	}
@@ -134,98 +197,64 @@ func (a *authUsecase) Login(ctx context.Context, email, password string) (*AuthR
 	}, nil
 }
 
-type googleTokenClaims struct {
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Name          string `json:"name"`
-	GivenName     string `json:"given_name"`
-	FamilyName    string `json:"family_name"`
-	Picture       string `json:"picture"`
-	Sub           string `json:"sub"`
-	HD            string `json:"hd"`
-}
-
-func parseGoogleIDToken(tokenString string) (*googleTokenClaims, error) {
-	parts := strings.Split(tokenString, ".")
-	if len(parts) < 2 {
-		return nil, errors.New("invalid jwt token format")
-	}
-
-	payloadSegment := parts[1]
-	// Handle URL base64 decoding with or without padding
-	decoded, err := base64.RawURLEncoding.DecodeString(payloadSegment)
-	if err != nil {
-		decoded, err = base64.URLEncoding.DecodeString(payloadSegment)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decode jwt payload: %w", err)
-		}
-	}
-
-	var claims googleTokenClaims
-	if err := json.Unmarshal(decoded, &claims); err != nil {
-		return nil, fmt.Errorf("failed to parse jwt json claims: %w", err)
-	}
-
-	return &claims, nil
-}
-
 func (a *authUsecase) LoginWithGoogle(ctx context.Context, dto GoogleLoginDTO) (*AuthResult, error) {
 	rawToken := dto.Credential
 	if rawToken == "" {
 		rawToken = dto.IDToken
 	}
 
+	var email, fullName, affiliation string
+
 	if rawToken != "" {
-		claims, err := parseGoogleIDToken(rawToken)
-		if err == nil && claims != nil {
-			if dto.Email == "" && claims.Email != "" {
-				dto.Email = claims.Email
-			}
-			if dto.FullName == "" && claims.Name != "" {
-				dto.FullName = claims.Name
-			}
-			if dto.GoogleID == "" && claims.Sub != "" {
-				dto.GoogleID = claims.Sub
-			}
-			if dto.Affiliation == "" && claims.HD != "" {
-				dto.Affiliation = fmt.Sprintf("UTS Google Workspace (%s)", claims.HD)
-			}
+		// Verified path: signature, audience, issuer and expiry are checked.
+		if a.googleVerifier == nil {
+			return nil, errors.New("google sign-in is not configured on this server")
 		}
+		identity, err := a.googleVerifier.Verify(ctx, rawToken)
+		if err != nil {
+			return nil, fmt.Errorf("google sign-in failed: %w", err)
+		}
+		if !identity.EmailVerified {
+			return nil, errors.New("google account email is not verified")
+		}
+		email = identity.Email
+		fullName = identity.Name
+		if identity.HostedDomain != "" {
+			affiliation = fmt.Sprintf("Google Workspace (%s)", identity.HostedDomain)
+		}
+	} else {
+		// Demo path: unverified email-only sign-in for local testing.
+		if !a.allowDemoLogin {
+			return nil, errors.New("email-only sign-in is disabled; please use the Google sign-in button")
+		}
+		email = dto.Email
+		fullName = dto.FullName
+		affiliation = dto.Affiliation
 	}
 
-	if strings.TrimSpace(dto.Email) == "" {
+	email = normalizeEmail(email)
+	if email == "" {
 		return nil, errors.New("email is required for Google SSO authentication")
 	}
-
-	if strings.TrimSpace(dto.FullName) == "" {
-		parts := strings.Split(dto.Email, "@")
-		dto.FullName = parts[0]
+	if strings.TrimSpace(fullName) == "" {
+		fullName = strings.Split(email, "@")[0]
+	}
+	if strings.TrimSpace(affiliation) == "" {
+		affiliation = "UTS Faculty of Engineering & IT"
 	}
 
-	if strings.TrimSpace(dto.Affiliation) == "" {
-		dto.Affiliation = "UTS Faculty of Engineering & IT"
-	}
-
-	user, err := a.userRepo.GetByEmail(ctx, dto.Email)
+	user, err := a.userRepo.GetByEmail(ctx, email)
 	if err != nil {
-		// User does not exist, provision new user
-		// Invariant: All people registered via Google SSO default strictly to AUTHOR first.
-		// Only pre-configured editorial management accounts are assigned ADMIN/EDITOR.
-		targetRole := domain.RoleAuthor
-		if dto.Email == "editor.google@uts.edu.au" {
-			targetRole = domain.RoleAdmin
-		} else if dto.Role == domain.RoleEditor {
-			targetRole = domain.RoleEditor
-		}
-
+		// First sign-in: provision the account. The role comes from the
+		// server-side allowlist only, never from the request body.
 		now := time.Now().UTC()
 		user = &domain.User{
 			ID:           uuid.New(),
-			Email:        dto.Email,
+			Email:        email,
 			PasswordHash: "OAUTH2_GOOGLE_MANAGED",
-			FullName:     dto.FullName,
-			Affiliation:  dto.Affiliation,
-			Role:         targetRole,
+			FullName:     fullName,
+			Affiliation:  affiliation,
+			Role:         a.resolveRole(email),
 			CreatedAt:    now,
 			UpdatedAt:    now,
 		}
@@ -282,4 +311,3 @@ func (a *authUsecase) ValidateToken(tokenString string) (*Claims, error) {
 func (a *authUsecase) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	return a.userRepo.GetByID(ctx, id)
 }
-

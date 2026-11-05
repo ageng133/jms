@@ -17,5 +17,8 @@ RUN python -m spacy download en_core_web_sm
 
 COPY . .
 
-CMD ["python", "-m", "app.worker"]
+EXPOSE 8090
+# HTTP audit engine used by the gateway. The legacy Redis queue consumer is still
+# available with: python -m app.worker
+CMD ["python", "-m", "app.server"]
 

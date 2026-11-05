@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     MARGIN_RIGHT_MM: float = 25.4
     MARGIN_TOLERANCE_MM: float = 1.0
 
+    # HTTP audit engine (app.server)
+    AUDIT_ENGINE_HOST: str = "127.0.0.1"
+    AUDIT_ENGINE_PORT: int = 8090
+    # Optional shared secret; when set the gateway must send X-Worker-Token
+    AUDIT_ENGINE_TOKEN: str = ""
+    AUDIT_MAX_UPLOAD_MB: int = 50
+
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env", "../../.env"),
         env_file_encoding="utf-8",

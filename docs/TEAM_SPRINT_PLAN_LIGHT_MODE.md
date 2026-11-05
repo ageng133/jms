@@ -4,6 +4,8 @@ This document outlines the tasks, visual mockups, and implementation guide for o
 
 ---
 
+> **Status update (PLAN-14):** The audit is no longer Gemini-only. The gateway now calls the PyMuPDF worker (`backend/ai-worker`, `python -m app.server`) first and uses Gemini only as an optional fallback; failed audits are marked FAILED instead of returning placeholder scores. See [PLAN-14](../plans/PLAN-14-poc-hardening-real-audit-engine.md) for the current architecture. The text below is kept as the original plan.
+
 ## 🎯 Sprint Goal
 
 1. **Light Mode Only:** Remove all dark mode backgrounds and text. Switch the entire application to a clean, crisp, academic light mode (clean white cards, light slate backgrounds, and dark high-contrast text).

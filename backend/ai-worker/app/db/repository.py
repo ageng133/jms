@@ -42,6 +42,8 @@ class DBRepository:
                         citation_issues = %s::jsonb,
                         anonymization_flags = %s::jsonb,
                         template_specs = %s::jsonb,
+                        summary = %s::jsonb,
+                        engine = %s,
                         annotated_pdf_s3_key = %s,
                         completed_at = %s
                     WHERE id = %s
@@ -49,9 +51,11 @@ class DBRepository:
                     (
                         report.overall_score,
                         json.dumps([c.model_dump() for c in report.modules.geometry_and_layout.checks]),
-                        json.dumps(report.modules.citation_crosscheck.model_dump()),
+                        json.dumps(report.modules.citation_crosscheck.model_dump(by_alias=True)),
                         json.dumps([l.model_dump() for l in report.modules.anonymization.leaks_found]),
                         template_specs_json,
+                        json.dumps({**report.summary.model_dump(), "overall_score": report.overall_score}),
+                        "pymupdf-worker",
                         report.annotated_pdf_s3_key,
                         now,
                         report.audit_id,

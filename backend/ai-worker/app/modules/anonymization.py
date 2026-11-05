@@ -1,6 +1,6 @@
 import re
 from typing import List, Tuple
-import fitz
+import pymupdf as fitz
 
 from app.models.audit import AnonymizationLeak, AnonymizationModule
 from app.modules.base import BaseAuditModule
@@ -97,6 +97,22 @@ class AnonymizationAuditor(BaseAuditModule):
             if key not in seen:
                 seen.add(key)
                 deduped_leaks.append(leak)
+
+        # Red boxes around every leaked identifier we can locate on its page
+        for leak in deduped_leaks:
+            if leak.type == "PDF_METADATA_AUTHOR":
+                continue  # metadata has no position on the page
+            needle = leak.leak.replace("Grant ID ", "", 1) if leak.type == "FUNDING_LEAK" else leak.leak
+            page_idx = max(0, leak.page - 1)
+            if page_idx >= len(doc) or not needle.strip():
+                continue
+            for r in doc[page_idx].search_for(needle)[:3]:
+                annotations.append((
+                    page_idx,
+                    [int(r.x0), int(r.y0), int(r.x1), int(r.y1)],
+                    f"ANONYMIZATION_{leak.type}",
+                    f"Double-blind leak ({leak.type}): '{leak.leak}'. Remove or anonymize before submission.",
+                ))
 
         is_passed = len(deduped_leaks) == 0
         return AnonymizationModule(pass_=is_passed, leaks_found=deduped_leaks), annotations

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useCallback, useEffect, useRef, useState, use } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -20,7 +20,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { PreSubmissionAuditReport } from "@/types/jms";
-import { getAuditReport } from "@/lib/api";
+import { getAuditReport, getFileDownloadUrl, getLatestAuditIdForManuscript } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { AuthGateCard } from "@/components/AuthGateCard";
 import { Button } from "@/components/ui/button";
@@ -31,55 +31,86 @@ import { AICopilotWidget } from "@/components/audit/AICopilotWidget";
 export default function AuditReportPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const searchParams = useSearchParams();
-  const auditId = searchParams.get("audit_id");
+  const auditIdParam = searchParams.get("audit_id");
   const { user, loading: authLoading } = useAuth();
 
+  const [auditId, setAuditId] = useState<string | null>(auditIdParam);
   const [report, setReport] = useState<PreSubmissionAuditReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPdfPreview, setShowPdfPreview] = useState(true);
+  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function fetchReport() {
-    if (!user) {
-      setLoading(false);
+  const isPending = !!report && (report.status === "QUEUED" || report.status === "PROCESSING");
+  const isFailed = report?.status === "FAILED";
+
+  // Resolve the audit id: use ?audit_id= if present, otherwise fall back to the
+  // manuscript's latest audit so links without the query param still work.
+  useEffect(() => {
+    if (!user) return;
+    if (auditIdParam) {
+      setAuditId(auditIdParam);
       return;
     }
+    let cancelled = false;
+    getLatestAuditIdForManuscript(resolvedParams.id)
+      .then((id) => {
+        if (cancelled) return;
+        if (id) setAuditId(id);
+        else {
+          setError("No audit has been run for this manuscript yet. Upload a draft to start the pre-check.");
+          setLoading(false);
+        }
+      })
+      .catch((err: any) => {
+        if (cancelled) return;
+        setError(err.message || "Failed to load manuscript");
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, auditIdParam, resolvedParams.id]);
 
-    // Resolve via query parameter audit_id or automatically via manuscript ID in route
-    const targetIdentifier = auditId || resolvedParams.id;
-    if (!targetIdentifier) {
-      setError("Missing submission identifier");
-      setLoading(false);
-      return;
-    }
-
+  const fetchReport = useCallback(async () => {
+    if (!user || !auditId) return null;
     try {
       setLoading(true);
       setError(null);
-      const data = await getAuditReport(targetIdentifier);
+      const data = await getAuditReport(auditId);
       setReport(data);
+      return data;
     } catch (err: any) {
       setError(err.message || "Failed to fetch audit report");
+      return null;
     } finally {
       setLoading(false);
     }
-  }
+  }, [user, auditId]);
 
+  // Poll every 3s while the audit is QUEUED/PROCESSING, stop once it is final.
   useEffect(() => {
     if (!user) {
       setLoading(false);
       return;
     }
+    if (!auditId) return;
 
-    fetchReport();
-    const interval = setInterval(() => {
-      // Poll if report status is not completed yet
-      if (!report || (report as any).status === "QUEUED" || (report as any).status === "PROCESSING") {
-        fetchReport();
+    let cancelled = false;
+    async function tick() {
+      const data = await fetchReport();
+      if (cancelled) return;
+      if (data && (data.status === "QUEUED" || data.status === "PROCESSING")) {
+        pollTimer.current = setTimeout(tick, 3000);
       }
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [auditId, resolvedParams.id, user]);
+    }
+    tick();
+
+    return () => {
+      cancelled = true;
+      if (pollTimer.current) clearTimeout(pollTimer.current);
+    };
+  }, [user, auditId, fetchReport]);
 
   if (authLoading) {
     return (
@@ -158,19 +189,36 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                 <span>{showPdfPreview ? "Hide Layout Comparison" : "Show Layout Comparison"}</span>
               </Button>
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/files/download?key=${encodeURIComponent(report.annotated_pdf_s3_key)}`}
+                href={getFileDownloadUrl(report.annotated_pdf_s3_key)}
                 target="_blank"
                 rel="noreferrer"
               >
                 <Button size="sm" className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full shadow-xs gap-1.5">
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download Reshaped PDF</span>
+                  <span>Download Annotated PDF</span>
                 </Button>
               </a>
             </>
           )}
         </div>
       </div>
+
+      {isPending && (
+        <div className="p-16 text-center bg-white rounded-3xl border border-black/[0.06] shadow-apple-card space-y-3">
+          <Loader2 className="w-8 h-8 text-[#0071e3] animate-spin mx-auto" />
+          <p className="text-sm font-semibold text-[#1d1d1f]">
+            Audit {report?.status === "QUEUED" ? "queued" : "in progress"}...
+          </p>
+          <p className="text-xs text-[#86868b]">This page refreshes automatically when the report is ready.</p>
+        </div>
+      )}
+
+      {isFailed && (
+        <div className="p-4 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs">
+          The audit could not be completed{report?.error_message ? `: ${report.error_message}` : "."} Please re-upload
+          the manuscript or contact the editorial office.
+        </div>
+      )}
 
       {loading && !report && (
         <div className="p-16 text-center bg-white rounded-3xl border border-black/[0.06] shadow-apple-card space-y-3">
@@ -186,7 +234,7 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
-      {report && (
+      {report && report.status === "COMPLETED" && (
         <div className="space-y-8">
           {/* Interactive Before-vs-After Visual Layout Comparison Engine */}
           {showPdfPreview && (
@@ -290,9 +338,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
 
-                {report.annotated_pdf_s3_key && (
+                {report.fixed_layout.fixed_pdf_s3_key && (
                   <a
-                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/files/download?key=${encodeURIComponent(report.annotated_pdf_s3_key)}`}
+                    href={getFileDownloadUrl(report.fixed_layout.fixed_pdf_s3_key)}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -371,9 +419,11 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
                       <Sparkles className="w-4 h-4 text-[#ff9500]" />
                     </h2>
                     <p className="text-xs text-[#86868b]">
-                      {report.template_specs.is_custom_template
+                      {report.template_specs.is_custom_template || report.template_specs.source === "uploaded_template"
                         ? "Extracted dynamically from uploaded Journal Template PDF"
-                        : "Using Standard Baseline Academic Template"}
+                        : report.template_specs.source?.startsWith("preset:")
+                          ? `Preset layout: ${report.template_specs.name || report.template_specs.source.slice(7)}`
+                          : `Using ${report.template_specs.name || "Standard Baseline Academic Template"}`}
                     </p>
                   </div>
                 </div>

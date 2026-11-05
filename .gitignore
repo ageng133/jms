@@ -8,6 +8,8 @@ bin/
 dist/
 build/
 backend/gateway/gateway
+backend/gateway/api
+backend/gateway/api.exe
 
 # Go
 vendor/
@@ -26,6 +28,10 @@ dist/
 downloads/
 eggs/
 .eggs/
+/lib/
+/lib64/
+backend/ai-worker/lib/
+backend/ai-worker/lib64/
 # lib/
 # lib64/
 !frontend/src/lib/

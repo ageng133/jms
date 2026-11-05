@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any
-import fitz
+import pymupdf as fitz
 
 
 class BaseAuditModule(ABC):

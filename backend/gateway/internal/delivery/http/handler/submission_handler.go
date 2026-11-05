@@ -3,9 +3,11 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
+	"mime"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -19,13 +21,50 @@ import (
 )
 
 type SubmissionHandler struct {
-	usecase       usecase.SubmissionUsecase
-	storageClient domain.StorageClient
-	googleAI      ai.GoogleAIService
+	usecase        usecase.SubmissionUsecase
+	storageClient  domain.StorageClient
+	googleAI       ai.GoogleAIService
+	maxUploadBytes int64
 }
 
-func NewSubmissionHandler(usecase usecase.SubmissionUsecase, storageClient domain.StorageClient, googleAI ai.GoogleAIService) *SubmissionHandler {
-	return &SubmissionHandler{usecase: usecase, storageClient: storageClient, googleAI: googleAI}
+func NewSubmissionHandler(usecase usecase.SubmissionUsecase, storageClient domain.StorageClient, maxUploadBytes int64, googleAI ai.GoogleAIService) *SubmissionHandler {
+	if maxUploadBytes <= 0 {
+		maxUploadBytes = 50 << 20 // 50 MB
+	}
+	return &SubmissionHandler{
+		usecase:        usecase,
+		storageClient:  storageClient,
+		googleAI:       googleAI,
+		maxUploadBytes: maxUploadBytes,
+	}
+}
+
+// actorFrom builds the authenticated actor set by the auth middleware.
+func actorFrom(c *gin.Context) usecase.Actor {
+	userID, _ := c.Get(middleware.ContextUserIDKey)
+	role, _ := c.Get(middleware.ContextRoleKey)
+	actor := usecase.Actor{}
+	if id, ok := userID.(uuid.UUID); ok {
+		actor.UserID = id
+	}
+	if r, ok := role.(domain.Role); ok {
+		actor.Role = r
+	}
+	return actor
+}
+
+// writeUsecaseError maps domain sentinel errors to HTTP status codes.
+func writeUsecaseError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, domain.ErrNotFound):
+		response.NotFound(c, "Resource not found")
+	case errors.Is(err, domain.ErrForbidden):
+		response.Forbidden(c, "You do not have access to this resource")
+	case errors.Is(err, domain.ErrInvalidInput):
+		response.BadRequest(c, err.Error(), "")
+	default:
+		response.InternalError(c, err.Error())
+	}
 }
 
 type CreateDraftRequest struct {
@@ -50,13 +89,15 @@ type FileMetaRequest struct {
 
 type ConfirmRequest struct {
 	// Backward compatibility single-file fields
-	FileType         domain.FileType  `json:"file_type"`
-	S3Key            string           `json:"s3_key"`
-	OriginalFilename string           `json:"original_filename"`
-	FileSizeBytes    int64            `json:"file_size_bytes"`
+	FileType         domain.FileType `json:"file_type"`
+	S3Key            string          `json:"s3_key"`
+	OriginalFilename string          `json:"original_filename"`
+	FileSizeBytes    int64           `json:"file_size_bytes"`
 	// Dual-file support
-	DraftFile        *FileMetaRequest `json:"draft_file"`
-	TemplateFile     *FileMetaRequest `json:"template_file"`
+	DraftFile    *FileMetaRequest `json:"draft_file"`
+	TemplateFile *FileMetaRequest `json:"template_file"`
+	// Built-in layout used when no template PDF is uploaded (default: ieee)
+	TemplatePreset string `json:"template_preset"`
 }
 
 func (h *SubmissionHandler) CreateDraft(c *gin.Context) {
@@ -85,9 +126,9 @@ func (h *SubmissionHandler) GetManuscript(c *gin.Context) {
 		return
 	}
 
-	manuscript, err := h.usecase.GetManuscript(c.Request.Context(), id)
+	manuscript, err := h.usecase.GetManuscript(c.Request.Context(), actorFrom(c), id)
 	if err != nil {
-		response.NotFound(c, "Manuscript not found")
+		writeUsecaseError(c, err)
 		return
 	}
 
@@ -131,9 +172,9 @@ func (h *SubmissionHandler) RequestUploadURL(c *gin.Context) {
 		return
 	}
 
-	result, err := h.usecase.RequestUploadURL(c.Request.Context(), manuscriptID, req.Filename, req.FileType, req.FileRole)
+	result, err := h.usecase.RequestUploadURL(c.Request.Context(), actorFrom(c), manuscriptID, req.Filename, req.FileType, req.FileRole)
 	if err != nil {
-		response.BadRequest(c, err.Error(), "")
+		writeUsecaseError(c, err)
 		return
 	}
 
@@ -185,181 +226,79 @@ func (h *SubmissionHandler) ConfirmSubmission(c *gin.Context) {
 		FileSizeBytes:    req.FileSizeBytes,
 		DraftFile:        draftDTO,
 		TemplateFile:     templateDTO,
+		TemplatePreset:   req.TemplatePreset,
 	}
 
-	result, err := h.usecase.ConfirmSubmission(c.Request.Context(), dto)
+	result, err := h.usecase.ConfirmSubmission(c.Request.Context(), actorFrom(c), dto)
 	if err != nil {
-		response.InternalError(c, err.Error())
+		writeUsecaseError(c, err)
 		return
 	}
 
 	response.Success(c, http.StatusAccepted, result)
 }
 
-// Query audit outcome (accepts either Audit UUID or Manuscript UUID)
+// ListTemplatePresets returns the built-in journal layouts (Template Vault).
+func (h *SubmissionHandler) ListTemplatePresets(c *gin.Context) {
+	response.Success(c, http.StatusOK, gin.H{
+		"default_id": domain.DefaultTemplatePresetID,
+		"presets":    domain.TemplatePresets(),
+	})
+}
+
+// GetAuditReport returns an audit by audit ID or manuscript ID (latest audit).
+// The body is the stored audit plus fields used by the comparison UI:
+// original_pdf_s3_key, fixed_layout (only when the reshape step really ran),
+// ai_engine and ai_mode (derived from the engine that produced the report).
 func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
-	idStr := c.Param("id")
-	targetID, err := uuid.Parse(idStr)
+	targetID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		response.BadRequest(c, "Invalid UUID parameter", err.Error())
+		response.BadRequest(c, "Invalid audit or manuscript UUID", err.Error())
 		return
 	}
 
-	audit, err := h.usecase.GetAuditReport(c.Request.Context(), targetID)
-	if err != nil || audit == nil {
-		// Graceful fallback: Check if targetID is a Manuscript ID and resolve its latest audit
-		if manuscript, mErr := h.usecase.GetManuscript(c.Request.Context(), targetID); mErr == nil && manuscript != nil {
-			for _, file := range manuscript.Files {
-				if len(file.Audits) > 0 {
-					// Choose the latest audit
-					audit = &file.Audits[len(file.Audits)-1]
-					break
-				}
-			}
-		}
-	}
-
-	if audit == nil {
-		response.NotFound(c, "Audit report not found for specified Audit or Manuscript ID")
+	audit, err := h.usecase.GetAuditReport(c.Request.Context(), actorFrom(c), targetID)
+	if err != nil {
+		writeUsecaseError(c, err)
 		return
 	}
 
-	// Parse JSONB fields into rich frontend response DTO
-	var layoutChecks []interface{}
-	if len(audit.LayoutIssues) > 0 {
-		_ = json.Unmarshal(audit.LayoutIssues, &layoutChecks)
+	raw, err := json.Marshal(audit)
+	if err != nil {
+		response.InternalError(c, "Failed to encode audit")
+		return
 	}
-	if layoutChecks == nil {
-		layoutChecks = []interface{}{}
+	payload := map[string]any{}
+	_ = json.Unmarshal(raw, &payload)
+	payload["audit_id"] = audit.ID.String()
+
+	if file, ferr := h.usecase.GetManuscriptFile(c.Request.Context(), audit.ManuscriptFileID); ferr == nil && file != nil {
+		payload["original_pdf_s3_key"] = file.S3Key
 	}
 
-	var anonLeaks []interface{}
-	if len(audit.AnonymizationFlags) > 0 {
-		_ = json.Unmarshal(audit.AnonymizationFlags, &anonLeaks)
-	}
-	if anonLeaks == nil {
-		anonLeaks = []interface{}{}
-	}
-
-	var citationMap map[string]interface{}
-	if len(audit.CitationIssues) > 0 {
-		_ = json.Unmarshal(audit.CitationIssues, &citationMap)
-	}
-	if citationMap == nil {
-		citationMap = map[string]interface{}{
-			"pass":              true,
-			"total_cited":        0,
-			"uncited_references": []string{},
-			"missing_citations":  []string{},
-		}
-	}
-
-	var templateSpecsMap map[string]interface{}
 	if len(audit.TemplateSpecs) > 0 {
-		_ = json.Unmarshal(audit.TemplateSpecs, &templateSpecsMap)
-	}
-	if templateSpecsMap == nil {
-		templateSpecsMap = map[string]interface{}{
-			"page_format":        "A4",
-			"page_width_mm":      210.0,
-			"page_height_mm":     297.0,
-			"margin_top_mm":      20.0,
-			"margin_bottom_mm":   20.0,
-			"margin_left_mm":     18.0,
-			"margin_right_mm":    18.0,
-			"column_count":       2,
-			"column_gap_mm":      6.35,
-			"is_custom_template": false,
+		var specs struct {
+			FixedLayout json.RawMessage `json:"fixed_layout"`
+		}
+		if json.Unmarshal(audit.TemplateSpecs, &specs) == nil && len(specs.FixedLayout) > 0 && string(specs.FixedLayout) != "null" {
+			payload["fixed_layout"] = specs.FixedLayout
 		}
 	}
 
-	score := 0
-	if audit.ScoreOverall != nil {
-		score = *audit.ScoreOverall
-	} else if len(layoutChecks) == 0 && len(anonLeaks) == 0 {
-		score = 98
-	} else {
-		score = 100 - (len(layoutChecks)*15 + len(anonLeaks)*5)
-		if score < 0 {
-			score = 0
-		}
+	engine := ""
+	if audit.Engine != nil {
+		engine = *audit.Engine
+	}
+	switch {
+	case strings.HasPrefix(engine, "gemini"):
+		payload["ai_engine"] = "Google Gemini (" + strings.TrimPrefix(engine, "gemini:") + ")"
+		payload["ai_mode"] = "LIVE_GEMINI_AI"
+	case engine != "":
+		payload["ai_engine"] = "PyMuPDF Geometry Engine"
+		payload["ai_mode"] = "PYMUPDF_WORKER"
 	}
 
-	summaryStatus := "FAIL"
-	if score >= 80 && len(layoutChecks) == 0 {
-		summaryStatus = "PASS"
-	}
-
-	fixedLayout := templateSpecsMap["fixed_layout"]
-	if fixedLayout == nil {
-		fixedLayout = map[string]interface{}{
-			"target_format": "IEEE Transactions / ACM Conference 2-Column Standard",
-			"target_margins_mm": map[string]interface{}{
-				"top": 20.0, "bottom": 20.0, "left": 18.0, "right": 18.0,
-			},
-			"column_count":       2,
-			"column_gap_mm":      6.35,
-			"camera_ready_status": "REMEDIATED_PASS",
-			"remediation_actions": []string{
-				"Applied IEEE 2-column guideline grid alignment (Top: 20mm, Side: 18mm, Gutter: 6.35mm)",
-				"Redacted leaked author and institutional metadata for double-blind integrity",
-				"Verified citation graph integrity across body citations and bibliography",
-				"Stamped Format Kilat Camera-Ready Verification Header",
-			},
-			"download_key": audit.AnnotatedPdfS3Key,
-		}
-	}
-
-	var originalPdfS3Key string
-	if file, err := h.usecase.GetManuscriptFile(c.Request.Context(), audit.ManuscriptFileID); err == nil && file != nil {
-		originalPdfS3Key = file.S3Key
-	}
-
-	respPayload := gin.H{
-		"id":                   audit.ID,
-		"audit_id":             audit.ID.String(),
-		"manuscript_file_id":   audit.ManuscriptFileID,
-		"status":               audit.Status,
-		"score_overall":        score,
-		"overall_score":        score,
-		"summary": gin.H{
-			"critical_errors": len(layoutChecks),
-			"warnings":        len(anonLeaks),
-			"status":          summaryStatus,
-		},
-		"modules": gin.H{
-			"geometry_and_layout": gin.H{
-				"pass":   len(layoutChecks) == 0,
-				"checks": layoutChecks,
-			},
-			"anonymization": gin.H{
-				"pass":        len(anonLeaks) == 0,
-				"leaks_found": anonLeaks,
-			},
-			"citation_crosscheck": citationMap,
-		},
-		"template_specs":       templateSpecsMap,
-		"fixed_layout":         fixedLayout,
-		"annotated_pdf_s3_key": audit.AnnotatedPdfS3Key,
-		"original_pdf_s3_key":  originalPdfS3Key,
-		"ai_engine": func() string {
-			if os.Getenv("GEMINI_API_KEY") != "" || os.Getenv("GOOGLE_API_KEY") != "" {
-				return "Google Gemini 1.5 Flash (Multimodal Vision)"
-			}
-			return "Autonomous Geometry Engine (PyMuPDF Heuristic)"
-		}(),
-		"ai_mode": func() string {
-			if os.Getenv("GEMINI_API_KEY") != "" || os.Getenv("GOOGLE_API_KEY") != "" {
-				return "LIVE_GEMINI_AI"
-			}
-			return "DETERMINISTIC_LOCAL_RECOVERY"
-		}(),
-		"error_message": audit.ErrorMessage,
-		"created_at":           audit.CreatedAt,
-		"completed_at":         audit.CompletedAt,
-	}
-
-	response.Success(c, http.StatusOK, respPayload)
+	response.Success(c, http.StatusOK, payload)
 }
 
 type UpdateStatusRequest struct {
@@ -381,14 +320,16 @@ func (h *SubmissionHandler) UpdateStatus(c *gin.Context) {
 	}
 
 	if err := h.usecase.UpdateManuscriptStatus(c.Request.Context(), id, req.Status); err != nil {
-		response.InternalError(c, err.Error())
+		writeUsecaseError(c, err)
 		return
 	}
 
 	response.Success(c, http.StatusOK, gin.H{"id": id, "status": req.Status})
 }
 
-// Direct upload to Box.com (or local Box cache)
+// Direct upload to Box.com (or local Box cache).
+// Only the manuscript owner may upload, only under raw/{manuscript_id}/,
+// with a size cap and a PDF signature check for .pdf keys.
 func (h *SubmissionHandler) DirectFileUpload(c *gin.Context) {
 	key := c.Query("key")
 	if key == "" {
@@ -399,83 +340,73 @@ func (h *SubmissionHandler) DirectFileUpload(c *gin.Context) {
 		return
 	}
 
-	cleanKey := filepath.Clean(key)
-	if strings.HasPrefix(cleanKey, "..") || strings.Contains(cleanKey, "/../") || filepath.IsAbs(cleanKey) || strings.HasPrefix(cleanKey, "/") || strings.HasPrefix(cleanKey, "\\") {
-		response.BadRequest(c, "Security violation: path traversal detected in file key", "")
+	if err := h.usecase.AuthorizeFileAccess(c.Request.Context(), actorFrom(c), key, true); err != nil {
+		writeUsecaseError(c, err)
 		return
 	}
 
-	const maxUploadSize = 35 * 1024 * 1024 // 35MB limit
+	// Hard cap on the request body (+1 MB slack for multipart framing).
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, h.maxUploadBytes+(1<<20))
 
 	var fileData []byte
 	var err error
 
-	contentType := c.ContentType()
-	// 1. Try reading from multipart file if multipart content-type
-	if strings.HasPrefix(contentType, "multipart/form-data") {
+	// 1. Try reading from multipart file
+	if strings.HasPrefix(c.ContentType(), "multipart/") {
 		fileHeader, fileErr := c.FormFile("file")
-		if fileErr == nil && fileHeader != nil {
-			if fileHeader.Size > maxUploadSize {
-				response.BadRequest(c, "File size exceeds maximum allowed limit of 35MB", "")
-				return
-			}
-			src, err := fileHeader.Open()
-			if err == nil {
-				defer src.Close()
-				limitedReader := io.LimitReader(src, maxUploadSize+1)
-				fileData, err = io.ReadAll(limitedReader)
-				if err != nil {
-					response.BadRequest(c, "Failed to read upload file", err.Error())
-					return
-				}
-				if int64(len(fileData)) > maxUploadSize {
-					response.BadRequest(c, "File size exceeds maximum allowed limit of 35MB", "")
-					return
-				}
-			}
-		}
-	}
-
-	// 2. Otherwise read raw request body (PUT direct stream / binary data)
-	if len(fileData) == 0 && c.Request.Body != nil {
-		limitedReader := io.LimitReader(c.Request.Body, maxUploadSize+1)
-		fileData, err = io.ReadAll(limitedReader)
-		if err != nil {
-			response.BadRequest(c, "Failed to read upload body", err.Error())
+		if fileErr != nil {
+			response.BadRequest(c, "Invalid multipart upload", fileErr.Error())
 			return
 		}
-		if int64(len(fileData)) > maxUploadSize {
-			response.BadRequest(c, "File size exceeds maximum allowed limit of 35MB", "")
+		src, openErr := fileHeader.Open()
+		if openErr != nil {
+			response.BadRequest(c, "Failed to read uploaded file", openErr.Error())
 			return
 		}
+		defer src.Close()
+		fileData, err = io.ReadAll(io.LimitReader(src, h.maxUploadBytes+1))
+	} else {
+		// 2. Otherwise read raw request body (PUT direct stream)
+		fileData, err = io.ReadAll(c.Request.Body)
 	}
 
+	if err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			response.Error(c, http.StatusRequestEntityTooLarge, "PAYLOAD_TOO_LARGE",
+				fmt.Sprintf("File exceeds the %d MB upload limit", h.maxUploadBytes>>20), "")
+			return
+		}
+		response.BadRequest(c, "Failed to read upload body", err.Error())
+		return
+	}
+	if int64(len(fileData)) > h.maxUploadBytes {
+		response.Error(c, http.StatusRequestEntityTooLarge, "PAYLOAD_TOO_LARGE",
+			fmt.Sprintf("File exceeds the %d MB upload limit", h.maxUploadBytes>>20), "")
+		return
+	}
 	if len(fileData) == 0 {
 		response.BadRequest(c, "Empty file payload", "")
 		return
 	}
-
-	// Magic byte verification for PDF files
-	if strings.HasSuffix(strings.ToLower(cleanKey), ".pdf") {
-		if len(fileData) < 4 || !bytes.HasPrefix(fileData, []byte("%PDF")) {
-			response.BadRequest(c, "Security violation: invalid file content, missing %PDF magic bytes signature", "")
-			return
-		}
+	if strings.EqualFold(filepath.Ext(key), ".pdf") && !bytes.HasPrefix(fileData, []byte("%PDF-")) {
+		response.BadRequest(c, "Uploaded file is not a valid PDF document", "")
+		return
 	}
 
-	if err := h.storageClient.SaveFile(c.Request.Context(), cleanKey, fileData); err != nil {
+	if err := h.storageClient.SaveFile(c.Request.Context(), key, fileData); err != nil {
 		response.InternalError(c, "Failed to save file to Box storage: "+err.Error())
 		return
 	}
 
 	response.Success(c, http.StatusOK, gin.H{
 		"message": "File uploaded successfully to Box storage",
-		"key":     cleanKey,
+		"key":     key,
 		"bytes":   len(fileData),
 	})
 }
 
-// Direct file download from Box storage
+// Direct file download from Box storage (owner or editorial staff only).
 func (h *SubmissionHandler) DirectFileDownload(c *gin.Context) {
 	key := c.Query("key")
 	if key == "" {
@@ -483,24 +414,35 @@ func (h *SubmissionHandler) DirectFileDownload(c *gin.Context) {
 		return
 	}
 
-	cleanKey := filepath.Clean(key)
-	if strings.HasPrefix(cleanKey, "..") || strings.Contains(cleanKey, "/../") || filepath.IsAbs(cleanKey) || strings.HasPrefix(cleanKey, "/") || strings.HasPrefix(cleanKey, "\\") {
-		response.BadRequest(c, "Security violation: path traversal detected in file key", "")
+	if err := h.usecase.AuthorizeFileAccess(c.Request.Context(), actorFrom(c), key, false); err != nil {
+		writeUsecaseError(c, err)
 		return
 	}
 
-	data, err := h.storageClient.GetFile(c.Request.Context(), cleanKey)
+	data, err := h.storageClient.GetFile(c.Request.Context(), key)
 	if err != nil {
 		response.NotFound(c, "File not found in Box storage")
 		return
 	}
 
-	c.Header("Content-Disposition", "inline; filename="+filepath.Base(cleanKey))
-	c.Data(http.StatusOK, "application/pdf", data)
+	contentType := mime.TypeByExtension(strings.ToLower(filepath.Ext(key)))
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	c.Header("Content-Disposition", mime.FormatMediaType("inline", map[string]string{"filename": filepath.Base(key)}))
+	c.Header("X-Content-Type-Options", "nosniff")
+	c.Header("Cache-Control", "private, no-store")
+	c.Data(http.StatusOK, contentType, data)
 }
 
 // AskCopilot provides interactive academic guidance, Overleaf fixes, and defense simulator advice
 func (h *SubmissionHandler) AskCopilot(c *gin.Context) {
+	if h.googleAI == nil {
+		response.Error(c, http.StatusServiceUnavailable, "SERVICE_UNAVAILABLE", "AI Copilot service not configured", "")
+		return
+	}
+
 	var req ai.AICopilotRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request payload", err.Error())
@@ -515,4 +457,3 @@ func (h *SubmissionHandler) AskCopilot(c *gin.Context) {
 
 	response.Success(c, http.StatusOK, advice)
 }
-

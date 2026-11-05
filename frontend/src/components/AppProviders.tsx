@@ -200,12 +200,12 @@ function AppShell({ children }: { children: React.ReactNode }) {
         <footer className="border-t border-black/[0.06] bg-white/60 py-6 text-center text-xs text-[#86868b]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div>
-              Journal Management System (JMS) &bull; University of Technology Sydney (UTS)
+              Format Kilat &bull; Journal Management System (JMS) &bull; University of Technology Sydney (UTS)
             </div>
             <div className="flex items-center gap-4 text-[11px] text-[#a1a1a6]">
               <span>Box Cloud Storage</span>
               <span>&bull;</span>
-              <span>Google Gemini AI</span>
+              <span>PyMuPDF Audit Engine</span>
               <span>&bull;</span>
               <span>Apple HIG Responsive</span>
             </div>

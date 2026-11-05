@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jms-uts/backend/gateway/internal/domain"
@@ -64,6 +65,9 @@ func (r *ManuscriptRepository) GetByID(ctx context.Context, id uuid.UUID) (*doma
 func (r *ManuscriptRepository) ListByAuthorID(ctx context.Context, authorID uuid.UUID) ([]domain.Manuscript, error) {
 	var list []domain.Manuscript
 	if err := r.db.WithContext(ctx).
+		Preload("Author").
+		Preload("Files").
+		Preload("Files.Audits").
 		Where("author_id = ?", authorID).
 		Order("created_at DESC").
 		Find(&list).Error; err != nil {
@@ -157,3 +161,77 @@ func (r *AuditRepository) GetByFileID(ctx context.Context, fileID uuid.UUID) (*d
 	return &audit, nil
 }
 
+func (r *AuditRepository) MarkProcessing(ctx context.Context, id uuid.UUID) error {
+	return r.db.WithContext(ctx).
+		Model(&domain.PreSubmissionAudit{}).
+		Where("id = ? AND status IN ?", id, []domain.AuditStatus{domain.AuditStatusQueued, domain.AuditStatusProcessing}).
+		Update("status", domain.AuditStatusProcessing).Error
+}
+
+func (r *AuditRepository) SaveCompleted(ctx context.Context, id, manuscriptID uuid.UUID, res domain.CompletedAudit) error {
+	now := time.Now().UTC()
+	score := res.Summary.OverallScore
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&domain.PreSubmissionAudit{}).
+			Where("id = ?", id).
+			Updates(map[string]interface{}{
+				"status":               domain.AuditStatusCompleted,
+				"score_overall":        score,
+				"layout_issues":        res.LayoutIssues,
+				"citation_issues":      res.CitationIssues,
+				"anonymization_flags":  res.Anonymization,
+				"template_specs":       res.TemplateSpecs,
+				"summary":              res.SummaryJSON,
+				"engine":               res.Engine,
+				"annotated_pdf_s3_key": res.AnnotatedKey,
+				"error_message":        nil,
+				"completed_at":         now,
+			}).Error; err != nil {
+			return err
+		}
+		return tx.Model(&domain.Manuscript{}).
+			Where("id = ?", manuscriptID).
+			Updates(map[string]interface{}{"status": res.ManuscriptStatus, "updated_at": now}).Error
+	})
+}
+
+func (r *AuditRepository) MarkFailed(ctx context.Context, id, manuscriptID uuid.UUID, message string) error {
+	now := time.Now().UTC()
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&domain.PreSubmissionAudit{}).
+			Where("id = ?", id).
+			Updates(map[string]interface{}{
+				"status":        domain.AuditStatusFailed,
+				"error_message": message,
+				"completed_at":  now,
+			}).Error; err != nil {
+			return err
+		}
+		// Only roll back a manuscript that is still waiting on this pre-check.
+		return tx.Model(&domain.Manuscript{}).
+			Where("id = ? AND status = ?", manuscriptID, domain.StatusPreCheckPending).
+			Updates(map[string]interface{}{"status": domain.StatusDraft, "updated_at": now}).Error
+	})
+}
+
+func (r *AuditRepository) FailUnfinished(ctx context.Context, message string) (int64, error) {
+	now := time.Now().UTC()
+	var affected int64
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		res := tx.Model(&domain.PreSubmissionAudit{}).
+			Where("status IN ?", []domain.AuditStatus{domain.AuditStatusQueued, domain.AuditStatusProcessing}).
+			Updates(map[string]interface{}{
+				"status":        domain.AuditStatusFailed,
+				"error_message": message,
+				"completed_at":  now,
+			})
+		if res.Error != nil {
+			return res.Error
+		}
+		affected = res.RowsAffected
+		return tx.Model(&domain.Manuscript{}).
+			Where("status = ?", domain.StatusPreCheckPending).
+			Updates(map[string]interface{}{"status": domain.StatusDraft, "updated_at": now}).Error
+	})
+	return affected, err
+}

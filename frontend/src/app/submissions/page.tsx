@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Clock, AlertTriangle, CheckCircle, FileCheck, Loader2, Sparkles } from "lucide-react";
 import { Manuscript } from "@/types/jms";
-import { listManuscripts } from "@/lib/api";
+import { getLatestAudit, listManuscripts } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { AuthGateCard } from "@/components/AuthGateCard";
 import { Button } from "@/components/ui/button";
@@ -107,8 +107,7 @@ export default function SubmissionsPage() {
         {manuscripts.map((m) => {
           const statusInfo = STATUS_CONFIG[m.status] || STATUS_CONFIG.DRAFT;
           const StatusIcon = statusInfo.icon;
-          const latestFile = m.files && m.files.length > 0 ? m.files[m.files.length - 1] : null;
-          const latestAudit = latestFile?.audits && latestFile.audits.length > 0 ? latestFile.audits[0] : null;
+          const latestAudit = getLatestAudit(m);
 
           return (
             <div
