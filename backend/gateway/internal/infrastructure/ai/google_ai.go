@@ -19,6 +19,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jms-uts/backend/gateway/config"
 	"github.com/jms-uts/backend/gateway/internal/domain"
+	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
@@ -140,7 +141,19 @@ func (s *googleAIService) AuditManuscript(ctx context.Context, auditID, manuscri
 
 	var report *GeminiAuditResponse
 
-	// 4. If Gemini API key is configured and file exists, invoke Google AI multimodal PDF inspection
+	// 4. Hot-reload Gemini API key from environment / .env if not initially set
+	if s.cfg.APIKey == "" {
+		_ = godotenv.Load(".env", "../.env", "../../.env")
+		if key := os.Getenv("GEMINI_API_KEY"); key != "" {
+			s.cfg.APIKey = key
+			log.Printf("[Google AI] Detected freshly added GEMINI_API_KEY via environment hot-reload!")
+		} else if key := os.Getenv("GOOGLE_API_KEY"); key != "" {
+			s.cfg.APIKey = key
+			log.Printf("[Google AI] Detected freshly added GOOGLE_API_KEY via environment hot-reload!")
+		}
+	}
+
+	// If Gemini API key is configured and file exists, invoke Google AI multimodal PDF inspection
 	if s.cfg.APIKey != "" && len(draftBytes) > 0 {
 		log.Printf("[Google AI] Invoking Gemini API (%s) for multimodal layout audit...", s.cfg.Model)
 		report, err = s.callGeminiAPI(ctx, draftBytes, len(templateBytes) > 0)

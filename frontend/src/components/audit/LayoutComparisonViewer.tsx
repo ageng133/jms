@@ -337,3 +337,4 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
     </div>
   );
 }
+

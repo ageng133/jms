@@ -17,6 +17,7 @@ import (
 
 	"github.com/jms-uts/backend/gateway/config"
 	"github.com/jms-uts/backend/gateway/internal/domain"
+	"github.com/joho/godotenv"
 )
 
 type BoxStorage struct {
@@ -94,7 +95,18 @@ func (b *BoxStorage) SaveFile(ctx context.Context, key string, data []byte) erro
 	}
 	log.Printf("[BoxStorage] Saved file locally to %s (%d bytes)", localPath, len(data))
 
-	if b.cfg.DeveloperToken != "" {
+	// Hot-reload developer token if added dynamically
+	devToken := b.cfg.DeveloperToken
+	if devToken == "" {
+		_ = godotenv.Load(".env", "../.env", "../../.env")
+		devToken = os.Getenv("BOX_DEVELOPER_TOKEN")
+		if devToken != "" {
+			b.cfg.DeveloperToken = devToken
+			log.Printf("[BoxStorage] Detected freshly added BOX_DEVELOPER_TOKEN via environment hot-reload!")
+		}
+	}
+
+	if devToken != "" {
 		go func() {
 			err := b.uploadToBoxCloud(key, data)
 			if err != nil {

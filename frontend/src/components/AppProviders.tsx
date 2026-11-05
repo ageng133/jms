@@ -44,6 +44,13 @@ function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href="/admin" className="hover:text-[#1d1d1f] transition-colors">
                   Editorial Portal
                 </Link>
+                <span
+                  title="Zero-Configuration Turnkey Architecture: All audit, format evaluation, and local storage engines run out-of-the-box. Add keys to .env to activate live Google Gemini & Box Cloud sync."
+                  className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#34c759]/10 text-[#34c759] border border-[#34c759]/20 text-[10px] font-semibold tracking-tight cursor-default select-none"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#34c759] animate-pulse" />
+                  <span>⚡ Turnkey Ready</span>
+                </span>
               </nav>
             </div>
 
