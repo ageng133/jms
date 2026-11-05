@@ -8,20 +8,9 @@ import {
   FileText,
   Sparkles,
   Layers,
-  ShieldCheck,
   AlertTriangle,
-  ChevronRight,
-  Box,
-  Compass,
   Zap,
-  Clock,
-  Scan,
   XCircle,
-  HelpCircle,
-  UploadCloud,
-  FileCheck2,
-  Award,
-  CreditCard,
   Check,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -30,13 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AICopilotWidget } from "@/components/audit/AICopilotWidget";
 import { AcademicTier } from "@/types/jms";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
 
 export default function HomePage() {
   const router = useRouter();
@@ -59,7 +41,7 @@ export default function HomePage() {
   return (
     <div className="space-y-20 sm:space-y-28 pb-20">
       {/* =====================================================================
-          1. HERO SECTION WITH VIBRANT AURORA GRADIENT & ZILENIAL PERSONAS
+          1. HERO SECTION: RELATABLE, GROUNDED, NO OVERCLAIMS
          ===================================================================== */}
       <section className="relative overflow-hidden rounded-3xl bg-white p-6 sm:p-10 lg:p-12 border border-indigo-100 shadow-2xl text-slate-900">
         {/* Ambient Mesh Glow */}
@@ -72,24 +54,24 @@ export default function HomePage() {
             {/* Status Pill */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-700">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-xs animate-pulse" />
-              <span>⚡ Format Kilat — Platform Review &amp; Format Otomatis Zilenial</span>
+              <span>☕ Format Kilat — Asisten Pengecek Format Naskah Tanpa Drama</span>
             </div>
 
             {/* Headline */}
             <div className="space-y-3">
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08] text-slate-900">
-                Zero Desk Rejections. <br />
-                <span className="gradient-text-aurora">Lulus Format dalam ~0.8 Detik.</span>
+                Reviewer 2 Boleh Galak, <br />
+                <span className="gradient-text-aurora">Tapi Urusan Margin Jangan Sampai Ditolak.</span>
               </h1>
               <p className="text-sm sm:text-base lg:text-lg text-slate-600 leading-relaxed max-w-xl">
-                Dirancang untuk Zilenial pejuang <strong>S1 Skripsi</strong>, <strong>S2 Tesis</strong>, <strong>S3 Disertasi Scopus</strong>, dan <strong>Dosen Muda</strong>. Otomasi audit margin 4-4-3-3 cm, layout 2 kolom IEEE, kebocoran blind review, dan sitasi dengan panduan cerdas <strong>AI Copilot</strong>.
+                Bantu rapikan format skripsi, tesis, dan naskah jurnal sesuai template sasaran. Nggak perlu begadang cuma gara-gara margin meleset 2 milimeter atau kelupaan hapus nama di double-blind review.
               </p>
             </div>
 
             {/* Academic Level Fast Switcher on Hero */}
             <div className="p-2 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
               <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-2">
-                Pilih Target Jenjang Akademik Anda:
+                Realita Lapangan per Jenjang:
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                 <button
@@ -101,7 +83,7 @@ export default function HomePage() {
                       : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
                   }`}
                 >
-                  <span>🎓 S1 Skripsi</span>
+                  <span>🎓 Pejuang Skripsi S1</span>
                 </button>
 
                 <button
@@ -113,7 +95,7 @@ export default function HomePage() {
                       : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
                   }`}
                 >
-                  <span>🚀 S2 Tesis</span>
+                  <span>🚀 Tesis &amp; Konferensi S2</span>
                 </button>
 
                 <button
@@ -125,7 +107,7 @@ export default function HomePage() {
                       : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
                   }`}
                 >
-                  <span>🔬 S3 Scopus</span>
+                  <span>🔬 Disertasi &amp; Scopus S3</span>
                 </button>
 
                 <button
@@ -137,20 +119,20 @@ export default function HomePage() {
                       : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
                   }`}
                 >
-                  <span>⚡ Dosen Muda</span>
+                  <span>⚡ Dosen Muda &amp; BKD</span>
                 </button>
               </div>
 
               {/* Dynamic Callout based on Tier */}
               <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 flex items-center justify-between">
                 <span className="font-medium">
-                  {selectedTier === "S1" && "📌 Target S1: Margin 4-4-3-3 cm, font TNR 12, bebas plagiarisme, dan simulasi pertanyaan penguji sidang."}
-                  {selectedTier === "S2" && "📌 Target S2: Format 2 kolom IEEE / ACM, kode Overleaf instan, dan anonymizer double-blind review."}
-                  {selectedTier === "S3" && "📌 Target S3: Standar Scopus Q1/Q2, validasi sitasi Crossref, cek retraksi, dan grafik >= 300 DPI."}
-                  {selectedTier === "LECTURER" && "📌 Target Dosen: Akreditasi SINTA 1–6, pemenuhan luaran BKD, dan koreksi batch naskah 1-klik."}
+                  {selectedTier === "S1" && "📌 Target S1: Margin 4-4-3-3 cm pas, font TNR 12 konsisten, dan ga panik waktu ditanya penguji soal asal-usul daftar pustaka."}
+                  {selectedTier === "S2" && "📌 Target S2: Format 2 kolom IEEE / ACM rapi, formula matematika aman, dan nama pembimbing nggak bocor di blind review."}
+                  {selectedTier === "S3" && "📌 Target S3: Standar Scopus Q1–Q4, sitasi nyambung dari teks ke daftar pustaka, dan gambar nggak blur saat di-zoom 300%."}
+                  {selectedTier === "LECTURER" && "📌 Target Dosen: Pusing urusan BKD dan target SINTA selesai lebih cepat, biar bisa fokus mengajar tanpa pusing ngutak-ngatik spasi."}
                 </span>
                 <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md shrink-0 ml-2">
-                  100% Cocok
+                  Rekomendasi Spesifik
                 </span>
               </div>
             </div>
@@ -191,23 +173,23 @@ export default function HomePage() {
               </Button>
             </div>
 
-            {/* Quick Metrics */}
+            {/* Quick Realistic Metrics */}
             <div className="pt-6 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-slate-500">
               <div>
-                <div className="text-base font-extrabold text-slate-900">~0.8 Detik</div>
-                <div>Laser Audit Latency</div>
+                <div className="text-base font-extrabold text-slate-900">Hitungan Detik</div>
+                <div>Pengecekan Cepat</div>
               </div>
               <div>
-                <div className="text-base font-extrabold text-slate-900">Box Cloud</div>
-                <div>Direct S3 Ingestion</div>
+                <div className="text-base font-extrabold text-slate-900">Template Asli</div>
+                <div>Ekstraksi Geometri PDF</div>
               </div>
               <div>
                 <div className="text-base font-extrabold text-slate-900">Double-Blind</div>
-                <div>spaCy NER Sanitization</div>
+                <div>Sensor Identitas Otomatis</div>
               </div>
               <div>
                 <div className="text-base font-extrabold text-slate-900">IEEE &amp; SINTA</div>
-                <div>SOTA Template Support</div>
+                <div>Dukungan Format Umum</div>
               </div>
             </div>
           </div>
@@ -224,13 +206,13 @@ export default function HomePage() {
 
                 {/* Floating Apple HIG Micro-Badges */}
                 <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-indigo-200 shadow-md flex items-center gap-1.5 text-[11px] font-bold text-indigo-900">
-                  <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
-                  <span>Real-Time Laser Beam</span>
+                  <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+                  <span>Pemeriksaan Koordinat Presisi</span>
                 </div>
 
                 <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-200 shadow-md flex items-center gap-1.5 text-[11px] font-bold text-emerald-600">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Compliance: 98 / 100 PASS</span>
+                  <span>Kepatuhan Format: 98 / 100</span>
                 </div>
               </div>
             </div>
@@ -239,20 +221,20 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          2. FORMAT KILAT AI ACADEMIC COPILOT (LIVE INTERACTIVE SHOWCASE)
+          2. FORMAT KILAT AI ACADEMIC COPILOT (GROUNDED & AMUSING)
          ===================================================================== */}
       <section id="ai-copilot" className="space-y-8 scroll-mt-20">
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/20 text-xs font-bold text-purple-700 shadow-xs">
-            <Sparkles className="w-4 h-4 text-purple-600 animate-spin" style={{ animationDuration: "6s" }} />
+            <Sparkles className="w-4 h-4 text-purple-600" />
             <span>Format Kilat AI Academic Copilot &bull; Multi-Tier Engine</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight">
-            Bukan Sekadar List Error Merah. <br />
-            <span className="gradient-text-aurora">Dampingi Skripsi, Tesis, Disertasi, &amp; BKD secara Proaktif.</span>
+            Bukan Dukun Skripsi, Bukan Pula Tukang Review Gaib. <br />
+            <span className="gradient-text-aurora">Asisten Cek Format yang Kasih Solusi, Bukan Sekadar Marah-Marah.</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Ditenagai model multimodal cerdas dengan <strong>100% turnkey offline intelligence</strong> (dan live Gemini 1.5 saat API key aktif). Dapatkan prediksi pertanyaan dosen penguji, generator kode Overleaf/LaTeX instan, reparasi BibTeX/DOI otomatis, dan penjelasan ramah aturan margin 4-4-3-3 cm.
+            Ditenagai model cerdas yang bekerja secara offline (dan Gemini saat terhubung). AI Copilot kami membedah dokumenmu berdampingan dengan template resmi jurnal tujuan: dari margin yang nyerempet tepi, kolom yang belum dipisah, sampai referensi yang ada di daftar pustaka tapi ga pernah disebut di teks.
           </p>
         </div>
 
@@ -263,18 +245,18 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          3. HOW IT WORKS — 3-STEP PIPELINE INFOGRAPHIC
+          3. HOW IT WORKS: 3-STEP PIPELINE
          ===================================================================== */}
       <section id="how-it-works" className="space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <Badge variant="default" className="text-xs bg-indigo-600 text-white hover:bg-indigo-700">
-            Interactive Infographic
+            Alur Kerja Terarah
           </Badge>
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-            How Format Kilat Works
+            Cara Kerja Format Kilat (Tanpa Ribet)
           </h2>
           <p className="text-slate-600 text-xs sm:text-sm">
-            From raw draft manuscript to camera-ready verification in three streamlined stages.
+            Dari draf mentah sampai siap kirim ke meja redaksi dalam 3 langkah terarah.
           </p>
         </div>
 
@@ -296,12 +278,12 @@ export default function HomePage() {
                   01
                 </span>
                 <Badge variant="secondary" className="text-[10px] bg-indigo-100 text-indigo-700 font-bold border-indigo-200">
-                  Cloud Box / S3
+                  Input Naskah &amp; Aturan
                 </Badge>
               </div>
-              <h3 className="font-bold text-sm text-slate-900">1. Ingest &amp; Style Extraction</h3>
+              <h3 className="font-bold text-sm text-slate-900">1. Unggah Naskah &amp; Template Jurnal</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Upload your draft manuscript PDF alongside the journal&apos;s styling template. The ingestion engine parses page bounding coordinates and column structures.
+                Upload draf PDF naskahmu dan template jurnal yang dituju. Sistem membaca batas margin, struktur kolom, dan gaya selingkung langsung dari berkas aslinya.
               </p>
             </div>
 
@@ -311,12 +293,12 @@ export default function HomePage() {
                   02
                 </span>
                 <Badge variant="default" className="text-[10px] bg-purple-100 text-purple-700 font-bold border-purple-200 hover:bg-purple-200">
-                  PyMuPDF &amp; NLP
+                  Analisis Geometri &amp; Sitasi
                 </Badge>
               </div>
-              <h3 className="font-bold text-sm text-slate-900">2. Comparative Multi-Engine Sweep</h3>
+              <h3 className="font-bold text-sm text-slate-900">2. Pemindaian Komparatif Otomatis</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                PyMuPDF checks millimeter margin geometry. spaCy scans for author affiliation leaks. The citation engine maps text citations directly to bibliography entries.
+                PyMuPDF memvalidasi ukuran margin milimeter demi milimeter. Detektor entitas mencari nama penulis yang masih terselip. Mesin sitasi mencocokkan kutipan di teks langsung ke daftar pustaka.
               </p>
             </div>
 
@@ -325,13 +307,13 @@ export default function HomePage() {
                 <span className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-md shadow-emerald-600/20">
                   03
                 </span>
-                <Badge variant="success" className="text-[10px] bg-emerald-100 text-emerald-700 font-bold border-emerald-200">
-                  Visual Proof PDF
+                <Badge variant="outline" className="text-[10px] bg-emerald-100 text-emerald-700 font-bold border-emerald-200">
+                  Laporan Visual
                 </Badge>
               </div>
-              <h3 className="font-bold text-sm text-slate-900">3. Report &amp; Bounding Box Proof</h3>
+              <h3 className="font-bold text-sm text-slate-900">3. Laporan Visual &amp; Sertifikat Kesiapan</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Receive an immediate compliance score (0–100) and download an annotated PDF with high-contrast red bounding boxes identifying exact fixes needed.
+                Dapatkan skor kepatuhan format transparan dan unduh pratinjau PDF berkotak merah pada bagian yang meleset, lengkap dengan sertifikat kesiapan format.
               </p>
             </div>
           </div>
@@ -339,18 +321,18 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          4. INTERACTIVE SIMULATOR: TRY THE FORMAT KILAT AUDITOR
+          4. INTERACTIVE SIMULATOR: HAL SEPELE YANG BIKIN EDITOR GELENG-GELENG
          ===================================================================== */}
       <section className="space-y-6">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <Badge variant="secondary" className="text-xs bg-indigo-50 text-indigo-700 font-bold border-indigo-200">
-            Interactive Simulator
+            Simulasi Kasus Nyata
           </Badge>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Test the Compliance Calculation
+            Hal-Hal Sepele yang Sering Bikin Naskah Mental di Meja Editor
           </h2>
           <p className="text-slate-600 text-xs sm:text-sm">
-            Toggle common layout violations below to see how Format Kilat calculates your paper&apos;s camera-ready status in real-time:
+            Coba centang kesalahan klasik di bawah ini dan lihat bagaimana skor kepatuhan format naskahmu berubah secara otomatis:
           </p>
         </div>
 
@@ -358,7 +340,7 @@ export default function HomePage() {
           {/* Controls */}
           <div className="lg:col-span-7 space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Simulate Layout Conditions:
+              Kondisi Format yang Sering Terjadi:
             </h3>
 
             <div className="space-y-3 text-xs">
@@ -371,11 +353,11 @@ export default function HomePage() {
                 />
                 <div className="space-y-0.5">
                   <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                    <span>Double-Blind Violation: Author Email Detected</span>
-                    <span className="text-[10px] text-rose-600 font-mono font-bold">(-15 pts)</span>
+                    <span>Nama atau Email Penulis Masih Muncul di Header</span>
+                    <span className="text-[10px] text-rose-600 font-mono font-bold">(-15 poin)</span>
                   </div>
                   <p className="text-slate-500">
-                    Author names and university emails leaked in the header, invalidating blind review.
+                    Bikin naskah langsung dikembalikan karena melanggar aturan double-blind peer review.
                   </p>
                 </div>
               </label>
@@ -389,11 +371,11 @@ export default function HomePage() {
                 />
                 <div className="space-y-0.5">
                   <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                    <span>Column Violation: Single Column on IEEE Template</span>
-                    <span className="text-[10px] text-amber-600 font-mono font-bold">(-12 pts)</span>
+                    <span>Masih 1 Kolom padahal Template Minta 2 Kolom</span>
+                    <span className="text-[10px] text-amber-600 font-mono font-bold">(-12 poin)</span>
                   </div>
                   <p className="text-slate-500">
-                    Manuscript text is single-column, but target IEEE template requires standard 2 columns.
+                    Kesalahan klasik konversi draf Word mentah ke template prosiding IEEE atau Elsevier.
                   </p>
                 </div>
               </label>
@@ -407,11 +389,11 @@ export default function HomePage() {
                 />
                 <div className="space-y-0.5">
                   <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                    <span>Citation Discrepancy: Uncited Bibliography Items</span>
-                    <span className="text-[10px] text-indigo-600 font-mono font-bold">(-8 pts)</span>
+                    <span>Daftar Pustaka Berisi Rujukan yang Ga Pernah Disebut di Teks</span>
+                    <span className="text-[10px] text-indigo-600 font-mono font-bold">(-8 poin)</span>
                   </div>
                   <p className="text-slate-500">
-                    Bibliography contains reference entries never cited in the body text.
+                    Referensi &quot;hantu&quot; sisa copy-paste proposal lama yang lupa dibersihkan.
                   </p>
                 </div>
               </label>
@@ -422,7 +404,7 @@ export default function HomePage() {
           <div className="lg:col-span-5 flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-b from-slate-50 to-indigo-50/30 border border-indigo-100 text-center space-y-4 shadow-inner">
             <div className="space-y-1">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Simulated Format Score
+                Skor Format Simulasi
               </span>
               <div
                 className={`text-5xl font-black tracking-tight transition-colors duration-300 ${
@@ -449,19 +431,19 @@ export default function HomePage() {
                 className="text-xs px-3.5 py-1 font-bold transition-all shadow-xs"
               >
                 {simStatus === "PASS"
-                  ? "✓ Camera Ready (Pass)"
+                  ? "✓ Siap Kirim (Format Rapi)"
                   : simStatus === "WARNING"
-                  ? "⚠️ Advisory Warnings Detected"
-                  : "✗ Revisions Required Before Review"}
+                  ? "⚠️ Catatan Minor Perlu Disesuaikan"
+                  : "✗ Perlu Koreksi Sebelum Submit"}
               </Badge>
             </div>
 
             <p className="text-xs text-slate-600 max-w-xs leading-relaxed">
               {simScore === 100
-                ? "Perfect paper geometry! All double-blind, column, and reference checks passed."
-                : `Format Kilat detected ${
+                ? "Geometri dokumen rapi! Seluruh margin, kolom, dan rujukan sudah sesuai panduan."
+                : `Ditemukan ${
                     (simEmailLeak ? 1 : 0) + (simSingleColumn ? 1 : 0) + (simMissingRef ? 1 : 0)
-                  } issue(s) that would trigger desk rejection.`}
+                  } kendala format yang berpotensi bikin editor mengembalikan naskah.`}
             </p>
 
             <Button
@@ -469,25 +451,25 @@ export default function HomePage() {
               onClick={openGoogleModal}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-full text-xs shadow-md shadow-indigo-600/20 px-5 h-9"
             >
-              Audit Your Real Manuscript &rarr;
+              Uji Coba pada Naskah Aslimu &rarr;
             </Button>
           </div>
         </div>
       </section>
 
       {/* =====================================================================
-          5. COMPARISON INFOGRAPHIC: TRADITIONAL VS FORMAT KILAT
+          5. TRADITIONAL VS FORMAT KILAT: HONEST & PRACTICAL
          ===================================================================== */}
       <section className="space-y-6">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <Badge variant="default" className="text-xs bg-indigo-600 text-white hover:bg-indigo-700">
-            Comparison Infographic
+            Perbandingan Proses
           </Badge>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Traditional Review vs. Format Kilat
+            Review Manual vs Pengecekan Format Kilat
           </h2>
           <p className="text-slate-600 text-xs sm:text-sm">
-            Why leading research labs and universities adopt automated pre-screening:
+            Kenapa memeriksa format sebelum kirim menghemat waktu dan kesehatan mentalmu:
           </p>
         </div>
 
@@ -497,29 +479,29 @@ export default function HomePage() {
             <div className="flex items-center justify-between border-b border-rose-100 pb-3">
               <span className="font-bold text-sm text-rose-600 flex items-center gap-1.5">
                 <XCircle className="w-4 h-4 text-rose-600" />
-                Traditional Journal Process
+                Cara Manual yang Bikin Waswas
               </span>
               <Badge variant="destructive" className="text-[10px] bg-rose-100 text-rose-700 font-bold border-rose-200">
-                Slow &amp; Manual
+                Lambat &amp; Berisiko
               </Badge>
             </div>
 
             <ul className="space-y-3 text-xs text-slate-600">
               <li className="flex items-start gap-2.5">
                 <span className="text-rose-600 font-bold text-sm leading-none">&times;</span>
-                <span><strong>3–6 Weeks Waiting Period</strong> for initial editorial triage and format approval.</span>
+                <span><strong>Menghabiskan berjam-jam</strong> mengukur margin penggaris manual di Word atau LaTeX.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="text-rose-600 font-bold text-sm leading-none">&times;</span>
-                <span><strong>Instant Desk Rejection</strong> for minor margin, column, or font specification slips.</span>
+                <span><strong>Naskah dikembalikan</strong> setelah nunggu berminggu-minggu cuma karena margin atau font beda tipis.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="text-rose-600 font-bold text-sm leading-none">&times;</span>
-                <span><strong>Accidental Identity Leaks</strong> compromise double-blind peer review integrity.</span>
+                <span><strong>Identitas penulis tidak sengaja tertinggal</strong>, merusak integritas double-blind review.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="text-rose-600 font-bold text-sm leading-none">&times;</span>
-                <span><strong>Vague Editorial Feedback</strong> without bounding coordinates or actionable PDF markers.</span>
+                <span><strong>Catatan editor singkat dan bikin bingung</strong>: &quot;Please conform to our journal style guidelines&quot;.</span>
               </li>
             </ul>
           </div>
@@ -529,29 +511,29 @@ export default function HomePage() {
             <div className="flex items-center justify-between border-b border-indigo-100 pb-3">
               <span className="font-bold text-sm text-indigo-700 flex items-center gap-1.5">
                 <Zap className="w-4 h-4 text-indigo-600 animate-pulse" />
-                Format Kilat Automated Pipeline
+                Format Kilat Pre-Submission Check
               </span>
               <Badge variant="default" className="text-[10px] bg-emerald-100 text-emerald-700 font-bold border-emerald-200 hover:bg-emerald-200">
-                Instant Verification
+                Praktis &amp; Terarah
               </Badge>
             </div>
 
             <ul className="space-y-3 text-xs text-slate-800 font-medium">
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span><strong>~0.8 Second Turnaround</strong> with high-performance zero-copy deserialization.</span>
+                <span><strong>Pengecekan tuntas dalam hitungan detik</strong>, hemat waktu sebelum berkas resmi diserahkan.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span><strong>Precise Millimeter Validation</strong> against IEEE, ACM, or custom uploaded templates.</span>
+                <span><strong>Validasi presisi milimeter</strong> langsung terhadap berkas template jurnal sasaran.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span><strong>NLP Double-Blind Shield</strong> detects leaked author names, affiliations, and ORCID tags.</span>
+                <span><strong>Sensor identitas otomatis</strong> membantu menandai nama dan email yang masih tercecer di teks.</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span><strong>Red Bounding Box Proof</strong> downloaded directly with visual coordinate markers.</span>
+                <span><strong>Laporan visual transparan</strong> dengan kotak panduan langsung pada file PDF naskah.</span>
               </li>
             </ul>
           </div>
@@ -559,18 +541,18 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          6. SAMPLE AUDIT REPORT (macOS WINDOW CHROME CARD)
+          6. SAMPLE AUDIT REPORT (macOS WINDOW)
          ===================================================================== */}
       <section id="demo-preview" className="space-y-6">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <Badge variant="default" className="text-xs bg-indigo-600 text-white hover:bg-indigo-700">
-            Live Sample Audit
+            Pratinjau Laporan Nyata
           </Badge>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Inside the Automated Report
+            Transparan, Tanpa Istilah Teknis yang Membingungkan
           </h2>
           <p className="text-slate-600 text-xs sm:text-sm">
-            Here is what the system outputs when evaluating an IEEE Transactions paper:
+            Begini tampilan laporan audit saat memeriksa kepatuhan naskah terhadap template IEEE:
           </p>
         </div>
 
@@ -583,12 +565,12 @@ export default function HomePage() {
               <span className="w-3 h-3 rounded-full bg-amber-400 border border-amber-500 inline-block" />
               <span className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-600 inline-block" />
               <span className="ml-3 font-semibold text-slate-800 hidden sm:inline">
-                Sample Report: IEEE Transactions Format Check
+                Sample Report: Evaluasi Template IEEE Transactions
               </span>
             </div>
             <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Audit Complete (~0.8s)
+              Audit Selesai
             </span>
           </div>
 
@@ -598,27 +580,27 @@ export default function HomePage() {
             <div className="lg:col-span-3 p-5 sm:p-6 space-y-3 bg-slate-50/60">
               <div className="font-bold text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                Journal Guidelines
+                Panduan Template Jurnal
               </div>
               <p className="text-[11px] text-slate-500">
-                Requirements extracted from IEEE reference template:
+                Aturan yang dibaca dari template rujukan IEEE:
               </p>
               <div className="space-y-2">
                 <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs">
-                  <div className="text-slate-400 text-[10px] font-semibold">Columns</div>
-                  <div className="font-bold text-slate-900">2 Columns (Double Column)</div>
+                  <div className="text-slate-400 text-[10px] font-semibold">Struktur Kolom</div>
+                  <div className="font-bold text-slate-900">2 Kolom (Double Column)</div>
                 </div>
                 <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs">
-                  <div className="text-slate-400 text-[10px] font-semibold">Body Font</div>
+                  <div className="text-slate-400 text-[10px] font-semibold">Ukuran Font Isi</div>
                   <div className="font-bold text-slate-900">Times New Roman &bull; 10pt</div>
                 </div>
                 <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs">
-                  <div className="text-slate-400 text-[10px] font-semibold">Margins</div>
-                  <div className="font-bold text-slate-900">19mm Top &bull; 14.3mm Side</div>
+                  <div className="text-slate-400 text-[10px] font-semibold">Batas Margin</div>
+                  <div className="font-bold text-slate-900">Atas 19mm &bull; Samping 14.3mm</div>
                 </div>
                 <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs">
-                  <div className="text-slate-400 text-[10px] font-semibold">Reference Style</div>
-                  <div className="font-bold text-slate-900">Bracketed Numeric [1], [2]</div>
+                  <div className="text-slate-400 text-[10px] font-semibold">Gaya Sitasi</div>
+                  <div className="font-bold text-slate-900">Format Numerik [1], [2]</div>
                 </div>
               </div>
             </div>
@@ -628,38 +610,38 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                  Your Manuscript Draft
+                  Draf Naskah Penulis
                 </span>
                 <span className="text-[11px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                  2 Issues Spotted
+                  2 Catatan Perbaikan
                 </span>
               </div>
 
               {/* Sample Paper Canvas */}
               <div className="bg-slate-50 rounded-2xl p-4 h-64 overflow-hidden border border-slate-200 text-[10px] space-y-2.5 select-none shadow-inner">
                 <div className="text-center font-bold text-xs text-slate-900">
-                  High-Performance Data Storage for Distributed Systems
+                  Penyimpanan Data Berkecepatan Tinggi pada Sistem Terdistribusi
                 </div>
 
                 {/* Highlight 1: Email Leak */}
                 <div className="p-2 border-2 border-dashed border-rose-500 bg-rose-50 rounded-xl text-center">
                   <div className="font-bold text-slate-900">
-                    Dr. Alexander Wright &bull; wright@uts.edu.au
+                    Dr. Alexander Wright &bull; wright@kampus.ac.id
                   </div>
                   <div className="text-[9px] text-rose-600 font-bold">
-                    Warning: Remove author email for double-blind review
+                    Catatan: Hapus nama &amp; email untuk tahap double-blind review
                   </div>
                 </div>
 
                 <div className="italic text-slate-500 text-[9px] leading-tight">
-                  <strong>Abstract</strong>—This research explores efficient file storage techniques for research databases...
+                  <strong>Abstrak</strong>—Penelitian ini mengkaji efisiensi penyimpanan berkas pada basis data penelitian berskala besar...
                 </div>
 
                 {/* Highlight 2: Single Column Layout Issue */}
                 <div className="p-2 border-2 border-dashed border-amber-500 bg-amber-50 rounded-xl text-[9px] text-slate-900">
-                  <strong>1. Introduction</strong>: In modern distributed architectures, file storage boundaries can slow down data sharing...
+                  <strong>1. Pendahuluan</strong>: Dalam arsitektur komputasi modern, pemisahan berkas sering kali memperlambat pertukaran data...
                   <div className="mt-1 font-bold text-amber-600">
-                    Warning: Draft is single-column, but template requires double-column.
+                    Catatan: Draf masih 1 kolom, template mewajibkan format 2 kolom.
                   </div>
                 </div>
               </div>
@@ -670,7 +652,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  Compliance Score
+                  Skor Kepatuhan Format
                 </span>
                 <span className="font-black text-amber-600 text-sm">78 / 100</span>
               </div>
@@ -679,21 +661,21 @@ export default function HomePage() {
                 <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-2 text-slate-800">
                   <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-rose-700">Author Info Detected</span>: Remove author names and email before submitting.
+                    <span className="font-bold text-rose-700">Identitas Penulis Terdeteksi</span>: Bersihkan nama dan email sebelum submit double-blind.
                   </div>
                 </div>
 
                 <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-2 text-slate-800">
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-amber-700">Column Format</span>: Format paper into 2 columns.
+                    <span className="font-bold text-amber-700">Format Kolom Berbeda</span>: Sesuaikan draf menjadi 2 kolom sesuai template.
                   </div>
                 </div>
 
                 <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-start gap-2 text-slate-800">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-emerald-700">Citations Valid</span>: All 24 references match bibliography entries.
+                    <span className="font-bold text-emerald-700">Sitasi Terverifikasi</span>: Seluruh 24 rujukan di teks sesuai dengan daftar pustaka.
                   </div>
                 </div>
               </div>
@@ -703,7 +685,7 @@ export default function HomePage() {
                 onClick={openGoogleModal}
                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold rounded-full mt-2 h-9 shadow-md shadow-indigo-600/20"
               >
-                Sign in to check your manuscript &rarr;
+                Masuk untuk memeriksa naskahmu &rarr;
               </Button>
             </div>
           </div>
@@ -711,18 +693,18 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          7. COMMERCIAL PRICING & GUARANTEE TIERS (READY TO SELL)
+          7. COMMERCIAL PRICING & TIERS (FAIR, HONEST, NO OVERCLAIMS)
          ===================================================================== */}
       <section id="pricing" className="space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <Badge variant="default" className="text-xs bg-emerald-600 text-white hover:bg-emerald-700">
-            Investasi Terjangkau &bull; Garansi 100% Lolos Triage
+            Pilihan Paket Praktis &bull; Transparan &amp; Adil
           </Badge>
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
-            Pilih Paket Format Kilat Anda
+            Pilih Paket Pengecekan Sesuai Kebutuhanmu
           </h2>
           <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
-            Dari mahasiswa tingkat akhir yang mengejar deadline sidang hingga laboratorium riset kampus. Hemat berminggu-minggu revisi format editorial dengan hasil instan.
+            Dari mahasiswa yang mengejar deadline sidang hingga laboratorium riset kampus. Bebaskan pikiran dari urusan margin dan fokus pada substansi riset.
           </p>
         </div>
 
@@ -736,12 +718,12 @@ export default function HomePage() {
               </div>
               <div className="space-y-1">
                 <div className="text-3xl font-black text-slate-900">Rp 0</div>
-                <p className="text-xs text-slate-400">Gratis selamanya untuk 1 paper per hari</p>
+                <p className="text-xs text-slate-400">Gratis untuk 1 naskah per hari sebelum sidang skripsi</p>
               </div>
               <ul className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Audit margin standar A4 &amp; 4-4-3-3 cm</span>
+                  <span>Cek margin standar A4 &amp; 4-4-3-3 cm</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -749,11 +731,11 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Deteksi kebocoran identitas penulis</span>
+                  <span>Peringatan kebocoran nama penulis di berkas</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Cross-check sitasi numerik [1]</span>
+                  <span>Cross-check sitasi numerik di badan teks</span>
                 </li>
               </ul>
             </div>
@@ -762,14 +744,14 @@ export default function HomePage() {
               onClick={openGoogleModal}
               className="w-full rounded-full text-xs font-bold h-10 border-slate-300 hover:bg-slate-50"
             >
-              Mulai Gratis
+              Mulai Cek Gratis
             </Button>
           </div>
 
           {/* Tier 2: Peneliti Mandiri S2/S3 (BEST VALUE) */}
           <div className="rounded-3xl border-2 border-indigo-600 bg-gradient-to-b from-indigo-50/50 via-white to-white p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-4 py-1 rounded-bl-2xl">
-              PALING POPULER
+              PILIHAN POPULER
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -780,7 +762,7 @@ export default function HomePage() {
                   <span className="text-3xl font-black text-slate-900">Rp 49.000</span>
                   <span className="text-xs text-slate-500">/ naskah</span>
                 </div>
-                <p className="text-xs text-indigo-700 font-semibold">Termasuk Sertifikat Resmi &amp; Penyesuaian Otomatis</p>
+                <p className="text-xs text-indigo-700 font-semibold">Untuk naskah tesis, prosiding, atau jurnal yang butuh ketelitian tinggi</p>
               </div>
               <ul className="space-y-2.5 text-xs text-slate-700 pt-2 border-t border-indigo-100 font-medium">
                 <li className="flex items-center gap-2">
@@ -789,19 +771,19 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span><strong>Ekstraksi Dual-Engine Template Jurnal Sasaran</strong></span>
+                  <span><strong>Ekstraksi geometri dari berkas template asli jurnal sasaran</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span><strong>Auto-Reshape Layout Siap Kirim (⚡ PDF)</strong></span>
+                  <span><strong>Rekomendasi perataan tata letak otomatis (&amp; pratinjau PDF)</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span><strong>Sertifikat Kepatuhan Format Resmi (QR Code)</strong></span>
+                  <span><strong>Sertifikat Kepatuhan Format Resmi (dengan QR verifikasi)</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span>Garansi lolos desk review format atau uang kembali</span>
+                  <span>Pemeriksaan menyeluruh font, gutter spasi, dan daftar pustaka</span>
                 </li>
               </ul>
             </div>
@@ -818,31 +800,31 @@ export default function HomePage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Laboratorium &amp; Kampus</span>
-                <Badge variant="outline" className="text-[10px] text-purple-700 border-purple-200 bg-purple-50">Enterprise</Badge>
+                <Badge variant="outline" className="text-[10px] text-purple-700 border-purple-200 bg-purple-50">Institusi</Badge>
               </div>
               <div className="space-y-1">
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-black text-slate-900">Rp 499.000</span>
                   <span className="text-xs text-slate-500">/ bulan</span>
                 </div>
-                <p className="text-xs text-slate-400">Unlimited akun &amp; batch audit satu institusi</p>
+                <p className="text-xs text-slate-400">Audit berkala untuk laboratorium, tim riset, atau dewan jurnal</p>
               </div>
               <ul className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-purple-600 shrink-0" />
-                  <span>Audit naskah tak terbatas untuk seluruh lab/prodi</span>
+                  <span>Pengecekan naskah untuk seluruh anggota tim riset/lab</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-purple-600 shrink-0" />
-                  <span>Kustomisasi logo &amp; kop sertifikat universitas</span>
+                  <span>Laporan terintegrasi untuk verifikasi berkas ujian/sidang</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-purple-600 shrink-0" />
-                  <span>Akses Webhook &amp; REST API terpadu</span>
+                  <span>Kustomisasi panduan format internal fakultas/kampus</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-purple-600 shrink-0" />
-                  <span>Dedicated server &amp; prioritas antrean rendering</span>
+                  <span>Akses API terpadu &amp; prioritas antrean rendering</span>
                 </li>
               </ul>
             </div>
@@ -858,7 +840,7 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          8. BOTTOM CTA BANNER (VIBRANT AURORA GRADIENT)
+          8. BOTTOM CTA BANNER: GROUNDED & CONVINCING
          ===================================================================== */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8 sm:p-14 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
         {/* Glow Spheres */}
@@ -867,13 +849,13 @@ export default function HomePage() {
 
         <div className="space-y-2 text-center sm:text-left relative z-10">
           <Badge variant="secondary" className="text-[10px] bg-white/20 text-white border-white/30 font-bold">
-            ⚡ Instant Camera-Ready Verification
+            ⚡ Pengecekan Format Terpercaya
           </Badge>
           <h2 className="text-xl sm:text-3xl font-black tracking-tight">
-            Ready to format check your manuscript?
+            Jangan Biarkan Riset Berbulan-bulan Terhambat Urusan Margin
           </h2>
           <p className="text-xs sm:text-sm text-white/90 max-w-lg leading-relaxed">
-            Masuk dengan Google SSO ke Format Kilat. Unggah naskah dan template jurnal untuk menerima audit kepatuhan &amp; asistensi AI Copilot dalam sekejap.
+            Masuk dengan Google SSO ke Format Kilat. Unggah naskah dan template jurnal tujuanmu untuk memeriksa kepatuhan format serta mendapatkan sertifikat kesiapannya.
           </p>
         </div>
         <Button

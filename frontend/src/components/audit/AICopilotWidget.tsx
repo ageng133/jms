@@ -111,7 +111,7 @@ export function AICopilotWidget({
                 </span>
               </div>
               <p className="text-xs text-indigo-100 mt-0.5">
-                Didesain khusus untuk Zilenial S1, S2, S3, dan Dosen Muda agar bebas revisi naskah!
+                Dampingi naskah S1, S2, S3, dan Dosen Muda agar format rapi dan siap kirim!
               </p>
             </div>
           </div>
