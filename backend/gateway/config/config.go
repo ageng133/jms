@@ -122,8 +122,10 @@ type JWTConfig struct {
 }
 
 func LoadConfig() (*Config, error) {
-	// Try loading from .env if present (ignore error if not present in prod)
-	_ = godotenv.Load(".env", "../.env", "../../.env")
+	// Try loading from .env if present (check current, parent, grandparent dirs)
+	for _, envFile := range []string{".env", "../.env", "../../.env"} {
+		_ = godotenv.Overload(envFile)
+	}
 
 	expiryHours, err := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "72"))
 	if err != nil {

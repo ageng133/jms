@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -61,7 +62,11 @@ func (h *HealthHandler) SystemStatus(c *gin.Context) {
 	})
 }
 func (h *HealthHandler) SystemReadiness(c *gin.Context) {
-	_ = godotenv.Load(".env", "../.env", "../../.env")
+	wd, _ := os.Getwd()
+	for _, envFile := range []string{".env", "../.env", "../../.env", "/Users/mac/Documents/Repositories/jms-uts/backend/.env"} {
+		err := godotenv.Overload(envFile)
+		log.Printf("[SystemReadiness] wd=%s file=%s err=%v", wd, envFile, err)
+	}
 
 	geminiKey := os.Getenv("GEMINI_API_KEY")
 	if geminiKey == "" {
@@ -71,6 +76,8 @@ func (h *HealthHandler) SystemReadiness(c *gin.Context) {
 	boxToken := os.Getenv("BOX_DEVELOPER_TOKEN")
 	boxClientID := os.Getenv("BOX_CLIENT_ID")
 	googleClientID := os.Getenv("GOOGLE_CLIENT_ID")
+
+	log.Printf("[SystemReadiness] boxToken=%t boxClientID=%t", boxToken != "", boxClientID != "")
 
 	response.Success(c, http.StatusOK, gin.H{
 		"system":       h.appName,

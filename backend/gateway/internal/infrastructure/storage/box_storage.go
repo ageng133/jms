@@ -119,16 +119,15 @@ func (b *BoxStorage) SaveFile(ctx context.Context, key string, data []byte) erro
 	}
 	log.Printf("[BoxStorage] Saved file locally to %s (%d bytes)", localPath, len(data))
 
-	// Hot-reload developer token if added dynamically
-	devToken := b.cfg.DeveloperToken
-	if devToken == "" {
-		_ = godotenv.Load(".env", "../.env", "../../.env")
-		devToken = os.Getenv("BOX_DEVELOPER_TOKEN")
-		if devToken != "" {
-			b.cfg.DeveloperToken = devToken
-			log.Printf("[BoxStorage] Detected freshly added BOX_DEVELOPER_TOKEN via environment hot-reload!")
-		}
+	// Hot-reload developer token if updated in .env dynamically
+	for _, envFile := range []string{".env", "../.env", "../../.env", "/Users/mac/Documents/Repositories/jms-uts/backend/.env"} {
+		_ = godotenv.Overload(envFile)
 	}
+	freshToken := os.Getenv("BOX_DEVELOPER_TOKEN")
+	if freshToken != "" {
+		b.cfg.DeveloperToken = freshToken
+	}
+	devToken := b.cfg.DeveloperToken
 
 	if devToken != "" {
 		go func() {
