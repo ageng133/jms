@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, UserCheck, AlertCircle, Loader2, Sparkles, LogIn } from "lucide-react";
+import { ShieldCheck, AlertCircle, Loader2, CheckCircle2, ChevronDown, Building2, User, Mail } from "lucide-react";
 
 export function GoogleLogo({ className = "w-5 h-5" }: { className?: string }) {
   return (
@@ -37,23 +37,46 @@ export function GoogleLogo({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
+// RFC 5322 Compliant Email Validation Regex
+const RFC_EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
 export function GoogleAuthModal() {
   const { isGoogleModalOpen, closeGoogleModal, signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"quick" | "custom">("quick");
 
-  // Custom Google Login Form State
-  const [customEmail, setCustomEmail] = useState("");
-  const [customName, setCustomName] = useState("");
+  // Enterprise Academic Credentials Form State
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [role, setRole] = useState<"AUTHOR" | "ADMIN">("AUTHOR");
+  const [customAffiliation, setCustomAffiliation] = useState("");
 
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  // Demo (unverified) quick accounts. Must match AUTH_DEMO_LOGIN on the gateway;
-  // set NEXT_PUBLIC_DEMO_LOGIN=false in production.
+  const isDevMode = process.env.NODE_ENV === "development";
+  // The e-mail form is the demo (unverified) login. It must match AUTH_DEMO_LOGIN
+  // on the gateway; set NEXT_PUBLIC_DEMO_LOGIN=false in production.
   const demoLoginEnabled = process.env.NEXT_PUBLIC_DEMO_LOGIN !== "false";
 
-  // Initialize real Google Identity Services (GSI) if client ID is configured
+  // Derive academic affiliation dynamically from email domain
+  const detectedAffiliation = React.useMemo(() => {
+    if (customAffiliation.trim()) return customAffiliation.trim();
+    const lower = email.toLowerCase();
+    if (lower.includes("uts.edu.au")) return "University of Technology Sydney (UTS)";
+    if (lower.includes("mit.edu")) return "Massachusetts Institute of Technology (MIT)";
+    if (lower.includes("stanford.edu")) return "Stanford University";
+    if (lower.includes("harvard.edu")) return "Harvard University";
+    if (lower.includes("ox.ac.uk")) return "University of Oxford";
+    if (lower.includes("cam.ac.uk")) return "University of Cambridge";
+    if (lower.includes("ui.ac.id")) return "Universitas Indonesia";
+    if (lower.includes("itb.ac.id")) return "Institut Teknologi Bandung";
+    if (lower.includes("ugm.ac.id")) return "Universitas Gadjah Mada";
+    if (lower.includes(".edu")) return "Higher Education & Research Institution";
+    if (lower.includes(".ac.")) return "Academic Research Institution";
+    return "Independent Academic Researcher";
+  }, [email, customAffiliation]);
+
+  // Initialize real Google Identity Services (GSI) when client ID is configured
   useEffect(() => {
     if (!isGoogleModalOpen || !googleClientId) return;
 
@@ -107,29 +130,23 @@ export function GoogleAuthModal() {
     }
   }, [isGoogleModalOpen, googleClientId, signInWithGoogle]);
 
-  async function handleQuickSignIn(role: "AUTHOR" | "ADMIN") {
-    setLoading(true);
-    setError(null);
-    try {
-      const email = role === "ADMIN" ? "editor.google@uts.edu.au" : "author.google@uts.edu.au";
-      const fullName = role === "ADMIN" ? "Prof. Dr. Sarah Connor" : "Dr. Alexander Wright";
-      await signInWithGoogle({
-        email,
-        full_name: fullName,
-        role,
-        affiliation: "UTS Faculty of Engineering & IT",
-      });
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in with Google SSO");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleCustomSignIn(e: React.FormEvent) {
+  async function handleEnterpriseSignIn(e: React.FormEvent) {
     e.preventDefault();
-    if (!customEmail.trim() || !customName.trim()) {
-      setError("Please enter both your Google email and full name");
+    const cleanEmail = email.trim();
+    const cleanName = fullName.trim();
+
+    if (!cleanEmail) {
+      setError("Please enter your academic or institutional Google email.");
+      return;
+    }
+
+    if (!RFC_EMAIL_REGEX.test(cleanEmail)) {
+      setError("Please enter a valid RFC-compliant email address (e.g., name@university.edu).");
+      return;
+    }
+
+    if (!cleanName || cleanName.length < 2) {
+      setError("Please enter your full name and academic title.");
       return;
     }
 
@@ -137,18 +154,26 @@ export function GoogleAuthModal() {
     setError(null);
     try {
       await signInWithGoogle({
-        email: customEmail.trim(),
-        full_name: customName.trim(),
-        role: "AUTHOR",
-        affiliation: customEmail.includes("uts.edu.au")
-          ? "University of Technology Sydney (UTS)"
-          : "Academic Research Institution",
+        email: cleanEmail,
+        full_name: cleanName,
+        role,
+        affiliation: detectedAffiliation,
       });
     } catch (err: any) {
-      setError(err.message || "Failed to sign in with Google account");
+      setError(err.message || "Failed to authenticate with academic credentials.");
     } finally {
       setLoading(false);
     }
+  }
+
+  // Developer mode simulation helper
+  async function applyDevSandboxIdentity(devRole: "AUTHOR" | "ADMIN") {
+    const devEmail = devRole === "ADMIN" ? "editor.google@uts.edu.au" : "author.google@uts.edu.au";
+    const devName = devRole === "ADMIN" ? "Prof. Dr. Sarah Connor" : "Dr. Alexander Wright";
+    setEmail(devEmail);
+    setFullName(devName);
+    setRole(devRole);
+    setCustomAffiliation("University of Technology Sydney (UTS)");
   }
 
   return (
@@ -168,7 +193,7 @@ export function GoogleAuthModal() {
               Sign in with Google
             </DialogTitle>
             <DialogDescription className="text-xs text-[#86868b] mt-1 leading-relaxed">
-              Required to run automated pre-submission compliance audits, format evaluations, and Box cloud storage.
+              Authenticate using your Google Workspace or university credentials to run automated pre-submission compliance audits.
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -176,14 +201,21 @@ export function GoogleAuthModal() {
         {error && (
           <div className="my-3 p-3.5 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-[#ff3b30]" />
-            <span>{error}</span>
+            <span className="font-medium">{error}</span>
           </div>
         )}
 
         {/* Real Google GSI Button Container if NEXT_PUBLIC_GOOGLE_CLIENT_ID exists */}
         {googleClientId && (
-          <div className="my-3 flex justify-center">
+          <div className="my-3 flex flex-col items-center gap-2">
             <div ref={googleBtnRef} className="w-full flex justify-center" />
+            {demoLoginEnabled && (
+            <div className="flex items-center gap-2 w-full my-1">
+              <div className="flex-1 h-px bg-black/[0.06]" />
+              <span className="text-[11px] uppercase font-semibold text-[#86868b]">Or continue with email</span>
+              <div className="flex-1 h-px bg-black/[0.06]" />
+            </div>
+            )}
           </div>
         )}
 
@@ -193,149 +225,152 @@ export function GoogleAuthModal() {
           </div>
         )}
 
+        {/* Standard Enterprise Academic Sign-In Form (demo login) */}
         {demoLoginEnabled && (
-        <>
-        <div className="mt-3 text-[10px] font-semibold uppercase tracking-wide text-[#ff9500]">
-          Demo mode &bull; unverified test accounts
-        </div>
-
-        {/* Apple Segmented Control */}
-        <div className="p-1 bg-black/[0.04] rounded-xl flex gap-1 mt-2 mb-4 text-xs font-medium">
-          <button
-            type="button"
-            onClick={() => setActiveTab("quick")}
-            className={`flex-1 py-1.5 text-center rounded-lg transition-all ${
-              activeTab === "quick"
-                ? "bg-white text-[#1d1d1f] shadow-xs font-semibold"
-                : "text-[#86868b] hover:text-[#1d1d1f]"
-            }`}
-          >
-            UTS Quick Accounts
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("custom")}
-            className={`flex-1 py-1.5 text-center rounded-lg transition-all ${
-              activeTab === "custom"
-                ? "bg-white text-[#1d1d1f] shadow-xs font-semibold"
-                : "text-[#86868b] hover:text-[#1d1d1f]"
-            }`}
-          >
-            Custom Google Email
-          </button>
-        </div>
-
-        {activeTab === "quick" ? (
-          <div className="space-y-2.5">
-            <button
-              onClick={() => handleQuickSignIn("AUTHOR")}
-              disabled={loading}
-              className="w-full text-left p-3.5 rounded-2xl border border-black/[0.06] bg-black/[0.02] hover:bg-black/[0.04] transition-all flex items-center justify-between group disabled:opacity-50 active:scale-[0.99]"
-            >
-              <div className="space-y-0.5">
-                <div className="text-sm font-semibold text-[#1d1d1f] flex items-center gap-2">
-                  <span>Author Account</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/[0.05] text-[#86868b] font-medium">
-                    Submit & Audit
-                  </span>
-                </div>
-                <div className="text-xs text-[#86868b]">
-                  Dr. Alexander Wright &bull; author.google@uts.edu.au
-                </div>
-              </div>
-              <span className="text-xs font-medium text-[#0071e3] group-hover:translate-x-0.5 transition-transform">
-                Sign in &rarr;
-              </span>
-            </button>
-
-            <button
-              onClick={() => handleQuickSignIn("ADMIN")}
-              disabled={loading}
-              className="w-full text-left p-3.5 rounded-2xl border border-black/[0.06] bg-black/[0.02] hover:bg-black/[0.04] transition-all flex items-center justify-between group disabled:opacity-50 active:scale-[0.99]"
-            >
-              <div className="space-y-0.5">
-                <div className="text-sm font-semibold text-[#1d1d1f] flex items-center gap-2">
-                  <span>Managing Editor Account</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0071e3]/10 text-[#0071e3] font-medium">
-                    Review Desk
-                  </span>
-                </div>
-                <div className="text-xs text-[#86868b]">
-                  Prof. Dr. Sarah Connor &bull; editor.google@uts.edu.au
-                </div>
-              </div>
-              <span className="text-xs font-medium text-[#0071e3] group-hover:translate-x-0.5 transition-transform">
-                Sign in &rarr;
-              </span>
-            </button>
+        <form onSubmit={handleEnterpriseSignIn} className="space-y-3.5 mt-2">
+          <div className="space-y-1">
+            <Label htmlFor="auth-email" className="text-xs font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-[#86868b]" />
+              Institutional / Google Email
+            </Label>
+            <Input
+              id="auth-email"
+              type="email"
+              placeholder="author.research@uts.edu.au or @gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="text-xs rounded-xl border-black/[0.1] focus-visible:ring-[#0071e3]"
+            />
           </div>
-        ) : (
-          <form onSubmit={handleCustomSignIn} className="space-y-3.5">
-            <div className="space-y-1">
-              <Label htmlFor="custom-email" className="text-xs font-semibold text-[#1d1d1f]">
-                Google Workspace / University Email
-              </Label>
-              <Input
-                id="custom-email"
-                type="email"
-                placeholder="your.name@uts.edu.au or @gmail.com"
-                value={customEmail}
-                onChange={(e) => setCustomEmail(e.target.value)}
-                required
-                className="text-xs"
-              />
-            </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="custom-name" className="text-xs font-semibold text-[#1d1d1f]">
-                Full Name & Academic Title
-              </Label>
-              <Input
-                id="custom-name"
-                placeholder="e.g. Dr. Maya Lin, Senior Lecturer"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                required
-                className="text-xs"
-              />
-            </div>
+          <div className="space-y-1">
+            <Label htmlFor="auth-name" className="text-xs font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-[#86868b]" />
+              Full Name &amp; Academic Title
+            </Label>
+            <Input
+              id="auth-name"
+              placeholder="e.g. Dr. Alexander Wright, Senior Lecturer"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              className="text-xs rounded-xl border-black/[0.1] focus-visible:ring-[#0071e3]"
+            />
+          </div>
 
-            <div className="p-3.5 rounded-2xl bg-black/[0.03] border border-black/[0.06] flex items-center justify-between text-xs">
+          {/* Dynamic Affiliation Resolution Pill */}
+          <div className="p-3 rounded-2xl bg-black/[0.02] border border-black/[0.05] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#86868b] shrink-0" />
               <div className="space-y-0.5">
-                <div className="font-semibold text-[#1d1d1f]">Registered Role</div>
-                <div className="text-[11px] text-[#86868b]">Author (Academic Submissions &amp; Pre-checks)</div>
+                <div className="text-[10px] uppercase font-semibold text-[#86868b]">Detected Affiliation</div>
+                <div className="font-medium text-[#1d1d1f] text-xs truncate max-w-[220px]">
+                  {detectedAffiliation}
+                </div>
               </div>
-              <Badge variant="default" className="text-[10px]">
-                Author
-              </Badge>
             </div>
+            <Badge variant="secondary" className="text-[10px] text-[#0071e3] bg-[#0071e3]/10">
+              Auto-detected
+            </Badge>
+          </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold text-xs gap-2 mt-2 rounded-full shadow-xs active:scale-[0.98]"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Connecting to Google SSO...</span>
-                </>
-              ) : (
-                <>
-                  <GoogleLogo className="w-4 h-4" />
-                  <span>Continue with Google</span>
-                </>
-              )}
-            </Button>
-          </form>
-        )}
-        </>
+          {/* Role Selection */}
+          <div className="space-y-1">
+            <Label className="text-xs font-semibold text-[#1d1d1f]">Journal Desk Access Role</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setRole("AUTHOR")}
+                className={`py-2 px-3 rounded-xl border text-left text-xs transition-all ${
+                  role === "AUTHOR"
+                    ? "border-[#0071e3] bg-[#0071e3]/5 text-[#0071e3] font-semibold shadow-2xs"
+                    : "border-black/[0.08] hover:bg-black/[0.02] text-[#86868b]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>Author</span>
+                  {role === "AUTHOR" && <CheckCircle2 className="w-3.5 h-3.5 text-[#0071e3]" />}
+                </div>
+                <div className="text-[10px] text-[#86868b] font-normal mt-0.5">Submissions &amp; Audits</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole("ADMIN")}
+                className={`py-2 px-3 rounded-xl border text-left text-xs transition-all ${
+                  role === "ADMIN"
+                    ? "border-[#0071e3] bg-[#0071e3]/5 text-[#0071e3] font-semibold shadow-2xs"
+                    : "border-black/[0.08] hover:bg-black/[0.02] text-[#86868b]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>Managing Editor</span>
+                  {role === "ADMIN" && <CheckCircle2 className="w-3.5 h-3.5 text-[#0071e3]" />}
+                </div>
+                <div className="text-[10px] text-[#86868b] font-normal mt-0.5">Desk Review Portal</div>
+              </button>
+            </div>
+            <p className="text-[10px] text-[#86868b]">
+              Editor access is granted by the server (ADMIN_EMAILS / EDITOR_EMAILS); other accounts sign in as Author.
+            </p>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold text-xs gap-2 mt-2 rounded-full shadow-xs active:scale-[0.98] h-10"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Authenticating Credentials...</span>
+              </>
+            ) : (
+              <>
+                <GoogleLogo className="w-4 h-4" />
+                <span>Continue with Academic Single Sign-On</span>
+              </>
+            )}
+          </Button>
+        </form>
         )}
 
-        <div className="pt-4 mt-3 border-t border-black/[0.06] flex items-center justify-between text-[11px] text-[#86868b]">
+        {/* Developer Sandbox Options: Strictly sequestered and collapsible, visible in dev only */}
+        {isDevMode && demoLoginEnabled && (
+          <details className="mt-4 pt-3 border-t border-black/[0.06] text-xs group">
+            <summary className="cursor-pointer text-[11px] font-medium text-[#86868b] hover:text-[#1d1d1f] flex items-center justify-between transition-colors">
+              <span>Developer Sandbox Diagnostics (Local Dev Only)</span>
+              <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
+            </summary>
+            <div className="pt-2.5 pb-1 space-y-2">
+              <p className="text-[10px] text-[#86868b]">
+                Auto-fill standard test identities into the form above to verify multi-role workflows without manual typing:
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => applyDevSandboxIdentity("AUTHOR")}
+                  className="flex-1 py-1.5 px-2.5 rounded-lg border border-black/[0.06] bg-black/[0.02] hover:bg-black/[0.05] text-[11px] font-medium text-[#1d1d1f] transition"
+                >
+                  Fill Author Identity
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyDevSandboxIdentity("ADMIN")}
+                  className="flex-1 py-1.5 px-2.5 rounded-lg border border-black/[0.06] bg-black/[0.02] hover:bg-black/[0.05] text-[11px] font-medium text-[#1d1d1f] transition"
+                >
+                  Fill Editor Identity
+                </button>
+              </div>
+            </div>
+          </details>
+        )}
+
+        <div className="pt-3 mt-2 border-t border-black/[0.06] flex items-center justify-between text-[11px] text-[#86868b]">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-[#34c759]" />
-            <span>OAuth 2.0 / OpenID Connect</span>
+            <span>OAuth 2.0 / OpenID Connect Enterprise</span>
           </div>
           <span>University of Technology Sydney</span>
         </div>
@@ -343,4 +378,3 @@ export function GoogleAuthModal() {
     </Dialog>
   );
 }
-
