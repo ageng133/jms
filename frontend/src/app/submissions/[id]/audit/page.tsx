@@ -107,10 +107,10 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
         <div className="space-y-1">
           <Link
             href="/admin"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#86868b] hover:text-[#1d1d1f] mb-2 transition"
+            className="inline-flex items-center gap-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-3.5 py-1.5 rounded-full mb-3 transition shadow-xs w-fit"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Admin Portal
+            <span>&larr; Kembali ke Editorial Portal (Admin Dashboard)</span>
           </Link>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-bold text-[#1d1d1f] tracking-tight">AI Pre-Submission Audit Report</h1>

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { Menu, X, LogOut, ArrowRight, ShieldCheck, Sparkles, Box } from "lucide-react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { GoogleAuthModal, GoogleLogo } from "@/components/GoogleAuthModal";
 import { Button } from "@/components/ui/button";
@@ -40,11 +40,15 @@ function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href="/" className="hover:text-indigo-600 transition-colors">
                   Overview
                 </Link>
-                <a href="#ai-copilot" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+                <a href="/#ai-copilot" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
                   <span>AI Copilot</span>
                 </a>
-                <a href="#how-it-works" className="hover:text-indigo-600 transition-colors">
+                <a href="/#virtual-office" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+                  <Box className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>3D Lab</span>
+                </a>
+                <a href="/#how-it-works" className="hover:text-indigo-600 transition-colors">
                   How It Works
                 </a>
                 <Link href="/admin" className="hover:text-indigo-600 transition-colors">
@@ -124,7 +128,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
                   Overview
                 </Link>
                 <a
-                  href="#ai-copilot"
+                  href="/#ai-copilot"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 transition"
                 >
@@ -132,7 +136,15 @@ function AppShell({ children }: { children: React.ReactNode }) {
                   <span>AI Copilot (Interactive)</span>
                 </a>
                 <a
-                  href="#how-it-works"
+                  href="/#virtual-office"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-800 hover:bg-indigo-50 hover:text-indigo-600 transition"
+                >
+                  <Box className="w-4 h-4 text-indigo-500" />
+                  <span>3D Autonomous AI Lab</span>
+                </a>
+                <a
+                  href="/#how-it-works"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block px-3 py-2 rounded-xl text-slate-800 hover:bg-indigo-50 hover:text-indigo-600 transition"
                 >

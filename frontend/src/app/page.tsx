@@ -711,7 +711,7 @@ export default function HomePage() {
       {/* =====================================================================
           7. 3D ISOMETRIC VIRTUAL OFFICE: THE AUTONOMOUS AI LAB
          ===================================================================== */}
-      <section className="space-y-6">
+      <section id="virtual-office" className="space-y-6 scroll-mt-20">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <Badge variant="default" className="text-xs bg-purple-100 text-purple-700 font-bold border-purple-200 hover:bg-purple-200">
             3D Digital Twin Architecture
