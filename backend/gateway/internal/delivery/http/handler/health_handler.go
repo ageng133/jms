@@ -79,6 +79,14 @@ func (h *HealthHandler) SystemReadiness(c *gin.Context) {
 
 	log.Printf("[SystemReadiness] boxToken=%t boxClientID=%t", boxToken != "", boxClientID != "")
 
+	hasJWTConfig := false
+	for _, p := range []string{"box_config.json", "../box_config.json", "/Users/mac/Documents/Repositories/jms-uts/backend/box_config.json", "/Users/mac/Documents/Repositories/jms-uts/backend/1568960837_7idv1n8k_config.json"} {
+		if _, err := os.Stat(p); err == nil {
+			hasJWTConfig = true
+			break
+		}
+	}
+
 	response.Success(c, http.StatusOK, gin.H{
 		"system":       h.appName,
 		"status":       "OPERATIONAL",
@@ -97,15 +105,18 @@ func (h *HealthHandler) SystemReadiness(c *gin.Context) {
 				"instruction": "Optional: Add GEMINI_API_KEY in backend/.env to enable the Gemini fallback engine (primary engine is the PyMuPDF worker)",
 			},
 			"box_storage": gin.H{
-				"key_configured": boxToken != "" || boxClientID != "",
+				"key_configured": hasJWTConfig || boxToken != "" || boxClientID != "",
 				"active_mode": func() string {
+					if hasJWTConfig {
+						return "LIVE_BOX_JWT_CLOUD_SYNC"
+					}
 					if boxToken != "" || boxClientID != "" {
 						return "LIVE_BOX_CLOUD_SYNC"
 					}
 					return "LOCAL_BOX_CONTAINED_CACHE"
 				}(),
 				"status":      "READY",
-				"instruction": "Optional: Add BOX_DEVELOPER_TOKEN in backend/.env for live Box.com cloud sync",
+				"instruction": "Box.com Cloud Storage configured with JWT Service Account & Local Cache",
 			},
 			"google_oauth": gin.H{
 				"client_id_configured": googleClientID != "",
@@ -125,4 +136,3 @@ func (h *HealthHandler) SystemReadiness(c *gin.Context) {
 		},
 	})
 }
-
