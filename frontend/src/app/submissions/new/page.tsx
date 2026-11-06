@@ -133,7 +133,7 @@ export default function NewSubmissionPage() {
       const confirmResult = await confirmSubmission(manuscriptId, {
         draft_file: draftMeta,
         template_file: templateMeta,
-        template_preset: templatePreset || undefined,
+        template_preset: templateFile ? undefined : (templatePreset || undefined),
       });
 
       setStep(3);
@@ -370,12 +370,12 @@ export default function NewSubmissionPage() {
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-on-surface truncate">{templateFile.name}</p>
                           <p className="text-[10px] text-on-surface-variant font-mono">
-                            {(templateFile.size / (1024 * 1024)).toFixed(2)} MB &bull; Target Journal Spec Loaded
+                            {(templateFile.size / (1024 * 1024)).toFixed(2)} MB &bull; Target Template Berkas
                           </p>
                         </div>
                       </div>
-                      <Badge className="bg-success text-on-success text-[10px]">
-                        Siap Diekstrak
+                      <Badge className="bg-primary text-on-primary text-[10px]">
+                        Mode AST XML Aktif
                       </Badge>
                     </div>
                     <div className="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant text-xs">

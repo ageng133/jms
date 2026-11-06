@@ -285,16 +285,32 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 			payload["template_pdf_s3_key"] = tfile.S3Key
 			payload["template_filename"] = tfile.OriginalFilename
 		}
+		payload["template_source"] = "uploaded_template_ast_xml"
+		payload["extraction_mode"] = "AST_XML_EXTRACTION"
 	} else if audit.TemplatePreset != nil && *audit.TemplatePreset != "" {
 		payload["template_filename"] = "Template Preset: " + strings.ToUpper(*audit.TemplatePreset)
+		payload["template_source"] = "preset:" + *audit.TemplatePreset
+		payload["extraction_mode"] = "PRESET_FALLBACK"
 	}
 
 	if len(audit.TemplateSpecs) > 0 {
 		var specs struct {
-			FixedLayout json.RawMessage `json:"fixed_layout"`
+			FixedLayout    json.RawMessage `json:"fixed_layout"`
+			AstXmlAnalysis json.RawMessage `json:"ast_xml_analysis"`
 		}
-		if json.Unmarshal(audit.TemplateSpecs, &specs) == nil && len(specs.FixedLayout) > 0 && string(specs.FixedLayout) != "null" {
-			payload["fixed_layout"] = specs.FixedLayout
+		if json.Unmarshal(audit.TemplateSpecs, &specs) == nil {
+			if len(specs.FixedLayout) > 0 && string(specs.FixedLayout) != "null" {
+				payload["fixed_layout"] = specs.FixedLayout
+				var fl struct {
+					AstXmlAnalysis json.RawMessage `json:"ast_xml_analysis"`
+				}
+				if json.Unmarshal(specs.FixedLayout, &fl) == nil && len(fl.AstXmlAnalysis) > 0 && string(fl.AstXmlAnalysis) != "null" {
+					payload["ast_xml_analysis"] = fl.AstXmlAnalysis
+				}
+			}
+			if len(specs.AstXmlAnalysis) > 0 && string(specs.AstXmlAnalysis) != "null" {
+				payload["ast_xml_analysis"] = specs.AstXmlAnalysis
+			}
 		}
 	}
 

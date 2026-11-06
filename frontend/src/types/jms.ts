@@ -48,6 +48,53 @@ export interface TemplateRuleComparison {
   delta_note?: string;
 }
 
+export interface AstXmlAnalysis {
+  status: string;
+  mode?: string;
+  template_ast?: {
+    page_count: number;
+    page_format: string;
+    margin_top_mm: number;
+    margin_bottom_mm: number;
+    margin_left_mm: number;
+    margin_right_mm: number;
+    column_count: number;
+    column_gap_mm: number;
+    font_family: string;
+    body_font_size_pt: number;
+    title_font_size_pt?: number;
+    heading_font_size_pt?: number;
+    line_spacing?: string;
+    text_alignment?: string;
+    running_header?: string;
+    required_sections?: string[];
+    ast_nodes_count?: number;
+  };
+  draft_ast?: {
+    page_count: number;
+    page_format: string;
+    margin_top_mm: number;
+    margin_bottom_mm: number;
+    margin_left_mm: number;
+    margin_right_mm: number;
+    column_count: number;
+    column_gap_mm: number;
+    font_family: string;
+    body_font_size_pt: number;
+    title_font_size_pt?: number;
+    heading_font_size_pt?: number;
+    line_spacing?: string;
+    text_alignment?: string;
+    running_header?: string;
+    detected_sections?: string[];
+    ast_nodes_count?: number;
+    title?: string;
+    anonymization_leaks?: string[];
+    inline_citations_count?: number;
+    references_count?: number;
+  };
+}
+
 export interface TemplateSpecs {
   page_format: string;
   page_width_mm: number;
@@ -82,6 +129,7 @@ export interface TemplateSpecs {
   double_blind_required?: boolean;
   extracted_rules_summary?: string[];
   comparison_matrix?: TemplateRuleComparison[];
+  ast_xml_analysis?: AstXmlAnalysis;
 }
 
 export interface AuditSummary {
@@ -159,6 +207,7 @@ export interface PreSubmissionAuditReport {
   ai_engine?: string;
   ai_mode?: "LIVE_GEMINI_AI" | "PYMUPDF_WORKER";
   fixed_layout?: FixedLayoutRemediation;
+  ast_xml_analysis?: AstXmlAnalysis;
 }
 
 export type AcademicTier = "S1" | "S2" | "S3" | "LECTURER";

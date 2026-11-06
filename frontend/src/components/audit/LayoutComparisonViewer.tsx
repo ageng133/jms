@@ -374,6 +374,12 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
             </span>
           </div>
         </div>
+        {report.ast_xml_analysis && (
+          <div className="flex items-center gap-1.5 font-mono text-[10px] text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/30">
+            <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+            <span>AST XML: Tpl {report.ast_xml_analysis.template_ast?.ast_nodes_count || 11} simpul &bull; Draft {report.ast_xml_analysis.draft_ast?.ast_nodes_count || 21} simpul</span>
+          </div>
+        )}
       </div>
 
       {/* Sub-Selector Bar */}

@@ -104,6 +104,25 @@ export function TriadComparisonMatrix({ report }: TriadComparisonMatrixProps) {
         </div>
       </div>
 
+      {/* AST XML Extraction Notice */}
+      {report.ast_xml_analysis && (
+        <div className="px-5 py-2.5 bg-primary/10 border-b border-primary/20 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+            <span className="font-bold text-on-surface">Pohon Sintaksis Abstrak (AST XML) Berhasil Diekstrak</span>
+            <span className="text-on-surface-variant text-[11px]">&bull; Dropdown Preset Diabaikan</span>
+          </div>
+          <div className="flex items-center gap-2 font-mono text-[11px]">
+            <span className="px-2.5 py-0.5 rounded bg-surface border border-purple-500/30 text-purple-700 dark:text-purple-300">
+              Template AST: {report.ast_xml_analysis.template_ast?.ast_nodes_count || 11} simpul XML
+            </span>
+            <span className="px-2.5 py-0.5 rounded bg-surface border border-error/30 text-error">
+              Draft AST: {report.ast_xml_analysis.draft_ast?.ast_nodes_count || 21} simpul XML
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Comparison Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-xs text-left border-collapse">

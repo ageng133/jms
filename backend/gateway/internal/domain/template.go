@@ -26,6 +26,8 @@ type TemplateSpecs struct {
 	TextAlignment     string   `json:"text_alignment,omitempty"` // justify | left
 	RunningHeader     string   `json:"running_header,omitempty"`
 	RequiredSections  []string `json:"required_sections,omitempty"`
+	// AstXmlAnalysis contains the structured XML AST breakdown extracted from template and draft.
+	AstXmlAnalysis json.RawMessage `json:"ast_xml_analysis,omitempty"`
 	// FixedLayout is filled by the optional reshape step (see Remediator).
 	FixedLayout json.RawMessage `json:"fixed_layout,omitempty"`
 }

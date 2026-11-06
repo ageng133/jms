@@ -63,17 +63,35 @@ export function TemplatePresetSelect({ value, onChange, hasUploadedTemplate }: P
     return <div className="text-[11px] text-error">{error}</div>;
   }
 
+  if (hasUploadedTemplate) {
+    return (
+      <div className="p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-primary flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-success animate-ping" />
+            Ekstraksi AST XML Aktif
+          </span>
+          <span className="text-[10px] font-semibold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-md border border-outline-variant/60">
+            Preset Dropdown Dinonaktifkan
+          </span>
+        </div>
+        <p className="text-[10px] text-on-surface-variant leading-relaxed">
+          Sistem akan mengekstrak pohon sintaksis abstrak (AST XML) langsung dari berkas template yang Anda unggah untuk menentukan layout, tipografi, dan daftar seksi.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-1.5">
       <label htmlFor="template-preset" className="text-[11px] font-semibold text-on-surface">
-        {hasUploadedTemplate ? "Fallback layout (not used: your template PDF wins)" : "Check against layout"}
+        Pilih Starter Preset (Hanya jika tidak ada file template):
       </label>
       <select
         id="template-preset"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        disabled={hasUploadedTemplate}
-        className="w-full h-9 rounded-xl border border-outline-variant bg-surface-container-low px-3 text-xs text-on-surface disabled:opacity-50"
+        className="w-full h-9 rounded-xl border border-outline-variant bg-surface-container-low px-3 text-xs text-on-surface"
       >
         {presets.map((p) => (
           <option key={p.id} value={p.id}>
@@ -81,7 +99,7 @@ export function TemplatePresetSelect({ value, onChange, hasUploadedTemplate }: P
           </option>
         ))}
       </select>
-      {selected && !hasUploadedTemplate && (
+      {selected && (
         <p className="text-[10px] text-on-surface-variant leading-relaxed">{describeSpecs(selected.specs)}</p>
       )}
     </div>

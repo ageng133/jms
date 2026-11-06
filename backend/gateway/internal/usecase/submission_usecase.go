@@ -213,13 +213,29 @@ func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, actor Actor, 
 		}
 	}
 
-	presetID := strings.TrimSpace(req.TemplatePreset)
-	if presetID == "" {
-		presetID = domain.DefaultTemplatePresetID
-	}
-	preset, ok := domain.FindTemplatePreset(presetID)
-	if !ok {
-		return nil, fmt.Errorf("%w: unknown template preset %q", domain.ErrInvalidInput, presetID)
+	var templatePresetPtr *string
+	var auditSpecs domain.TemplateSpecs
+
+	if req.TemplateFile != nil && req.TemplateFile.S3Key != "" {
+		// Uploaded Template Mode: Extract AST XML directly from file. Bypasses dropdown presets.
+		templatePresetPtr = nil
+		auditSpecs = domain.TemplateSpecs{
+			Name:             req.TemplateFile.OriginalFilename,
+			Source:           "uploaded_template_ast_xml",
+			IsCustomTemplate: true,
+		}
+	} else {
+		// Fallback Preset Mode: Only used when no template file is uploaded.
+		presetID := strings.TrimSpace(req.TemplatePreset)
+		if presetID == "" {
+			presetID = domain.DefaultTemplatePresetID
+		}
+		preset, ok := domain.FindTemplatePreset(presetID)
+		if !ok {
+			return nil, fmt.Errorf("%w: unknown template preset %q", domain.ErrInvalidInput, presetID)
+		}
+		templatePresetPtr = &preset.ID
+		auditSpecs = preset.Specs
 	}
 
 	err := u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -274,7 +290,7 @@ func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, actor Actor, 
 			ManuscriptFileID: draftFileID,
 			TemplateFileID:   templateFileIDPtr,
 			Status:           domain.AuditStatusQueued,
-			TemplatePreset:   &preset.ID,
+			TemplatePreset:   templatePresetPtr,
 			CreatedAt:        now,
 		}
 		if err := tx.Create(&audit).Error; err != nil {
@@ -323,7 +339,7 @@ func (u *submissionUsecase) ConfirmSubmission(ctx context.Context, actor Actor, 
 			ManuscriptID: req.ManuscriptID,
 			DraftKey:     draftS3Key,
 			TemplateKey:  templateS3Key,
-			Specs:        preset.Specs,
+			Specs:        auditSpecs,
 		}
 		go func() {
 			// The runner owns timeouts, panic recovery and FAILED marking.
