@@ -26,6 +26,10 @@ export function getApiBaseUrl(): string {
       return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
     }
     if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      // If accessing via standard HTTP/HTTPS reverse proxy (Nginx port 80 or 443)
+      if (!window.location.port || window.location.port === "80" || window.location.port === "443") {
+        return `${window.location.origin}/api/v1`;
+      }
       return `${window.location.protocol}//${window.location.hostname}:8080/api/v1`;
     }
   }

@@ -7,3 +7,4 @@ COPY migrations/000003_audit_summary_engine.up.sql /docker-entrypoint-initdb.d/0
 COPY seeds/001_seed_dev_data.sql /docker-entrypoint-initdb.d/004_seed_dev_data.sql
 
 EXPOSE 5432
+
