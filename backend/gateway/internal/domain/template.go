@@ -5,18 +5,27 @@ import "encoding/json"
 // TemplateSpecs describes the layout a manuscript is checked against.
 // JSON tags match backend/ai-worker/app/models/audit.py TemplateSpecs.
 type TemplateSpecs struct {
-	PageFormat       string   `json:"page_format"`
-	PageWidthMm      float64  `json:"page_width_mm"`
-	PageHeightMm     float64  `json:"page_height_mm"`
-	MarginTopMm      float64  `json:"margin_top_mm"`
-	MarginBottomMm   float64  `json:"margin_bottom_mm"`
-	MarginLeftMm     float64  `json:"margin_left_mm"`
-	MarginRightMm    float64  `json:"margin_right_mm"`
-	ColumnCount      int      `json:"column_count"`
-	ColumnGapMm      *float64 `json:"column_gap_mm,omitempty"`
-	IsCustomTemplate bool     `json:"is_custom_template"`
-	Name             string   `json:"name,omitempty"`
-	Source           string   `json:"source,omitempty"` // uploaded_template | preset:<id> | default
+	PageFormat        string   `json:"page_format"`
+	PageWidthMm       float64  `json:"page_width_mm"`
+	PageHeightMm      float64  `json:"page_height_mm"`
+	MarginTopMm       float64  `json:"margin_top_mm"`
+	MarginBottomMm    float64  `json:"margin_bottom_mm"`
+	MarginLeftMm      float64  `json:"margin_left_mm"`
+	MarginRightMm     float64  `json:"margin_right_mm"`
+	ColumnCount       int      `json:"column_count"`
+	ColumnGapMm       *float64 `json:"column_gap_mm,omitempty"`
+	IsCustomTemplate  bool     `json:"is_custom_template"`
+	Name              string   `json:"name,omitempty"`
+	Source            string   `json:"source,omitempty"` // uploaded_template | preset:<id> | default
+	FontFamily        string   `json:"font_family,omitempty"`
+	BodyFontSizePt    float64  `json:"body_font_size_pt,omitempty"`
+	TitleFontSizePt   float64  `json:"title_font_size_pt,omitempty"`
+	HeadingFontSizePt float64  `json:"heading_font_size_pt,omitempty"`
+	LineSpacing       string   `json:"line_spacing,omitempty"` // single | 1.15 | 1.5 | double
+	LineHeightPt      float64  `json:"line_height_pt,omitempty"`
+	TextAlignment     string   `json:"text_alignment,omitempty"` // justify | left
+	RunningHeader     string   `json:"running_header,omitempty"`
+	RequiredSections  []string `json:"required_sections,omitempty"`
 	// FixedLayout is filled by the optional reshape step (see Remediator).
 	FixedLayout json.RawMessage `json:"fixed_layout,omitempty"`
 }

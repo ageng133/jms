@@ -274,11 +274,19 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 
 	if file, ferr := h.usecase.GetManuscriptFile(c.Request.Context(), audit.ManuscriptFileID); ferr == nil && file != nil {
 		payload["original_pdf_s3_key"] = file.S3Key
+		payload["draft_filename"] = file.OriginalFilename
+		payload["original_filename"] = file.OriginalFilename
+		if m, merr := h.usecase.GetManuscript(c.Request.Context(), actorFrom(c), file.ManuscriptID); merr == nil && m != nil {
+			payload["manuscript_title"] = m.Title
+		}
 	}
 	if audit.TemplateFileID != nil {
 		if tfile, terr := h.usecase.GetManuscriptFile(c.Request.Context(), *audit.TemplateFileID); terr == nil && tfile != nil {
 			payload["template_pdf_s3_key"] = tfile.S3Key
+			payload["template_filename"] = tfile.OriginalFilename
 		}
+	} else if audit.TemplatePreset != nil && *audit.TemplatePreset != "" {
+		payload["template_filename"] = "Template Preset: " + strings.ToUpper(*audit.TemplatePreset)
 	}
 
 	if len(audit.TemplateSpecs) > 0 {

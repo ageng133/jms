@@ -54,7 +54,10 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
   ).length;
 
   const anonymizationLeaksCount = report.modules.anonymization.leaks_found.length;
-  const templateName = report.template_specs?.name || "Target Template Jurnal";
+  const draftFileName = report.draft_filename || report.original_filename || "Naskah_Draft.pdf";
+  const templateFileName = report.template_filename || report.template_specs?.name || (report.template_preset ? `Template ${report.template_preset.toUpperCase()}` : "Template_Acuan.pdf");
+  const aiFileName = draftFileName.replace(/\.pdf$/i, "") + "_camera_ready.pdf";
+  const templateName = report.template_specs?.name || templateFileName;
 
   // Render a specific document panel
   const renderDocPanel = (docType: SingleViewDoc, isHalf: boolean = false) => {
@@ -64,10 +67,12 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
           <div className="flex flex-col bg-surface-container-low h-full">
             {/* Header */}
             <div className="h-11 bg-surface-container px-4 flex items-center justify-between border-b border-outline-variant text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" />
-                <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span className="font-bold text-on-surface">1. Template Target (Acuan Jurnal)</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block shrink-0" />
+                <BookOpen className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                <span className="font-bold text-on-surface truncate" title={templateFileName}>
+                  1. Template: <span className="font-mono text-purple-700 dark:text-purple-300 font-semibold">{templateFileName}</span>
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="bg-purple-600/10 text-purple-700 dark:text-purple-300 border-purple-500/30 text-[10px]">
@@ -144,10 +149,12 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
           <div className="flex flex-col bg-surface-container-low h-full">
             {/* Header */}
             <div className="h-11 bg-surface-container px-4 flex items-center justify-between border-b border-outline-variant text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-error inline-block" />
-                <FileText className="w-3.5 h-3.5 text-error" />
-                <span className="font-bold text-on-surface">2. Naskah Asli (Draft Sebelum Diperbaiki)</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-error inline-block shrink-0" />
+                <FileText className="w-3.5 h-3.5 text-error shrink-0" />
+                <span className="font-bold text-on-surface truncate" title={draftFileName}>
+                  2. Naskah Asli: <span className="font-mono text-error font-semibold">{draftFileName}</span>
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 {layoutViolationsCount > 0 ? (
@@ -211,10 +218,12 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
           <div className="flex flex-col bg-surface-container-low h-full">
             {/* Header */}
             <div className="h-11 bg-surface-container px-4 flex items-center justify-between border-b border-outline-variant text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-success inline-block" />
-                <Sparkles className="w-3.5 h-3.5 text-success" />
-                <span className="font-bold text-on-surface">3. Hasil Format AI (Camera-Ready Bersih)</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-success inline-block shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-success shrink-0" />
+                <span className="font-bold text-on-surface truncate" title={aiFileName}>
+                  3. Hasil AI: <span className="font-mono text-success font-semibold">{aiFileName}</span>
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="bg-success text-on-success text-[10px] gap-1 font-semibold">
@@ -335,6 +344,35 @@ export function LayoutComparisonViewer({ report }: LayoutComparisonViewerProps) 
           >
             {expanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
+        </div>
+      </div>
+
+      {/* File Provenance Strip (Active File Identity & Role) */}
+      <div className="px-5 py-2.5 bg-surface-container/60 border-b border-outline-variant flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+            <span className="text-on-surface-variant text-[11px] font-semibold">1. Template Target:</span>
+            <span className="font-mono text-purple-700 dark:text-purple-300 font-bold bg-purple-500/10 px-2 py-0.5 rounded text-[11px] border border-purple-500/20 max-w-[220px] truncate" title={templateFileName}>
+              {templateFileName}
+            </span>
+          </div>
+          <span className="text-outline hidden sm:inline">&bull;</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-error" />
+            <span className="text-on-surface-variant text-[11px] font-semibold">2. Naskah Asli:</span>
+            <span className="font-mono text-error font-bold bg-error/10 px-2 py-0.5 rounded text-[11px] border border-error/20 max-w-[220px] truncate" title={draftFileName}>
+              {draftFileName}
+            </span>
+          </div>
+          <span className="text-outline hidden sm:inline">&bull;</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-success" />
+            <span className="text-on-surface-variant text-[11px] font-semibold">3. Hasil Format AI:</span>
+            <span className="font-mono text-success font-bold bg-success/10 px-2 py-0.5 rounded text-[11px] border border-success/20 max-w-[220px] truncate" title={aiFileName}>
+              {aiFileName}
+            </span>
+          </div>
         </div>
       </div>
 

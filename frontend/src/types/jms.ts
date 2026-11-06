@@ -67,8 +67,17 @@ export interface TemplateSpecs {
   template_type?: string;
   template_type_label?: string;
   extraction_mode?: string;
+  font_family?: string;
   detected_font_family?: string;
+  body_font_size_pt?: number;
   detected_font_size_pt?: number;
+  title_font_size_pt?: number;
+  heading_font_size_pt?: number;
+  line_spacing?: string;
+  line_height_pt?: number;
+  text_alignment?: string;
+  running_header?: string;
+  required_sections?: string[];
   detected_citation_style?: string;
   double_blind_required?: boolean;
   extracted_rules_summary?: string[];
@@ -143,6 +152,10 @@ export interface PreSubmissionAuditReport {
   original_pdf_s3_key?: string;
   template_pdf_s3_key?: string;
   template_preset?: string;
+  draft_filename?: string;
+  original_filename?: string;
+  template_filename?: string;
+  manuscript_title?: string;
   ai_engine?: string;
   ai_mode?: "LIVE_GEMINI_AI" | "PYMUPDF_WORKER";
   fixed_layout?: FixedLayoutRemediation;

@@ -177,15 +177,22 @@ def run_e2e_verification():
     print("\n[Step 5] Inspecting Audit & Reshape Outcome...")
     assert audit_data.get("status") == "COMPLETED", f"Audit did not complete: {audit_data}"
 
+    print(f"  • Draft Filename  : {audit_data.get('draft_filename')}")
+    print(f"  • Template Filename: {audit_data.get('template_filename')}")
+    print(f"  • Manuscript Title: {audit_data.get('manuscript_title')}")
     print(f"  • Audit Status    : {audit_data.get('status')}")
     print(f"  • Overall Score   : {audit_data.get('overall_score')}/100")
     print(f"  • Custom Template : {audit_data.get('template_specs', {}).get('is_custom_template')}")
     print(f"  • Extracted Format: {audit_data.get('template_specs', {}).get('page_format')}")
     print(f"  • Extracted Margin: Top: {audit_data.get('template_specs', {}).get('margin_top_mm')}mm, Left: {audit_data.get('template_specs', {}).get('margin_left_mm')}mm")
     print(f"  • Extracted Cols  : {audit_data.get('template_specs', {}).get('column_count')} Columns")
+    print(f"  • Extracted Font  : {audit_data.get('template_specs', {}).get('font_family')}")
     print(f"  • Reshape Status  : {audit_data.get('fixed_layout', {}).get('camera_ready_status')}")
     print(f"  • Reshaped PDF Key: {audit_data.get('annotated_pdf_s3_key')}")
     print(f"  • Template PDF Key: {audit_data.get('template_pdf_s3_key')}")
+
+    assert audit_data.get('draft_filename') == "violating_draft.pdf", f"Wrong draft filename: {audit_data.get('draft_filename')}"
+    assert audit_data.get('template_filename') == "custom_template.pdf", f"Wrong template filename: {audit_data.get('template_filename')}"
 
     actions = audit_data.get('fixed_layout', {}).get('remediation_actions', [])
     print(f"  • Corrective Reshaping Actions Applied ({len(actions)}):")

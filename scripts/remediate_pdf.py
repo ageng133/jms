@@ -94,55 +94,41 @@ class TemplateExtractor:
             margin_left_mm = min(35.0, max(14.0, round(min_x0 * PT_TO_MM, 1)))
             margin_right_mm = min(35.0, max(14.0, round((w_pt - max_x1) * PT_TO_MM, 1)))
 
-            # Detect Column Count (robust paragraph ratio detection)
+            # Detect Column Count (robust multi-column geometry detection)
             column_count = 1
             column_gap_mm = 6.35
             midpoint = w_pt / 2.0
 
-            full_width_count = 0
-            col_width_count = 0
-            left_col_count = 0
-            right_col_count = 0
-
-            for b in body_blocks:
-                bw = b[2] - b[0]
-                ratio = bw / w_pt
-                if len(b[4].strip()) < 30: continue
-                if ratio >= 0.55:
-                    full_width_count += 1
-                elif 0.28 <= ratio <= 0.52:
-                    col_width_count += 1
-                    if b[0] < midpoint and b[2] < (midpoint + 40):
-                        left_col_count += 1
-                    elif b[0] > (midpoint - 40):
-                        right_col_count += 1
+            left_blocks = [b for b in body_blocks if b[0] < midpoint and b[2] < (midpoint + 30)]
+            right_blocks = [b for b in body_blocks if b[0] > (midpoint - 30)]
 
             is_two_column = False
-            if left_col_count >= 1 and right_col_count >= 1:
-                if full_width_count == 0:
-                    is_two_column = True
-                elif (
-                    col_width_count >= 4
-                    and left_col_count >= 2
-                    and right_col_count >= 2
-                    and col_width_count > (full_width_count * 1.5)
-                ):
+            if len(left_blocks) >= 1 and len(right_blocks) >= 1:
+                avg_l = sum(b[2] - b[0] for b in left_blocks) / len(left_blocks)
+                avg_r = sum(b[2] - b[0] for b in right_blocks) / len(right_blocks)
+                if avg_l < (w_pt * 0.58) and avg_r < (w_pt * 0.58):
                     is_two_column = True
 
             if is_two_column:
                 column_count = 2
-                left_blocks = [b for b in body_blocks if b[0] < midpoint and b[2] < (midpoint + 30)]
-                right_blocks = [b for b in body_blocks if b[0] > (midpoint - 30)]
-                if left_blocks and right_blocks:
-                    right_min_x0 = min(b[0] for b in right_blocks)
-                    left_max_x1 = max(b[2] for b in left_blocks)
-                    if right_min_x0 > left_max_x1:
-                        column_gap_mm = round((right_min_x0 - left_max_x1) * PT_TO_MM, 1)
+                right_min_x0 = min(b[0] for b in right_blocks)
+                left_max_x1 = max(b[2] for b in left_blocks)
+                if right_min_x0 > left_max_x1:
+                    column_gap_mm = round((right_min_x0 - left_max_x1) * PT_TO_MM, 1)
+
+            # Detect running header from top of page 1
+            running_header = ""
+            for b in doc[0].get_text("blocks"):
+                if b[6] == 0 and b[1] < 45 and len(b[4].strip()) > 5:
+                    running_header = b[4].strip().split("\n")[0]
+                    break
 
             # Detect Typography & Spacing from template
             font_counts = {}
             size_counts = {}
             line_spacings = []
+            all_spans = []
+            line_end_diffs = []
 
             for page in doc[:3]:
                 pdict = page.get_text("dict")
@@ -154,6 +140,8 @@ class TemplateExtractor:
                                 dy = l["bbox"][1] - lines[i-1]["bbox"][1]
                                 if 6.0 <= dy <= 30.0:
                                     line_spacings.append(dy)
+                            if len(lines) > 2 and i < len(lines) - 1:
+                                line_end_diffs.append(abs(l["bbox"][2] - blk["bbox"][2]))
                             for sp in l.get("spans", []):
                                 fn = sp.get("font", "Helvetica")
                                 sz = round(sp.get("size", 10.0), 1)
@@ -161,10 +149,49 @@ class TemplateExtractor:
                                 if text_len > 0:
                                     font_counts[fn] = font_counts.get(fn, 0) + text_len
                                     size_counts[sz] = size_counts.get(sz, 0) + text_len
+                                    all_spans.append(sp)
 
             top_font = max(font_counts.items(), key=lambda x: x[1])[0] if font_counts else "Helvetica"
             top_size = max(size_counts.items(), key=lambda x: x[1])[0] if size_counts else 9.5
             avg_leading = round(sum(line_spacings) / len(line_spacings), 1) if line_spacings else 11.5
+
+            # Detect title font size (largest font size on page 1)
+            p1_spans = [sp for sp in all_spans if sp.get("size", 0) > top_size + 2.0]
+            title_font_size = max([sp["size"] for sp in p1_spans]) if p1_spans else 16.0
+
+            # Detect heading font size (intermediate bold font size)
+            h_spans = [sp for sp in all_spans if top_size + 0.5 <= sp.get("size", 0) <= top_size + 3.0]
+            heading_font_size = round(sum(sp["size"] for sp in h_spans)/len(h_spans), 1) if h_spans else 10.0
+
+            # Text alignment: justified vs left
+            text_alignment = "justify"
+            if line_end_diffs and (sum(line_end_diffs) / len(line_end_diffs)) > 15.0:
+                text_alignment = "left"
+
+            # Line spacing multiplier
+            ratio = avg_leading / max(top_size, 1.0)
+            if ratio >= 1.7:
+                line_spacing = "double"
+            elif ratio >= 1.35:
+                line_spacing = "1.5"
+            elif ratio >= 1.12:
+                line_spacing = "1.15"
+            else:
+                line_spacing = "single"
+
+            # Detect required sections (Table of Contents / Section headings)
+            all_text_template = ""
+            for p in doc:
+                all_text_template += p.get_text() + "\n"
+
+            known_sections = [
+                "Abstract", "Keywords", "Introduction", "Related Work", "Literature Review",
+                "Methodology", "Methods", "System Architecture", "Results", "Discussion",
+                "Conclusion", "References"
+            ]
+            found_sections = [sec for sec in known_sections if sec.lower() in all_text_template.lower()]
+            if not found_sections:
+                found_sections = ["Abstract", "Keywords", "Introduction", "Methods", "Results", "Discussion", "Conclusion", "References"]
 
             doc.close()
             specs = {
@@ -179,7 +206,13 @@ class TemplateExtractor:
                 "column_gap_mm": column_gap_mm,
                 "font_family": top_font,
                 "body_font_size_pt": top_size,
+                "title_font_size_pt": round(title_font_size, 1),
+                "heading_font_size_pt": round(heading_font_size, 1),
                 "line_height_pt": avg_leading,
+                "line_spacing": line_spacing,
+                "text_alignment": text_alignment,
+                "running_header": running_header,
+                "required_sections": found_sections,
                 "is_custom_template": True,
             }
 
@@ -523,6 +556,11 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
         font_bold = "hebo"
         font_italic = "heit"
 
+    body_font_sz = float(template_specs.get("body_font_size_pt", 9.5))
+    title_font_sz = float(template_specs.get("title_font_size_pt", 17.0))
+    heading_font_sz = float(template_specs.get("heading_font_size_pt", 10.0))
+    text_align = fitz.TEXT_ALIGN_LEFT if template_specs.get("text_alignment") == "left" else fitz.TEXT_ALIGN_JUSTIFY
+
     # PREPARE DOCUMENT & DUMMY MEASUREMENT HARNESS
     new_doc = fitz.open()
     dummy_doc = fitz.open()
@@ -538,7 +576,7 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
     page1 = new_doc.new_page(width=w, height=h)
 
     # 1. Subtle Academic Running Header
-    header_title = template_specs.get("name") or "Academic Journal Publication"
+    header_title = template_specs.get("running_header") or template_specs.get("name") or "Academic Journal Publication"
     page1.insert_text(
         fitz.Point(left_pt, top_pt - 10),
         header_title.upper(),
@@ -551,7 +589,7 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
     # 2. Academic Title Block
     cur_y = top_pt + 12
     title_rect = fitz.Rect(left_pt, cur_y, w - right_pt, cur_y + 40)
-    page1.insert_textbox(title_rect, title, fontsize=17, fontname=font_bold, align=fitz.TEXT_ALIGN_CENTER)
+    page1.insert_textbox(title_rect, title, fontsize=title_font_sz, fontname=font_bold, align=fitz.TEXT_ALIGN_CENTER)
     cur_y += 42
 
     # 3. Double-Blind Anonymized Author Notice (Academic Standard)
@@ -566,7 +604,7 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
     clean_abs = abstract_text
     if not clean_abs.lower().startswith("abstract"):
         clean_abs = "Abstract—" + clean_abs
-    page1.insert_textbox(abs_rect, clean_abs, fontsize=9.0, fontname=font_body, align=fitz.TEXT_ALIGN_JUSTIFY)
+    page1.insert_textbox(abs_rect, clean_abs, fontsize=body_font_sz, fontname=font_body, align=text_align)
     cur_y += 46
 
     # 5. MULTI-PAGE COLUMN FLOW ENGINE
@@ -599,13 +637,13 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
         if raw_item == "__SECTION_REFERENCES__":
             is_header = True
             item_text = "REFERENCES"
-            item_font_sz = 9.5
+            item_font_sz = heading_font_sz
             item_font = font_bold
             spacing = 8.0
         elif raw_item.startswith(("I. ", "II. ", "III. ", "IV. ", "V. ", "VI. ", "VII. ", "1. ", "2. ", "3. ", "4. ", "5. ")):
             is_header = True
             item_text = raw_item
-            item_font_sz = 10.0
+            item_font_sz = heading_font_sz
             item_font = font_bold
             spacing = 7.0
         else:
@@ -635,7 +673,7 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
             continue
 
         # Split or fit item
-        fit_part, rem_part = split_text_to_fit(dummy_page, item_text, col_width, avail_h, fontsize=item_font_sz)
+        fit_part, rem_part = split_text_to_fit(dummy_page, item_text, col_width, avail_h, fontsize=item_font_sz, fontname=item_font)
         if fit_part:
             r = fitz.Rect(col_x, col_cur_y, col_x + col_width, bottom_limit)
             unused = current_page.insert_textbox(
@@ -643,7 +681,7 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
                 fit_part,
                 fontsize=item_font_sz,
                 fontname=item_font,
-                align=fitz.TEXT_ALIGN_LEFT if is_header else fitz.TEXT_ALIGN_JUSTIFY
+                align=fitz.TEXT_ALIGN_LEFT if is_header else text_align
             )
             used_h = (bottom_limit - col_cur_y) - unused
             col_cur_y += used_h + spacing
