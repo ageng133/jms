@@ -20,6 +20,18 @@ import type {
   User,
 } from "@/types/jms";
 
+export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined" && window.location.hostname) {
+    if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes("localhost")) {
+      return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
+    }
+    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      return `${window.location.protocol}//${window.location.hostname}:8080/api/v1`;
+    }
+  }
+  return (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1").replace(/\/+$/, "");
+}
+
 export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1").replace(/\/+$/, "");
 
 const TOKEN_KEY = "jms_token";
@@ -201,7 +213,7 @@ async function parseEnvelope<T>(res: Response): Promise<T> {
 }
 
 async function fetchPublic<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...(init.headers || {}) },
   });
@@ -215,7 +227,7 @@ async function fetchWithAuth<T>(path: string, init: RequestInit = {}): Promise<T
     throw new ApiError("Authentication required. Please sign in with Google to continue.", 401, "UNAUTHORIZED");
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -315,7 +327,7 @@ export async function uploadDirectToS3(uploadUrl: string, file: File): Promise<v
   };
 
   const token = getStoredToken();
-  if (token && isSameOrigin(uploadUrl, API_BASE_URL)) {
+  if (token && isSameOrigin(uploadUrl, getApiBaseUrl())) {
     headers.Authorization = `Bearer ${token}`;
   }
 
@@ -430,7 +442,7 @@ export function getFileDownloadUrl(key: string): string {
   const params = new URLSearchParams({ key });
   const token = getStoredToken();
   if (token) params.set("token", token);
-  return `${API_BASE_URL}/files/download?${params.toString()}`;
+  return `${getApiBaseUrl()}/files/download?${params.toString()}`;
 }
 
 // ---------------------------------------------------------------------------

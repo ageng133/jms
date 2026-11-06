@@ -16,10 +16,6 @@ services:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/db/migrations/000001_init_schema.up.sql:/docker-entrypoint-initdb.d/001_init_schema.sql:ro
-      - ./backend/db/migrations/000002_add_template_support.up.sql:/docker-entrypoint-initdb.d/002_add_template_support.sql:ro
-      - ./backend/db/migrations/000003_audit_summary_engine.up.sql:/docker-entrypoint-initdb.d/003_audit_summary_engine.sql:ro
-      - ./backend/db/seeds/001_seed_dev_data.sql:/docker-entrypoint-initdb.d/004_seed_dev_data.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-jms} -d ${DB_NAME:-jms_db}"]
       interval: 5s
@@ -98,3 +94,4 @@ services:
 volumes:
   postgres_data:
   box_storage:
+
