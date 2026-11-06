@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LayoutComparisonViewer } from "@/components/audit/LayoutComparisonViewer";
 import { AICopilotWidget } from "@/components/audit/AICopilotWidget";
-import { TemplateComparisonMatrix } from "@/components/audit/TemplateComparisonMatrix";
+import { TriadComparisonMatrix } from "@/components/audit/TriadComparisonMatrix";
 import { ComplianceCertificateCard } from "@/components/audit/ComplianceCertificateCard";
 
 function humanizeLeakType(type: string): string {
@@ -281,6 +281,9 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
             <LayoutComparisonViewer report={report} />
           )}
 
+          {/* Triad 3-Way Comparison Matrix (Template Target vs Naskah Draft vs Hasil AI) */}
+          <TriadComparisonMatrix report={report} />
+
           {/* Executive Summary Card with Vibrant Accents */}
           <div className="bg-surface-container-low p-6 sm:p-8 rounded-3xl border border-primary/20 shadow-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-primary" />
@@ -449,9 +452,6 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
               )}
             </div>
           )}
-
-          {/* Template-Driven Comparison Matrix (Target Journal Template vs Draft) */}
-          <TemplateComparisonMatrix templateSpecs={report.template_specs} />
 
           {/* Module 1: Geometry & Layout */}
           <div className="bg-surface-container-low rounded-3xl border border-outline-variant shadow-elevation-1 overflow-hidden">

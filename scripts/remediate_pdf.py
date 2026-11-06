@@ -416,22 +416,22 @@ def audit_draft_against_template(draft_doc: fitz.Document, template_specs: Dict[
     passed = (len(violations) == 0 and len(anon_leaks) == 0)
     return passed, violations, anon_leaks, citation_audit
 
-def measure_rendered_text_height(dummy_page: fitz.Page, text: str, width: float, fontsize: float = 9.5) -> float:
+def measure_rendered_text_height(dummy_page: fitz.Page, text: str, width: float, fontsize: float = 9.5, fontname: str = "tiro") -> float:
     """Accurately calculates rendered text box height in points using a sandbox PyMuPDF page."""
     r = fitz.Rect(0, 0, width, 5000.0)
-    res = dummy_page.insert_textbox(r, text, fontsize=fontsize, fontname="helv", align=fitz.TEXT_ALIGN_JUSTIFY)
+    res = dummy_page.insert_textbox(r, text, fontsize=fontsize, fontname=fontname, align=fitz.TEXT_ALIGN_JUSTIFY)
     if res >= 0:
         return 5000.0 - res
     return 5000.0
 
-def split_text_to_fit(dummy_page: fitz.Page, text: str, width: float, max_height: float, fontsize: float = 9.5) -> Tuple[str, str]:
+def split_text_to_fit(dummy_page: fitz.Page, text: str, width: float, max_height: float, fontsize: float = 9.5, fontname: str = "tiro") -> Tuple[str, str]:
     """Splits a body paragraph into a prefix fitting within max_height and the residual text."""
     if max_height <= fontsize * 1.5:
         return "", text
     words = text.split()
     if not words:
         return "", ""
-    if measure_rendered_text_height(dummy_page, text, width, fontsize) <= max_height:
+    if measure_rendered_text_height(dummy_page, text, width, fontsize, fontname) <= max_height:
         return text, ""
     
     low, high, best_mid = 1, len(words), 0
@@ -511,6 +511,18 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
     if not abstract_text:
         abstract_text = "Abstract—This manuscript has been reshaped by Format Kilat to conform strictly with target journal layout geometry."
 
+    # Font family selection: Times-Roman (tiro/tibo/tiit) is standard for IEEE, ACM, Springer, Elsevier.
+    # Base-14 abbreviations in MuPDF: tiro (Times-Roman), tibo (Times-Bold), tiit (Times-Italic),
+    # helv (Helvetica), hebo (Helvetica-Bold), heit (Helvetica-Oblique).
+    font_body = "tiro"
+    font_bold = "tibo"
+    font_italic = "tiit"
+    detected_font = str(template_specs.get("font_family", "")).lower()
+    if "helv" in detected_font or "arial" in detected_font or "sans" in detected_font:
+        font_body = "helv"
+        font_bold = "hebo"
+        font_italic = "heit"
+
     # PREPARE DOCUMENT & DUMMY MEASUREMENT HARNESS
     new_doc = fitz.open()
     dummy_doc = fitz.open()
@@ -525,47 +537,39 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
     # PAGE 1 SETUP
     page1 = new_doc.new_page(width=w, height=h)
 
-    # 1. Page 1 Header Banner
-    banner_rect = fitz.Rect(0, 0, w, 32)
-    page1.draw_rect(banner_rect, color=(0.0, 0.44, 0.89), fill=(0.95, 0.97, 1.0))
-    page1.draw_line(fitz.Point(0, 32), fitz.Point(w, 32), color=(0.0, 0.44, 0.89), width=1)
+    # 1. Subtle Academic Running Header
+    header_title = template_specs.get("name") or "Academic Journal Publication"
     page1.insert_text(
-        fitz.Point(18, 20),
-        "⚡ FORMAT KILAT  |  RESHAPED TO MATCH UPLOADED TEMPLATE SPECIFICATIONS",
-        fontsize=8.5,
-        fontname="helv",
-        color=(0.0, 0.44, 0.89)
+        fitz.Point(left_pt, top_pt - 10),
+        header_title.upper(),
+        fontsize=7.5,
+        fontname=font_italic,
+        color=(0.4, 0.4, 0.4)
     )
-    page1.insert_text(
-        fitz.Point(w - 170, 20),
-        "STATUS: RESHAPED (PASS)",
-        fontsize=8.0,
-        fontname="helv",
-        color=(0.15, 0.68, 0.38)
-    )
-    reshape_logs.append("Applied Format Kilat template compliance header banner")
+    page1.draw_line(fitz.Point(left_pt, top_pt - 6), fitz.Point(w - right_pt, top_pt - 6), color=(0.8, 0.8, 0.8), width=0.5)
 
-    # 2. Title Block
-    cur_y = top_pt + 20
+    # 2. Academic Title Block
+    cur_y = top_pt + 12
     title_rect = fitz.Rect(left_pt, cur_y, w - right_pt, cur_y + 40)
-    page1.insert_textbox(title_rect, title, fontsize=15, fontname="helv", align=fitz.TEXT_ALIGN_CENTER)
-    cur_y += 45
+    page1.insert_textbox(title_rect, title, fontsize=17, fontname=font_bold, align=fitz.TEXT_ALIGN_CENTER)
+    cur_y += 42
 
-    # 3. Double-Blind Anonymized Author Notice
-    anon_rect = fitz.Rect(left_pt, cur_y, w - right_pt, cur_y + 20)
-    page1.insert_textbox(anon_rect, "[ANONYMIZED FOR DOUBLE-BLIND PEER REVIEW — FORMAT KILAT SHIELD]", 
-                         fontsize=8.5, fontname="helv", color=(0.4, 0.4, 0.4), align=fitz.TEXT_ALIGN_CENTER)
+    # 3. Double-Blind Anonymized Author Notice (Academic Standard)
+    anon_rect = fitz.Rect(left_pt, cur_y, w - right_pt, cur_y + 18)
+    page1.insert_textbox(anon_rect, "[Author details omitted for double-blind peer review]", 
+                         fontsize=9.0, fontname=font_italic, color=(0.35, 0.35, 0.35), align=fitz.TEXT_ALIGN_CENTER)
     cur_y += 24
-    reshape_logs.append("Inserted double-blind peer review anonymization banner")
+    reshape_logs.append("Anonymized author details for double-blind peer review compliance")
 
-    # 4. Abstract (Full width across margins)
-    abs_rect = fitz.Rect(left_pt + 15, cur_y, w - right_pt - 15, cur_y + 35)
-    page1.draw_rect(fitz.Rect(left_pt + 10, cur_y - 4, w - right_pt - 10, cur_y + 40), color=(0.9, 0.9, 0.9), width=0.5)
-    page1.insert_textbox(abs_rect, abstract_text, fontsize=8.5, fontname="helv", align=fitz.TEXT_ALIGN_JUSTIFY)
-    cur_y += 50
+    # 4. Abstract Block (Standard Journal Typographic Indent)
+    abs_rect = fitz.Rect(left_pt + 12, cur_y, w - right_pt - 12, cur_y + 38)
+    clean_abs = abstract_text
+    if not clean_abs.lower().startswith("abstract"):
+        clean_abs = "Abstract—" + clean_abs
+    page1.insert_textbox(abs_rect, clean_abs, fontsize=9.0, fontname=font_body, align=fitz.TEXT_ALIGN_JUSTIFY)
+    cur_y += 46
 
     # 5. MULTI-PAGE COLUMN FLOW ENGINE
-    # Build stream of items to layout
     items_to_flow = list(cleaned_paragraphs)
     if references_text:
         items_to_flow.append("__SECTION_REFERENCES__")
@@ -574,7 +578,7 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
     current_page_idx = 0
     current_col_idx = 0
     col_cur_y = cur_y
-    bottom_limit = h - bottom_pt - 24
+    bottom_limit = h - bottom_pt - 20
 
     def get_column_x(col_idx: int) -> float:
         if cols == 2:
@@ -584,32 +588,31 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
     def get_column_top_y(page_idx: int) -> float:
         if page_idx == 0:
             return cur_y
-        return top_pt + 18
-
-    # Draw template margin guides on page 1
-    if cols == 2:
-        page1.draw_rect(fitz.Rect(left_pt, cur_y, left_pt + col_width, bottom_limit), color=(0.2, 0.75, 0.4), width=0.5, dashes="[3 3] 0")
-        page1.draw_rect(fitz.Rect(left_pt + col_width + gap_pt, cur_y, w - right_pt, bottom_limit), color=(0.2, 0.75, 0.4), width=0.5, dashes="[3 3] 0")
-    else:
-        page1.draw_rect(fitz.Rect(left_pt, cur_y, w - right_pt, bottom_limit), color=(0.2, 0.75, 0.4), width=0.5, dashes="[3 3] 0")
+        return top_pt + 14
 
     item_idx = 0
     while item_idx < len(items_to_flow):
         raw_item = items_to_flow[item_idx]
 
-        # Handle References Section Header
+        # Handle References and Major Section Headers
+        is_header = False
         if raw_item == "__SECTION_REFERENCES__":
             is_header = True
-            item_text = "References"
-            item_font_sz = 10.5
-            item_font = "helv"
-            spacing = 10.0
+            item_text = "REFERENCES"
+            item_font_sz = 9.5
+            item_font = font_bold
+            spacing = 8.0
+        elif raw_item.startswith(("I. ", "II. ", "III. ", "IV. ", "V. ", "VI. ", "VII. ", "1. ", "2. ", "3. ", "4. ", "5. ")):
+            is_header = True
+            item_text = raw_item
+            item_font_sz = 10.0
+            item_font = font_bold
+            spacing = 7.0
         else:
-            is_header = False
             item_text = raw_item
             item_font_sz = body_font_sz
-            item_font = "helv"
-            spacing = 7.0
+            item_font = font_body
+            spacing = 6.0
 
         current_page = new_doc[current_page_idx]
         col_x = get_column_x(current_col_idx)
@@ -625,15 +628,9 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
                 current_page_idx += 1
                 current_col_idx = 0
                 new_pg = new_doc.new_page(width=w, height=h)
-                # Stamp Running Header on new page
-                new_pg.draw_line(fitz.Point(left_pt, top_pt + 8), fitz.Point(w - right_pt, top_pt + 8), color=(0.8, 0.8, 0.8), width=0.5)
-                new_pg.insert_text(fitz.Point(left_pt, top_pt + 4), "⚡ FORMAT KILAT | CAMERA-READY CONFORMANCE AUDIT PROOF", fontsize=7.5, color=(0.4, 0.4, 0.4))
-                # Guides
-                if cols == 2:
-                    new_pg.draw_rect(fitz.Rect(left_pt, top_pt + 18, left_pt + col_width, bottom_limit), color=(0.2, 0.75, 0.4), width=0.5, dashes="[3 3] 0")
-                    new_pg.draw_rect(fitz.Rect(left_pt + col_width + gap_pt, top_pt + 18, w - right_pt, bottom_limit), color=(0.2, 0.75, 0.4), width=0.5, dashes="[3 3] 0")
-                else:
-                    new_pg.draw_rect(fitz.Rect(left_pt, top_pt + 18, w - right_pt, bottom_limit), color=(0.2, 0.75, 0.4), width=0.5, dashes="[3 3] 0")
+                # Subtle Running Header on subsequent pages
+                new_pg.insert_text(fitz.Point(left_pt, top_pt - 10), header_title.upper(), fontsize=7.5, fontname=font_italic, color=(0.4, 0.4, 0.4))
+                new_pg.draw_line(fitz.Point(left_pt, top_pt - 6), fitz.Point(w - right_pt, top_pt - 6), color=(0.8, 0.8, 0.8), width=0.5)
                 col_cur_y = get_column_top_y(current_page_idx)
             continue
 
@@ -652,9 +649,7 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
             col_cur_y += used_h + spacing
 
         if rem_part:
-            # Put remaining words back into queue
             items_to_flow[item_idx] = rem_part
-            # Force advance column/page
             if cols == 2 and current_col_idx == 0:
                 current_col_idx = 1
                 col_cur_y = get_column_top_y(current_page_idx)
@@ -662,13 +657,8 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
                 current_page_idx += 1
                 current_col_idx = 0
                 new_pg = new_doc.new_page(width=w, height=h)
-                new_pg.draw_line(fitz.Point(left_pt, top_pt + 8), fitz.Point(w - right_pt, top_pt + 8), color=(0.8, 0.8, 0.8), width=0.5)
-                new_pg.insert_text(fitz.Point(left_pt, top_pt + 4), "⚡ FORMAT KILAT | CAMERA-READY CONFORMANCE AUDIT PROOF", fontsize=7.5, color=(0.4, 0.4, 0.4))
-                if cols == 2:
-                    new_pg.draw_rect(fitz.Rect(left_pt, top_pt + 18, left_pt + col_width, bottom_limit), color=(0.2, 0.75, 0.4), width=0.5, dashes="[3 3] 0")
-                    new_pg.draw_rect(fitz.Rect(left_pt + col_width + gap_pt, top_pt + 18, w - right_pt, bottom_limit), color=(0.2, 0.75, 0.4), width=0.5, dashes="[3 3] 0")
-                else:
-                    new_pg.draw_rect(fitz.Rect(left_pt, top_pt + 18, w - right_pt, bottom_limit), color=(0.2, 0.75, 0.4), width=0.5, dashes="[3 3] 0")
+                new_pg.insert_text(fitz.Point(left_pt, top_pt - 10), header_title.upper(), fontsize=7.5, fontname=font_italic, color=(0.4, 0.4, 0.4))
+                new_pg.draw_line(fitz.Point(left_pt, top_pt - 6), fitz.Point(w - right_pt, top_pt - 6), color=(0.8, 0.8, 0.8), width=0.5)
                 col_cur_y = get_column_top_y(current_page_idx)
         else:
             item_idx += 1
@@ -676,26 +666,20 @@ def reshape_draft_to_template(draft_doc: fitz.Document, template_specs: Dict[str
     total_pages = len(new_doc)
     dummy_doc.close()
 
-    # 6. RUNNING FOOTERS ON ALL PAGES
-    footer_y = h - 14
+    # 6. CLEAN ACADEMIC PAGE NUMBERS IN FOOTER
     for p_idx, p in enumerate(new_doc):
-        p.draw_line(fitz.Point(18, footer_y - 6), fitz.Point(w - 18, footer_y - 6), color=(0.85, 0.85, 0.87), width=0.5)
+        # Standard centered academic page number
         p.insert_text(
-            fitz.Point(18, footer_y),
-            f"Format Kilat (⚡) Autonomous Reshaping Engine  •  Conforming to {template_specs['page_format']} Template  •  Margins: [T:{template_specs['margin_top_mm']}mm, L:{template_specs['margin_left_mm']}mm]",
-            fontsize=7.0,
-            color=(0.55, 0.55, 0.57)
-        )
-        p.insert_text(
-            fitz.Point(w - 180, footer_y),
-            f"Page {p_idx + 1} of {total_pages}  •  CAMERA-READY (PASS)",
-            fontsize=7.0,
-            color=(0.15, 0.68, 0.38)
+            fitz.Point(w / 2.0 - 4, h - bottom_pt + 18),
+            str(p_idx + 1),
+            fontsize=8.5,
+            fontname=font_body,
+            color=(0.3, 0.3, 0.3)
         )
 
     reshape_logs.append(f"Reshaped manuscript across {total_pages} page(s) in template {cols}-column grid ({col_width:.1f}pt width, {gap_pt * PT_TO_MM:.1f}mm gutter)")
-    reshape_logs.append(f"Calibrated typography to {body_font_sz}pt ({template_specs.get('font_family', 'Helvetica')}) conforming to template")
-    reshape_logs.append(f"Stamped synchronized running headers and running footers (Pages 1 to {total_pages})")
+    reshape_logs.append(f"Calibrated typography to {body_font_sz}pt ({font_body}) conforming to template")
+    reshape_logs.append(f"Stamped synchronized academic running headers and page numbers (1 to {total_pages})")
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     new_doc.save(output_path, garbage=4, deflate=True)

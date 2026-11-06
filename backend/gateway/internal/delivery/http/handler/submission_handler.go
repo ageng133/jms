@@ -275,6 +275,11 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 	if file, ferr := h.usecase.GetManuscriptFile(c.Request.Context(), audit.ManuscriptFileID); ferr == nil && file != nil {
 		payload["original_pdf_s3_key"] = file.S3Key
 	}
+	if audit.TemplateFileID != nil {
+		if tfile, terr := h.usecase.GetManuscriptFile(c.Request.Context(), *audit.TemplateFileID); terr == nil && tfile != nil {
+			payload["template_pdf_s3_key"] = tfile.S3Key
+		}
+	}
 
 	if len(audit.TemplateSpecs) > 0 {
 		var specs struct {

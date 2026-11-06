@@ -141,6 +141,8 @@ export interface PreSubmissionAuditReport {
   template_specs?: TemplateSpecs;
   annotated_pdf_s3_key?: string;
   original_pdf_s3_key?: string;
+  template_pdf_s3_key?: string;
+  template_preset?: string;
   ai_engine?: string;
   ai_mode?: "LIVE_GEMINI_AI" | "PYMUPDF_WORKER";
   fixed_layout?: FixedLayoutRemediation;
