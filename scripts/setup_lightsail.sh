@@ -40,6 +40,17 @@ echo -e "\n${BOLD}[2/4] Starting Docker Daemon...${NC}"
 sudo systemctl enable --now docker
 sudo usermod -aG docker "$USER" || true
 
+# Stop host-level nginx if running to free ports 80 and 443 for Docker
+if systemctl is-active --quiet nginx; then
+  echo -e "${YELLOW}Stopping host-level nginx to free ports 80/443 for Format Kilat Docker stack...${NC}"
+  sudo systemctl stop nginx
+  sudo systemctl disable nginx || true
+fi
+if systemctl is-active --quiet httpd; then
+  sudo systemctl stop httpd
+  sudo systemctl disable httpd || true
+fi
+
 # 3. Clone or update Format Kilat repository
 echo -e "\n${BOLD}[3/4] Fetching Format Kilat Production Stack...${NC}"
 TARGET_DIR="${HOME}/jms"
@@ -56,17 +67,16 @@ echo -e "\n${BOLD}[4/4] Pulling Docker Hub Images and Launching Microservices...
 sudo docker compose -f docker-compose.prod.yml pull
 sudo docker compose -f docker-compose.prod.yml up -d
 
-# Get public IP if accessible
-PUBLIC_IP=$(curl -s http://checkip.amazonaws.com || curl -s https://ifconfig.me || echo "YOUR-LIGHTSAIL-IP")
+DEFAULT_DOMAIN="formatkilat.caberawit.my.id"
 
 echo -e "\n${GREEN}${BOLD}======================================================================${NC}"
 echo -e "${GREEN}${BOLD}🎉 FORMAT KILAT PRODUCTION STACK IS LIVE!${NC}"
-echo -e "   • Web UI: ${CYAN}http://${PUBLIC_IP}${NC} (Nginx Port 80)"
-echo -e "   • API Endpoint: ${CYAN}http://${PUBLIC_IP}/api/v1${NC}"
+echo -e "   • Web UI (HTTP): ${CYAN}http://${DEFAULT_DOMAIN}${NC} (Port 80)"
+echo -e "   • API Endpoint: ${CYAN}http://${DEFAULT_DOMAIN}/api/v1${NC}"
 echo -e "   • Demo Author Login: author@jms.org / password123"
 echo -e ""
-echo -e "🔒 ${BOLD}To Activate SSL/HTTPS via Certbot:${NC}"
-echo -e "   1. Point your domain (e.g. journal.myuni.edu) DNS A-Record to: ${BOLD}${PUBLIC_IP}${NC}"
-echo -e "   2. Run:"
-echo -e "      ${CYAN}cd ~/jms && sudo ./scripts/init_ssl.sh <YOUR_DOMAIN> <YOUR_EMAIL>${NC}"
+echo -e "🔒 ${BOLD}Activate SSL / HTTPS via Let's Encrypt Certbot:${NC}"
+echo -e "   Run the following command now:"
+echo -e "   ${CYAN}cd ~/jms && sudo ./scripts/init_ssl.sh ${DEFAULT_DOMAIN} admin@caberawit.my.id${NC}"
 echo -e "${GREEN}${BOLD}======================================================================${NC}"
+

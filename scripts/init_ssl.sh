@@ -13,24 +13,30 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-if [ "$#" -lt 2 ]; then
-  echo -e "${RED}${BOLD}Error: Missing required arguments.${NC}"
-  echo -e "Usage: sudo $0 <DOMAIN> <EMAIL> [--staging]"
-  echo -e "Example: sudo $0 journal.myuni.edu editor@myuni.edu"
-  exit 1
-fi
-
-DOMAIN="$1"
-EMAIL="$2"
+DOMAIN="${1:-formatkilat.caberawit.my.id}"
+EMAIL="${2:-admin@caberawit.my.id}"
 STAGING=0
 
-if [ "${3:-}" == "--staging" ]; then
+if [ "${3:-}" == "--staging" ] || [ "${1:-}" == "--staging" ] || [ "${2:-}" == "--staging" ]; then
   STAGING=1
   echo -e "${YELLOW}⚠️ Running in Let's Encrypt Staging mode (test certificates)...${NC}"
 fi
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPO_DIR}"
+
+# Free host port 80/443 if host-level webserver is running
+if command -v systemctl >/dev/null 2>&1; then
+  if systemctl is-active --quiet nginx; then
+    echo -e "${YELLOW}Stopping host-level nginx to free ports 80/443 for Docker...${NC}"
+    systemctl stop nginx
+    systemctl disable nginx || true
+  fi
+  if systemctl is-active --quiet httpd; then
+    systemctl stop httpd
+    systemctl disable httpd || true
+  fi
+fi
 
 echo -e "${CYAN}${BOLD}======================================================================${NC}"
 echo -e "${CYAN}${BOLD}⚡ Format Kilat SSL Engine: Provisioning HTTPS for ${DOMAIN}${NC}"
@@ -97,3 +103,4 @@ echo -e "   • Public URL: ${CYAN}https://${DOMAIN}${NC}"
 echo -e "   • API Endpoint: ${CYAN}https://${DOMAIN}/api/v1${NC}"
 echo -e "   • Auto-renewal: Managed automatically by format_kilat_certbot (every 12h)"
 echo -e "${GREEN}${BOLD}======================================================================${NC}"
+
