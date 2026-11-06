@@ -122,11 +122,12 @@ type JWTConfig struct {
 }
 
 func LoadConfig() (*Config, error) {
-	// Load .env files if present (current, parent, grandparent dirs, and repo path).
-	// Overload ensures latest configured credentials in .env take effect.
-	for _, envFile := range []string{".env", "../.env", "../../.env", "/Users/mac/Documents/Repositories/jms-uts/backend/.env", "/Users/mac/Documents/Repositories/jms-uts/backend/gateway/.env"} {
-		_ = godotenv.Overload(envFile)
-	}
+	// Load .env files if present (current, parent, grandparent dirs).
+	// godotenv.Load never replaces a variable that is already set, so real
+	// environment variables (docker-compose, shell, CI) win over .env, and
+	// the nearest .env wins over the ones further up.
+	for _, envFile := range []string{".env", "../.env", "../../.env"} {
+		_ = godotenv.Load(envFile)
 	}
 
 	expiryHours, err := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "72"))
