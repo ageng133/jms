@@ -2,111 +2,194 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Material Design 3 color tokens (seed #6366f1, indigo).
+ * Values are RGB channels so Tailwind opacity modifiers work: bg-primary/10.
+ * Light is the default; `.dark` on <html> switches to the dark scheme.
+ */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --md-primary: 73 75 214; /* #494bd6 */
+  --md-on-primary: 255 255 255; /* #ffffff */
+  --md-primary-container: 225 224 255; /* #e1e0ff */
+  --md-on-primary-container: 47 46 190; /* #2f2ebe */
+  --md-secondary: 93 92 114; /* #5d5c72 */
+  --md-on-secondary: 255 255 255; /* #ffffff */
+  --md-secondary-container: 226 224 249; /* #e2e0f9 */
+  --md-on-secondary-container: 69 69 89; /* #454559 */
+  --md-tertiary: 109 59 215; /* #6d3bd7 */
+  --md-on-tertiary: 255 255 255; /* #ffffff */
+  --md-tertiary-container: 233 221 255; /* #e9ddff */
+  --md-on-tertiary-container: 85 22 190; /* #5516be */
+  --md-error: 186 26 26; /* #ba1a1a */
+  --md-on-error: 255 255 255; /* #ffffff */
+  --md-error-container: 255 218 214; /* #ffdad6 */
+  --md-on-error-container: 147 0 10; /* #93000a */
+  --md-success: 0 108 73; /* #006c49 */
+  --md-on-success: 255 255 255; /* #ffffff */
+  --md-success-container: 190 255 219; /* #beffdb */
+  --md-on-success-container: 0 82 54; /* #005236 */
+  --md-warning: 133 83 0; /* #855300 */
+  --md-on-warning: 255 255 255; /* #ffffff */
+  --md-warning-container: 255 221 184; /* #ffddb8 */
+  --md-on-warning-container: 101 62 0; /* #653e00 */
+  --md-surface: 252 248 255; /* #fcf8ff */
+  --md-surface-dim: 220 217 224; /* #dcd9e0 */
+  --md-surface-bright: 252 248 255; /* #fcf8ff */
+  --md-surface-container-lowest: 255 255 255; /* #ffffff */
+  --md-surface-container-low: 246 242 250; /* #f6f2fa */
+  --md-surface-container: 240 236 244; /* #f0ecf4 */
+  --md-surface-container-high: 234 231 239; /* #eae7ef */
+  --md-surface-container-highest: 228 225 233; /* #e4e1e9 */
+  --md-on-surface: 27 27 33; /* #1b1b21 */
+  --md-on-surface-variant: 70 70 79; /* #46464f */
+  --md-outline: 119 118 128; /* #777680 */
+  --md-outline-variant: 200 197 208; /* #c8c5d0 */
+  --md-inverse-surface: 48 48 54; /* #303036 */
+  --md-inverse-on-surface: 243 239 247; /* #f3eff7 */
+  --md-inverse-primary: 192 193 255; /* #c0c1ff */
+  --md-scrim: 0 0 0; /* #000000 */
+  --md-shadow: 0 0 0; /* #000000 */
+  color-scheme: light;
 }
 
-body {
-  color: var(--foreground);
-  background-color: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.011em;
+.dark {
+  --md-primary: 192 193 255; /* #c0c1ff */
+  --md-on-primary: 16 0 169; /* #1000a9 */
+  --md-primary-container: 47 46 190; /* #2f2ebe */
+  --md-on-primary-container: 225 224 255; /* #e1e0ff */
+  --md-secondary: 198 196 221; /* #c6c4dd */
+  --md-on-secondary: 46 47 66; /* #2e2f42 */
+  --md-secondary-container: 69 69 89; /* #454559 */
+  --md-on-secondary-container: 226 224 249; /* #e2e0f9 */
+  --md-tertiary: 208 188 255; /* #d0bcff */
+  --md-on-tertiary: 60 0 145; /* #3c0091 */
+  --md-tertiary-container: 85 22 190; /* #5516be */
+  --md-on-tertiary-container: 233 221 255; /* #e9ddff */
+  --md-error: 255 180 171; /* #ffb4ab */
+  --md-on-error: 105 0 5; /* #690005 */
+  --md-error-container: 147 0 10; /* #93000a */
+  --md-on-error-container: 255 218 214; /* #ffdad6 */
+  --md-success: 78 222 163; /* #4edea3 */
+  --md-on-success: 0 56 36; /* #003824 */
+  --md-success-container: 0 82 54; /* #005236 */
+  --md-on-success-container: 111 251 190; /* #6ffbbe */
+  --md-warning: 255 185 95; /* #ffb95f */
+  --md-on-warning: 71 42 0; /* #472a00 */
+  --md-warning-container: 101 62 0; /* #653e00 */
+  --md-on-warning-container: 255 221 184; /* #ffddb8 */
+  --md-surface: 19 19 24; /* #131318 */
+  --md-surface-dim: 19 19 24; /* #131318 */
+  --md-surface-bright: 57 56 63; /* #39383f */
+  --md-surface-container-lowest: 14 14 19; /* #0e0e13 */
+  --md-surface-container-low: 27 27 33; /* #1b1b21 */
+  --md-surface-container: 31 31 37; /* #1f1f25 */
+  --md-surface-container-high: 42 41 47; /* #2a292f */
+  --md-surface-container-highest: 53 52 58; /* #35343a */
+  --md-on-surface: 228 225 233; /* #e4e1e9 */
+  --md-on-surface-variant: 200 197 208; /* #c8c5d0 */
+  --md-outline: 145 143 154; /* #918f9a */
+  --md-outline-variant: 70 70 79; /* #46464f */
+  --md-inverse-surface: 228 225 233; /* #e4e1e9 */
+  --md-inverse-on-surface: 48 48 54; /* #303036 */
+  --md-inverse-primary: 73 75 214; /* #494bd6 */
+  --md-scrim: 0 0 0; /* #000000 */
+  --md-shadow: 0 0 0; /* #000000 */
+  color-scheme: dark;
 }
 
-/* Custom Gradient Text Styles */
+@layer base {
+  body {
+    @apply bg-surface text-on-surface;
+    font-family: var(--font-roboto), "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    @apply bg-primary text-on-primary;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--md-primary));
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /*
+   * M3 state layer: an overlay in the content color at 8% (hover),
+   * 10% (focus / pressed). Put it on any interactive element that sets
+   * its own text color; the overlay uses currentColor.
+   */
+  .state-layer {
+    position: relative;
+    isolation: isolate;
+  }
+  .state-layer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 150ms cubic-bezier(0.2, 0, 0, 1);
+    z-index: -1;
+  }
+  .state-layer:hover::before {
+    opacity: 0.08;
+  }
+  .state-layer:focus-visible::before,
+  .state-layer:active::before {
+    opacity: 0.1;
+  }
+  .state-layer:disabled::before {
+    opacity: 0;
+  }
+
+  /* Simple enter animations (used as `animate-in fade-in` in markup). */
+  .animate-in {
+    animation: md-fade-in 200ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+  .slide-in-from-top {
+    animation-name: md-slide-down;
+  }
+}
+
+@keyframes md-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes md-slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Landing page brand gradients (allowed on marketing surfaces only). */
 .gradient-text-aurora {
   background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-
-.gradient-text-emerald {
-  background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+.dark .gradient-text-aurora {
+  background: linear-gradient(135deg, #a5b4fc 0%, #d8b4fe 50%, #f9a8d4 100%);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.gradient-text-amber {
-  background: linear-gradient(135deg, #f59e0b 0%, #f43f5e 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.gradient-text-cyan {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Glassmorphic Colorful Cards */
-.zilenial-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.05), 0 2px 8px -1px rgba(0, 0, 0, 0.03);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.zilenial-card:hover {
-  box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
-}
-
-/* Vibrant Academic Level Badges */
-.badge-s1 {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #059669;
-}
-
-.badge-s2 {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  color: #4f46e5;
-}
-
-.badge-s3 {
-  background: linear-gradient(135deg, rgba(217, 70, 239, 0.12) 0%, rgba(236, 72, 153, 0.12) 100%);
-  border: 1px solid rgba(217, 70, 239, 0.3);
-  color: #c026d3;
-}
-
-.badge-lecturer {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(249, 115, 22, 0.12) 100%);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  color: #d97706;
-}
-
-/* Neon Pulse Indicator */
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(1.15);
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Smooth Colorful Scrollbar */
+/* Scrollbar follows the active scheme. */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: rgb(var(--md-surface-container));
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgb(var(--md-outline-variant));
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #818cf8;
+  background: rgb(var(--md-outline));
 }

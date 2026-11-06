@@ -55,8 +55,8 @@ export default function ManuscriptDetailPage({
   if (authLoading) {
     return (
       <div className="py-24 text-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0071e3] mx-auto mb-3" />
-        <p className="text-xs text-[#86868b]">Checking authorization status...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+        <p className="text-xs text-on-surface-variant">Checking authorization status...</p>
       </div>
     );
   }
@@ -75,20 +75,20 @@ export default function ManuscriptDetailPage({
     <div className="max-w-4xl mx-auto space-y-6">
       <Link
         href="/admin"
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#86868b] hover:text-[#1d1d1f] transition"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-on-surface-variant hover:text-on-surface transition"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         Back to Dashboard
       </Link>
 
       {loading ? (
-        <div className="p-16 text-center bg-white rounded-3xl border border-black/[0.06] shadow-apple-card space-y-2">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#0071e3]" />
-          <p className="text-xs text-[#86868b]">Loading manuscript details...</p>
+        <div className="p-16 text-center bg-surface-container-low rounded-3xl border border-outline-variant shadow-elevation-1 space-y-2">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+          <p className="text-xs text-on-surface-variant">Loading manuscript details...</p>
         </div>
       ) : !manuscript ? (
-        <div className="p-16 text-center bg-white rounded-3xl border border-dashed border-black/[0.12] space-y-3">
-          <p className="text-sm font-semibold text-[#1d1d1f]">Manuscript not found</p>
+        <div className="p-16 text-center bg-surface-container-low rounded-3xl border border-dashed border-outline-variant space-y-3">
+          <p className="text-sm font-semibold text-on-surface">Manuscript not found</p>
           <Link href="/admin">
             <Button variant="outline" size="sm" className="rounded-full text-xs">
               Return to Submissions
@@ -97,13 +97,13 @@ export default function ManuscriptDetailPage({
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-black/[0.06] shadow-apple-card space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/[0.06] pb-4">
+          <div className="bg-surface-container-low rounded-3xl p-6 sm:p-8 border border-outline-variant shadow-elevation-1 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant pb-4">
               <div className="flex items-center gap-2">
                 <Badge variant="default" className="text-[11px]">
                   {manuscript.status}
                 </Badge>
-                <span className="text-xs text-[#86868b] font-mono">
+                <span className="text-xs text-on-surface-variant font-mono">
                   ID: {manuscript.id}
                 </span>
               </div>
@@ -115,7 +115,7 @@ export default function ManuscriptDetailPage({
                     : `/submissions/${manuscript.id}/audit`
                 }
               >
-                <Button className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full shadow-xs gap-1.5">
+                <Button className="bg-primary hover:bg-primary text-on-primary text-xs font-medium rounded-full shadow-xs gap-1.5">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Inspect Audit Report</span>
                 </Button>
@@ -123,12 +123,12 @@ export default function ManuscriptDetailPage({
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#1d1d1f] tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-on-surface tracking-tight">
                 {manuscript.title}
               </h1>
-              <div className="flex flex-wrap items-center gap-4 text-xs text-[#86868b]">
+              <div className="flex flex-wrap items-center gap-4 text-xs text-on-surface-variant">
                 <span className="flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#0071e3]" />
+                  <User className="w-3.5 h-3.5 text-primary" />
                   {manuscript.author?.full_name || "Author"} &bull; {manuscript.author?.affiliation || "UTS"}
                 </span>
                 <span className="flex items-center gap-1.5">
@@ -139,23 +139,23 @@ export default function ManuscriptDetailPage({
             </div>
 
             <div className="space-y-1.5 pt-2">
-              <h2 className="text-xs font-semibold text-[#86868b] uppercase tracking-wider">
+              <h2 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
                 Abstract
               </h2>
-              <p className="text-xs sm:text-sm text-[#1d1d1f] leading-relaxed bg-[#f5f5f7] p-4 rounded-2xl border border-black/[0.04]">
+              <p className="text-xs sm:text-sm text-on-surface leading-relaxed bg-surface-container p-4 rounded-2xl border border-outline-variant">
                 {manuscript.abstract}
               </p>
             </div>
 
             <div className="space-y-1.5 pt-1">
-              <h2 className="text-xs font-semibold text-[#86868b] uppercase tracking-wider">
+              <h2 className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
                 Keywords
               </h2>
               <div className="flex flex-wrap gap-1.5">
                 {manuscript.keywords.map((kw, i) => (
                   <span
                     key={i}
-                    className="text-xs bg-black/[0.05] text-[#1d1d1f] px-3 py-1 rounded-full font-medium"
+                    className="text-xs bg-on-surface/[0.05] text-on-surface px-3 py-1 rounded-full font-medium"
                   >
                     {kw}
                   </span>
@@ -165,10 +165,10 @@ export default function ManuscriptDetailPage({
           </div>
 
           {/* Files List Card */}
-          <Card className="rounded-3xl border border-black/[0.06] shadow-apple-card">
-            <CardHeader className="border-b border-black/[0.06] pb-3">
-              <CardTitle className="text-base text-[#1d1d1f]">Associated Files &amp; Storage</CardTitle>
-              <CardDescription className="text-xs text-[#86868b]">
+          <Card className="rounded-3xl border border-outline-variant shadow-elevation-1">
+            <CardHeader className="border-b border-outline-variant pb-3">
+              <CardTitle className="text-base text-on-surface">Associated Files &amp; Storage</CardTitle>
+              <CardDescription className="text-xs text-on-surface-variant">
                 S3 / Box cloud files attached to this manuscript submission.
               </CardDescription>
             </CardHeader>
@@ -178,15 +178,15 @@ export default function ManuscriptDetailPage({
                   {manuscript.files.map((f) => (
                     <div
                       key={f.id}
-                      className="p-3.5 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] flex items-center justify-between gap-3 text-xs"
+                      className="p-3.5 rounded-2xl bg-surface-container border border-outline-variant flex items-center justify-between gap-3 text-xs"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-[#1d1d1f] truncate">{f.original_filename}</p>
-                          <p className="text-[11px] text-[#86868b] font-mono">
+                          <p className="font-semibold text-on-surface truncate">{f.original_filename}</p>
+                          <p className="text-[11px] text-on-surface-variant font-mono">
                             Role: {f.file_role} &bull; {(f.file_size_bytes / 1024).toFixed(1)} KB
                           </p>
                         </div>
@@ -198,7 +198,7 @@ export default function ManuscriptDetailPage({
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-[#86868b]">No file attachments registered.</p>
+                <p className="text-xs text-on-surface-variant">No file attachments registered.</p>
               )}
             </CardContent>
           </Card>

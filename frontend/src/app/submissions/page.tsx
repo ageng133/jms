@@ -48,8 +48,8 @@ export default function SubmissionsPage() {
   if (authLoading) {
     return (
       <div className="py-24 text-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0071e3] mx-auto mb-3" />
-        <p className="text-xs text-[#86868b]">Checking authorization status...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+        <p className="text-xs text-on-surface-variant">Checking authorization status...</p>
       </div>
     );
   }
@@ -68,11 +68,11 @@ export default function SubmissionsPage() {
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#1d1d1f] tracking-tight">Manuscript Submissions</h1>
-          <p className="text-xs sm:text-sm text-[#86868b]">Track and inspect automated pre-submission compliance reports</p>
+          <h1 className="text-2xl font-bold text-on-surface tracking-tight">Manuscript Submissions</h1>
+          <p className="text-xs sm:text-sm text-on-surface-variant">Track and inspect automated pre-submission compliance reports</p>
         </div>
         <Link href="/submissions/new">
-          <Button className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-xs rounded-full gap-1.5 shadow-xs h-9 px-4 active:scale-[0.98] transition-all">
+          <Button className="bg-primary hover:bg-primary text-on-primary font-medium text-xs rounded-full gap-1.5 shadow-xs h-9 px-4 active:scale-[0.98] transition-all">
             <Plus className="w-4 h-4" />
             <span>Submit Manuscript</span>
           </Button>
@@ -80,23 +80,23 @@ export default function SubmissionsPage() {
       </div>
 
       {loading && (
-        <div className="p-16 text-center text-[#86868b] bg-white rounded-3xl border border-black/[0.06] shadow-apple-card space-y-2">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#0071e3]" />
+        <div className="p-16 text-center text-on-surface-variant bg-surface-container-low rounded-3xl border border-outline-variant shadow-elevation-1 space-y-2">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
           <p className="text-xs">Loading submissions...</p>
         </div>
       )}
 
       {error && (
-        <div className="p-4 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs">
+        <div className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-xs">
           {error}
         </div>
       )}
 
       {!loading && manuscripts.length === 0 && (
-        <div className="p-16 text-center bg-white rounded-3xl border border-dashed border-black/[0.12] space-y-3">
-          <p className="text-[#86868b] text-sm font-medium">No manuscripts found.</p>
+        <div className="p-16 text-center bg-surface-container-low rounded-3xl border border-dashed border-outline-variant space-y-3">
+          <p className="text-on-surface-variant text-sm font-medium">No manuscripts found.</p>
           <Link href="/submissions/new">
-            <Button variant="outline" size="sm" className="rounded-full text-xs text-[#0071e3]">
+            <Button variant="outline" size="sm" className="rounded-full text-xs text-primary">
               Create your first submission &rarr;
             </Button>
           </Link>
@@ -112,7 +112,7 @@ export default function SubmissionsPage() {
           return (
             <div
               key={m.id}
-              className="bg-white p-5 sm:p-6 rounded-2xl border border-black/[0.06] shadow-apple-card hover:shadow-apple-hover transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+              className="bg-surface-container-low p-5 sm:p-6 rounded-2xl border border-outline-variant shadow-elevation-1 hover:shadow-elevation-2 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
             >
               <div className="space-y-2 max-w-2xl min-w-0">
                 <div className="flex items-center gap-2.5">
@@ -120,21 +120,21 @@ export default function SubmissionsPage() {
                     <StatusIcon className="w-3 h-3" />
                     <span>{statusInfo.label}</span>
                   </Badge>
-                  <span className="text-[11px] text-[#86868b] font-mono">
+                  <span className="text-[11px] text-on-surface-variant font-mono">
                     ID: {m.id.slice(0, 8)}...
                   </span>
                 </div>
-                <h2 className="text-base sm:text-lg font-bold text-[#1d1d1f] leading-snug">
+                <h2 className="text-base sm:text-lg font-bold text-on-surface leading-snug">
                   {m.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-[#86868b] line-clamp-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-on-surface-variant line-clamp-2 leading-relaxed">
                   {m.abstract}
                 </p>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {m.keywords.map((kw, idx) => (
                     <span
                       key={idx}
-                      className="text-[11px] bg-black/[0.04] text-[#1d1d1f] px-2.5 py-0.5 rounded-full font-medium"
+                      className="text-[11px] bg-on-surface/[0.04] text-on-surface px-2.5 py-0.5 rounded-full font-medium"
                     >
                       {kw}
                     </span>
@@ -151,9 +151,9 @@ export default function SubmissionsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full text-xs rounded-full gap-1.5 border-black/[0.12] hover:bg-black/[0.04]"
+                      className="w-full text-xs rounded-full gap-1.5 border-outline-variant hover:bg-on-surface/[0.04]"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-[#0071e3]" />
+                      <Sparkles className="w-3.5 h-3.5 text-primary" />
                       <span>View AI Report</span>
                     </Button>
                   </Link>
@@ -162,7 +162,7 @@ export default function SubmissionsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full text-xs rounded-full hover:bg-black/[0.04]"
+                    className="w-full text-xs rounded-full hover:bg-on-surface/[0.04]"
                   >
                     Details
                   </Button>

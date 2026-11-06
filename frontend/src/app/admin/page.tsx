@@ -39,6 +39,7 @@ import {
   getLatestAudit,
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { SystemStatusPanel } from "@/components/SystemStatusPanel";
 import { AuthGateCard } from "@/components/AuthGateCard";
 import { TemplatePresetSelect, useTemplatePresets } from "@/components/TemplatePresetSelect";
@@ -357,16 +358,17 @@ export default function AdminPortalPage() {
   // 1. UNAUTHENTICATED STATE GUARD
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0071e3] mb-3" />
-        <p className="text-xs text-slate-500 font-medium">Authenticating UTS session...</p>
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
+        <p className="text-xs text-on-surface-variant font-medium">Authenticating UTS session...</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+      <div className="relative min-h-screen bg-surface flex flex-col items-center justify-center p-4">
+        <ThemeToggle className="absolute right-4 top-4" />
         <AuthGateCard
           title="Admin Dashboard Authentication Required"
           description="Access to manuscript triage, peer review queues, Box storage tickets, and live format audits requires an authenticated UTS Google session."
@@ -379,26 +381,26 @@ export default function AdminPortalPage() {
   // 2. AUTHENTICATED DEDICATED ADMIN SHELL (SIDEBAR + MAIN CANVAS)
   function renderSidebarContent() {
     return (
-      <div className="flex flex-col justify-between h-full bg-white/95">
+      <div className="flex flex-col justify-between h-full">
         <div>
           {/* Workspace Brand Header */}
-          <div className="p-4 sm:p-5 border-b border-black/[0.06] flex items-center justify-between">
+          <div className="p-4 sm:p-5 border-b border-outline-variant flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2.5 group">
-              <span className="w-7 h-7 rounded-lg bg-[#0071e3] flex items-center justify-center text-xs font-bold text-white shadow-xs group-hover:scale-105 transition-transform">
+              <span className="w-9 h-9 rounded-m3-md bg-primary-container text-on-primary-container flex items-center justify-center text-base">
                 ⚡
               </span>
               <div>
-                <div className="text-sm font-semibold tracking-tight text-[#1d1d1f] leading-tight">
+                <div className="text-title-md text-on-surface">
                   Format Kilat
                 </div>
-                <div className="text-[10px] text-[#86868b] font-medium">
+                <div className="text-[10px] text-on-surface-variant font-medium">
                   Workspace &amp; Review Desk
                 </div>
               </div>
             </Link>
             <button
               onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden p-1.5 rounded-lg text-[#86868b] hover:text-[#1d1d1f] hover:bg-black/[0.05]"
+              className="lg:hidden p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-on-surface/[0.05]"
               aria-label="Close Sidebar"
             >
               <X className="w-4 h-4" />
@@ -406,16 +408,16 @@ export default function AdminPortalPage() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="p-3 space-y-1 text-xs font-medium">
+          <nav className="p-3 space-y-1">
             <button
               onClick={() => {
                 setActiveTab("overview");
                 setMobileSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${
+              className={`w-full flex items-center gap-2.5 h-12 px-4 rounded-full text-left text-label-lg state-layer transition-colors ${
                 activeTab === "overview"
-                  ? "bg-black/[0.06] text-[#1d1d1f] font-semibold shadow-2xs"
-                  : "text-[#86868b] hover:bg-black/[0.03] hover:text-[#1d1d1f]"
+                  ? "bg-secondary-container text-on-secondary-container"
+                  : "text-on-surface-variant"
               }`}
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -427,10 +429,10 @@ export default function AdminPortalPage() {
                 setActiveTab("submissions");
                 setMobileSidebarOpen(false);
               }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all ${
+              className={`w-full flex items-center justify-between h-12 px-4 rounded-full text-left text-label-lg state-layer transition-colors ${
                 activeTab === "submissions"
-                  ? "bg-black/[0.06] text-[#1d1d1f] font-semibold shadow-2xs"
-                  : "text-[#86868b] hover:bg-black/[0.03] hover:text-[#1d1d1f]"
+                  ? "bg-secondary-container text-on-secondary-container"
+                  : "text-on-surface-variant"
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -447,13 +449,13 @@ export default function AdminPortalPage() {
                 setActiveTab("new-submission");
                 setMobileSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${
+              className={`w-full flex items-center gap-2.5 h-12 px-4 rounded-full text-left text-label-lg state-layer transition-colors ${
                 activeTab === "new-submission"
-                  ? "bg-black/[0.06] text-[#1d1d1f] font-semibold shadow-2xs"
-                  : "text-[#86868b] hover:bg-black/[0.03] hover:text-[#1d1d1f]"
+                  ? "bg-secondary-container text-on-secondary-container"
+                  : "text-on-surface-variant"
               }`}
             >
-              <Plus className="w-4 h-4 text-[#0071e3]" />
+              <Plus className="w-4 h-4 text-primary" />
               <span>Submit Paper</span>
             </button>
 
@@ -462,10 +464,10 @@ export default function AdminPortalPage() {
                 setActiveTab("templates");
                 setMobileSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${
+              className={`w-full flex items-center gap-2.5 h-12 px-4 rounded-full text-left text-label-lg state-layer transition-colors ${
                 activeTab === "templates"
-                  ? "bg-black/[0.06] text-[#1d1d1f] font-semibold shadow-2xs"
-                  : "text-[#86868b] hover:bg-black/[0.03] hover:text-[#1d1d1f]"
+                  ? "bg-secondary-container text-on-secondary-container"
+                  : "text-on-surface-variant"
               }`}
             >
               <BookOpen className="w-4 h-4" />
@@ -478,19 +480,19 @@ export default function AdminPortalPage() {
         </div>
 
         {/* User Profile Card at Bottom */}
-        <div className="p-3 border-t border-black/[0.06] bg-black/[0.01]">
-          <div className="flex items-center space-x-3 p-2 rounded-xl bg-black/[0.02]">
-            <div className="w-8 h-8 rounded-full bg-[#0071e3] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+        <div className="p-3 border-t border-outline-variant bg-on-surface/[0.01]">
+          <div className="flex items-center space-x-3 p-2 rounded-xl bg-on-surface/[0.02]">
+            <div className="w-8 h-8 rounded-full bg-primary text-on-primary font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
               {user?.full_name?.charAt(0) || "U"}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold text-[#1d1d1f] truncate">
+              <div className="text-xs font-semibold text-on-surface truncate">
                 {user?.full_name || "User"}
               </div>
-              <div className="text-[10px] text-[#86868b] truncate flex items-center gap-1">
+              <div className="text-[10px] text-on-surface-variant truncate flex items-center gap-1">
                 <span>{user?.role === "ADMIN" ? "Managing Editor" : "Author"}</span>
-                <span className="text-slate-300">&bull;</span>
-                <span className="text-[#0071e3] font-medium">Google SSO</span>
+                <span className="text-outline-variant">&bull;</span>
+                <span className="text-primary font-medium">Google SSO</span>
               </div>
             </div>
           </div>
@@ -502,14 +504,14 @@ export default function AdminPortalPage() {
                   user?.role === "ADMIN" ? "AUTHOR" : "ADMIN"
                 )
               }
-              className="text-[#0071e3] hover:underline font-medium"
+              className="text-primary hover:underline font-medium"
             >
               Switch to {user?.role === "ADMIN" ? "Author" : "Editor"}
             </button>
 
             <button
               onClick={handleSignOut}
-              className="text-[#86868b] hover:text-[#ff3b30] font-medium flex items-center gap-1 transition-colors"
+              className="text-on-surface-variant hover:text-error font-medium flex items-center gap-1 transition-colors"
             >
               <LogOut className="w-3 h-3" />
               Sign Out
@@ -521,17 +523,17 @@ export default function AdminPortalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex text-[#1d1d1f]">
+    <div className="min-h-screen bg-surface flex text-on-surface">
       {/* SUCCESS TOAST */}
       {successToast && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-[#34c759] text-white px-4 py-3 shadow-lg flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-bottom">
+        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-success text-on-success px-4 py-3 shadow-lg flex items-center gap-2 text-xs font-semibold animate-in slide-in-from-bottom">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{successToast}</span>
         </div>
       )}
 
       {/* DESKTOP SIDEBAR */}
-      <aside className="hidden lg:flex w-64 bg-white/80 backdrop-blur-xl border-r border-black/[0.06] flex-col justify-between shrink-0 h-screen sticky top-0 shadow-xs">
+      <aside className="hidden lg:flex w-72 bg-surface-container-low flex-col justify-between shrink-0 h-screen sticky top-0">
         {renderSidebarContent()}
       </aside>
 
@@ -539,10 +541,10 @@ export default function AdminPortalPage() {
       {mobileSidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-black/30 backdrop-blur-xs transition-opacity animate-in fade-in"
+            className="fixed inset-0 bg-scrim/[0.32] transition-opacity animate-in fade-in"
             onClick={() => setMobileSidebarOpen(false)}
           />
-          <aside className="relative w-72 max-w-[85vw] bg-white h-full z-10 shadow-2xl p-0 animate-in slide-in-from-left duration-200">
+          <aside className="relative w-80 max-w-[85vw] bg-surface-container-low h-full z-10 shadow-elevation-1 rounded-r-m3-lg p-0 animate-in">
             {renderSidebarContent()}
           </aside>
         </div>
@@ -553,28 +555,29 @@ export default function AdminPortalPage() {
          ========================================================================= */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Top Header Bar */}
-        <header className="h-14 bg-white/80 backdrop-blur-xl border-b border-black/[0.06] px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 sticky top-0 z-30">
-          <div className="flex items-center space-x-2.5 text-xs text-[#86868b]">
+        <header className="h-16 bg-surface/90 backdrop-blur-md border-b border-outline-variant px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 sticky top-0 z-30">
+          <div className="flex items-center space-x-2.5 text-xs text-on-surface-variant">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="lg:hidden p-1.5 -ml-1 rounded-lg text-[#1d1d1f] hover:bg-black/[0.05] transition"
+              className="lg:hidden p-1.5 -ml-1 rounded-lg text-on-surface hover:bg-on-surface/[0.05] transition"
               aria-label="Open sidebar"
             >
               <PanelLeft className="w-5 h-5" />
             </button>
             <span className="hidden sm:inline">Admin Portal</span>
             <span className="hidden sm:inline">/</span>
-            <span className="text-[#1d1d1f] font-semibold capitalize">
+            <span className="text-on-surface font-semibold capitalize">
               {activeTab === "new-submission" ? "Submit Paper" : activeTab}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {activeTab !== "new-submission" && (
               <Button
                 size="sm"
                 onClick={() => setActiveTab("new-submission")}
-                className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium gap-1.5 shadow-xs rounded-full"
+                
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Submit Paper</span>
@@ -584,7 +587,7 @@ export default function AdminPortalPage() {
             <button
               onClick={handleSignOut}
               title="Sign Out"
-              className="lg:hidden h-8 w-8 rounded-full border border-black/[0.08] hover:bg-black/[0.05] text-[#86868b] hover:text-[#1d1d1f] flex items-center justify-center transition active:scale-[0.98]"
+              className="lg:hidden h-8 w-8 rounded-full border border-outline-variant hover:bg-on-surface/[0.05] text-on-surface-variant hover:text-on-surface flex items-center justify-center transition active:scale-[0.98]"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -597,10 +600,10 @@ export default function AdminPortalPage() {
           {activeTab === "overview" && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-[#1d1d1f]">
+                <h1 className="text-xl font-bold tracking-tight text-on-surface">
                   Welcome back, {user?.full_name}
                 </h1>
-                <p className="text-xs text-[#86868b]">
+                <p className="text-xs text-on-surface-variant">
                   Review recent submissions and inspect automated formatting pre-checks.
                 </p>
               </div>
@@ -610,55 +613,55 @@ export default function AdminPortalPage() {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Total Papers</CardDescription>
-                    <CardTitle className="text-2xl font-bold text-[#1d1d1f]">
+                    <CardTitle className="text-2xl font-bold text-on-surface">
                       {totalSubmissions}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-[#86868b]">Ingested submissions</p>
+                    <p className="text-xs text-on-surface-variant">Ingested submissions</p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Format Pass Rate</CardDescription>
-                    <CardTitle className="text-2xl font-bold text-[#34c759]">
+                    <CardTitle className="text-2xl font-bold text-success">
                       {passRate}%
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-[#86868b]">Passed pre-screening</p>
+                    <p className="text-xs text-on-surface-variant">Passed pre-screening</p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Awaiting Review</CardDescription>
-                    <CardTitle className="text-2xl font-bold text-[#ff9500]">
+                    <CardTitle className="text-2xl font-bold text-warning">
                       {deskReviewCount}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-[#86868b]">Pending editorial triage</p>
+                    <p className="text-xs text-on-surface-variant">Pending editorial triage</p>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
                     <CardDescription>Storage Driver</CardDescription>
-                    <CardTitle className="text-2xl font-bold text-[#0071e3]">
+                    <CardTitle className="text-2xl font-bold text-primary">
                       Box Cloud
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-[#86868b]">Direct file streams active</p>
+                    <p className="text-xs text-on-surface-variant">Direct file streams active</p>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Recent Submissions Quick View */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between border-b border-black/[0.06]">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-outline-variant">
                   <div>
                     <CardTitle>Recent Submissions</CardTitle>
                     <CardDescription>
@@ -676,24 +679,24 @@ export default function AdminPortalPage() {
                 </CardHeader>
                 <CardContent className="p-0">
                   {manuscripts.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-[#86868b]">
+                    <div className="p-8 text-center text-xs text-on-surface-variant">
                       No submissions recorded yet. Click &quot;Submit Paper&quot; to start.
                     </div>
                   ) : (
-                    <div className="divide-y divide-black/[0.06] text-xs">
+                    <div className="divide-y divide-outline-variant text-xs">
                       {manuscripts.slice(0, 3).map((m) => (
                         <div
                           key={m.id}
-                          className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-black/[0.02] transition"
+                          className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-on-surface/[0.02] transition"
                         >
                           <div className="space-y-0.5 min-w-0">
                             <Link
                               href={auditHref(m)}
-                              className="font-semibold text-[#1d1d1f] hover:text-[#0071e3] transition line-clamp-1"
+                              className="font-semibold text-on-surface hover:text-primary transition line-clamp-1"
                             >
                               {m.title}
                             </Link>
-                            <div className="text-[11px] text-[#86868b]">
+                            <div className="text-[11px] text-on-surface-variant">
                               {m.author?.full_name || "Author"} &bull; {new Date(m.created_at).toLocaleDateString()}
                             </div>
                           </div>
@@ -718,18 +721,18 @@ export default function AdminPortalPage() {
           {activeTab === "submissions" && (
             <div className="space-y-4">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-[#1d1d1f]">
+                <h1 className="text-xl font-bold tracking-tight text-on-surface">
                   All Submissions
                 </h1>
-                <p className="text-xs text-[#86868b]">
+                <p className="text-xs text-on-surface-variant">
                   Search, inspect format scores, and triage submitted papers.
                 </p>
               </div>
 
               {/* Filters Toolbar */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-black/[0.06] shadow-apple-card">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-surface-container-low border border-outline-variant shadow-elevation-1">
                 <div className="relative flex-1 max-w-sm">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#86868b]" />
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-on-surface-variant" />
                   <Input
                     placeholder="Search by title or ID..."
                     className="pl-8 h-8 text-xs rounded-full"
@@ -738,7 +741,7 @@ export default function AdminPortalPage() {
                   />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-1.5 text-xs p-1 rounded-full bg-black/[0.04]">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs p-1 rounded-full bg-on-surface/[0.04]">
                   <Button
                     variant={filterStatus === "ALL" ? "secondary" : "ghost"}
                     size="sm"
@@ -775,7 +778,7 @@ export default function AdminPortalPage() {
                     variant="ghost"
                     size="sm"
                     onClick={fetchSubmissions}
-                    className="h-7 w-7 p-0 rounded-full text-[#86868b]"
+                    className="h-7 w-7 p-0 rounded-full text-on-surface-variant"
                     title="Refresh"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -787,15 +790,15 @@ export default function AdminPortalPage() {
               <Card className="p-0 overflow-hidden">
                 {loading ? (
                   <div className="py-16 text-center space-y-2">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#0071e3]" />
-                    <p className="text-xs text-[#86868b]">Loading submissions...</p>
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+                    <p className="text-xs text-on-surface-variant">Loading submissions...</p>
                   </div>
                 ) : filteredManuscripts.length === 0 ? (
                   <div className="py-16 text-center space-y-3 p-6">
-                    <FileText className="w-8 h-8 mx-auto text-[#86868b]" />
+                    <FileText className="w-8 h-8 mx-auto text-on-surface-variant" />
                     <div className="space-y-1">
-                      <h3 className="font-semibold text-[#1d1d1f] text-sm">No papers found</h3>
-                      <p className="text-xs text-[#86868b]">
+                      <h3 className="font-semibold text-on-surface text-sm">No papers found</h3>
+                      <p className="text-xs text-on-surface-variant">
                         {searchTerm
                           ? "No records matched your search query."
                           : "Submit your manuscript to run your first pre-check."}
@@ -804,7 +807,7 @@ export default function AdminPortalPage() {
                     <Button
                       onClick={() => setActiveTab("new-submission")}
                       size="sm"
-                      className="text-xs font-medium rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white"
+                      className="text-xs font-medium rounded-full bg-primary hover:bg-primary text-on-primary"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" />
                       Submit Paper
@@ -813,27 +816,27 @@ export default function AdminPortalPage() {
                 ) : (
                   <>
                     {/* MOBILE CARD VIEW (< md screens) */}
-                    <div className="md:hidden divide-y divide-black/[0.06]">
+                    <div className="md:hidden divide-y divide-outline-variant">
                       {filteredManuscripts.map((m) => {
                         const isCustomTemplate = m.files?.some((f) => f.file_role === "TEMPLATE");
                         return (
-                          <div key={m.id} className="p-4 space-y-3 bg-white">
+                          <div key={m.id} className="p-4 space-y-3 bg-surface-container-low">
                             <div className="space-y-1">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] text-[#86868b] font-mono">
+                                <span className="text-[10px] text-on-surface-variant font-mono">
                                   ID: {m.id.substring(0, 8)}...
                                 </span>
-                                <span className="text-[10px] text-[#86868b]">
+                                <span className="text-[10px] text-on-surface-variant">
                                   {new Date(m.created_at).toLocaleDateString()}
                                 </span>
                               </div>
                               <Link
                                 href={auditHref(m)}
-                                className="font-semibold text-sm text-[#1d1d1f] hover:text-[#0071e3] transition line-clamp-2"
+                                className="font-semibold text-sm text-on-surface hover:text-primary transition line-clamp-2"
                               >
                                 {m.title}
                               </Link>
-                              <div className="text-xs text-[#86868b]">
+                              <div className="text-xs text-on-surface-variant">
                                 {m.author?.full_name || "Author"} &bull; {m.author?.affiliation || "UTS"}
                               </div>
                             </div>
@@ -870,7 +873,7 @@ export default function AdminPortalPage() {
                                   size="sm"
                                   className="w-full h-8 text-xs rounded-full gap-1"
                                 >
-                                  <Sparkles className="w-3.5 h-3.5 text-[#0071e3]" />
+                                  <Sparkles className="w-3.5 h-3.5 text-primary" />
                                   <span>View Report</span>
                                 </Button>
                               </Link>
@@ -882,7 +885,7 @@ export default function AdminPortalPage() {
                                     size="sm"
                                     disabled={actionLoading === m.id}
                                     onClick={() => handleStatusChange(m.id, "ACCEPTED")}
-                                    className="h-8 text-xs rounded-full text-[#34c759] hover:bg-[#34c759]/10"
+                                    className="h-8 text-xs rounded-full text-success hover:bg-success/10"
                                   >
                                     Accept
                                   </Button>
@@ -891,7 +894,7 @@ export default function AdminPortalPage() {
                                     size="sm"
                                     disabled={actionLoading === m.id}
                                     onClick={() => handleStatusChange(m.id, "REVISION_REQUIRED")}
-                                    className="h-8 text-xs rounded-full text-[#ff9500] hover:bg-[#ff9500]/10"
+                                    className="h-8 text-xs rounded-full text-warning hover:bg-warning/10"
                                   >
                                     Revise
                                   </Button>
@@ -925,22 +928,22 @@ export default function AdminPortalPage() {
                                   <div className="space-y-0.5">
                                     <Link
                                       href={auditHref(m)}
-                                      className="font-semibold text-[#1d1d1f] hover:text-[#0071e3] transition flex items-center gap-1.5"
+                                      className="font-semibold text-on-surface hover:text-primary transition flex items-center gap-1.5"
                                     >
                                       <span>{m.title}</span>
                                       <ExternalLink className="w-3 h-3 opacity-50 shrink-0" />
                                     </Link>
-                                    <div className="text-[11px] text-[#86868b]">
+                                    <div className="text-[11px] text-on-surface-variant">
                                       ID: {m.id.substring(0, 8)}... &bull; {new Date(m.created_at).toLocaleDateString()}
                                     </div>
                                   </div>
                                 </TableCell>
 
                                 <TableCell>
-                                  <div className="text-xs text-[#1d1d1f]">
+                                  <div className="text-xs text-on-surface">
                                     {m.author?.full_name || "Dr. Alexander Wright"}
                                   </div>
-                                  <div className="text-[11px] text-[#86868b]">
+                                  <div className="text-[11px] text-on-surface-variant">
                                     {m.author?.affiliation || "UTS Faculty of IT"}
                                   </div>
                                 </TableCell>
@@ -980,7 +983,7 @@ export default function AdminPortalPage() {
                                   <div className="flex items-center justify-end gap-1.5">
                                     <Link href={auditHref(m)}>
                                       <Button variant="outline" size="sm" className="h-7 text-xs rounded-full gap-1">
-                                        <Sparkles className="w-3 h-3 text-[#0071e3]" />
+                                        <Sparkles className="w-3 h-3 text-primary" />
                                         <span>Report</span>
                                       </Button>
                                     </Link>
@@ -992,7 +995,7 @@ export default function AdminPortalPage() {
                                           size="sm"
                                           disabled={actionLoading === m.id}
                                           onClick={() => handleStatusChange(m.id, "ACCEPTED")}
-                                          className="h-7 text-xs rounded-full text-[#34c759] hover:bg-[#34c759]/10"
+                                          className="h-7 text-xs rounded-full text-success hover:bg-success/10"
                                         >
                                           Accept
                                         </Button>
@@ -1001,7 +1004,7 @@ export default function AdminPortalPage() {
                                           size="sm"
                                           disabled={actionLoading === m.id}
                                           onClick={() => handleStatusChange(m.id, "REVISION_REQUIRED")}
-                                          className="h-7 text-xs rounded-full text-[#ff9500] hover:bg-[#ff9500]/10"
+                                          className="h-7 text-xs rounded-full text-warning hover:bg-warning/10"
                                         >
                                           Revise
                                         </Button>
@@ -1023,12 +1026,12 @@ export default function AdminPortalPage() {
 
           {/* TAB 3: IN-ADMIN SUBMIT FORM */}
           {activeTab === "new-submission" && (
-            <Card className="max-w-3xl mx-auto shadow-apple-card">
-              <CardHeader className="border-b border-black/[0.06] pb-4">
+            <Card className="max-w-3xl mx-auto shadow-elevation-1">
+              <CardHeader className="border-b border-outline-variant pb-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <CardTitle className="text-base text-[#1d1d1f]">Submit Your Research Paper</CardTitle>
-                    <CardDescription className="text-xs text-[#86868b]">
+                    <CardTitle className="text-base text-on-surface">Submit Your Research Paper</CardTitle>
+                    <CardDescription className="text-xs text-on-surface-variant">
                       Attach your draft PDF and reference template for automated formatting review.
                     </CardDescription>
                   </div>
@@ -1038,28 +1041,28 @@ export default function AdminPortalPage() {
                     <span
                       className={`px-3 py-1 rounded-full text-xs transition-colors ${
                         submissionStep === 1
-                          ? "bg-[#0071e3] text-white font-medium shadow-xs"
-                          : "bg-black/[0.04] text-[#86868b]"
+                          ? "bg-primary text-on-primary font-medium shadow-xs"
+                          : "bg-on-surface/[0.04] text-on-surface-variant"
                       }`}
                     >
                       1. Details
                     </span>
-                    <span className="text-[#86868b]">&rarr;</span>
+                    <span className="text-on-surface-variant">&rarr;</span>
                     <span
                       className={`px-3 py-1 rounded-full text-xs transition-colors ${
                         submissionStep === 2
-                          ? "bg-[#0071e3] text-white font-medium shadow-xs"
-                          : "bg-black/[0.04] text-[#86868b]"
+                          ? "bg-primary text-on-primary font-medium shadow-xs"
+                          : "bg-on-surface/[0.04] text-on-surface-variant"
                       }`}
                     >
                       2. Upload
                     </span>
-                    <span className="text-[#86868b]">&rarr;</span>
+                    <span className="text-on-surface-variant">&rarr;</span>
                     <span
                       className={`px-3 py-1 rounded-full text-xs transition-colors ${
                         submissionStep === 3
-                          ? "bg-[#34c759] text-white font-medium shadow-xs"
-                          : "bg-black/[0.04] text-[#86868b]"
+                          ? "bg-success text-on-success font-medium shadow-xs"
+                          : "bg-on-surface/[0.04] text-on-surface-variant"
                       }`}
                     >
                       3. Report
@@ -1070,7 +1073,7 @@ export default function AdminPortalPage() {
 
               <CardContent className="p-6">
                 {submitError && (
-                  <div className="mb-4 p-3.5 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs flex items-center gap-2">
+                  <div className="mb-4 p-3.5 rounded-2xl bg-error/10 border border-error/20 text-error text-xs flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{submitError}</span>
                   </div>
@@ -1080,13 +1083,13 @@ export default function AdminPortalPage() {
                 {submissionStep === 1 && (
                   <form onSubmit={handleCreateDraft} className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[#1d1d1f] font-semibold text-xs">Paper Information</Label>
+                      <Label className="text-on-surface font-semibold text-xs">Paper Information</Label>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handlePrefillDemo}
-                        className="text-xs text-[#0071e3] rounded-full border-black/[0.08]"
+                        className="text-xs text-primary rounded-full border-outline-variant"
                       >
                         <Sparkles className="w-3.5 h-3.5 mr-1" />
                         Auto-fill Sample Paper
@@ -1094,7 +1097,7 @@ export default function AdminPortalPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="title" className="text-xs text-[#86868b]">Title</Label>
+                      <Label htmlFor="title" className="text-xs text-on-surface-variant">Title</Label>
                       <Input
                         id="title"
                         required
@@ -1106,7 +1109,7 @@ export default function AdminPortalPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="abstract" className="text-xs text-[#86868b]">Abstract</Label>
+                      <Label htmlFor="abstract" className="text-xs text-on-surface-variant">Abstract</Label>
                       <Textarea
                         id="abstract"
                         required
@@ -1119,7 +1122,7 @@ export default function AdminPortalPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="keywords" className="text-xs text-[#86868b]">Keywords (Comma Separated)</Label>
+                      <Label htmlFor="keywords" className="text-xs text-on-surface-variant">Keywords (Comma Separated)</Label>
                       <Input
                         id="keywords"
                         required
@@ -1134,7 +1137,7 @@ export default function AdminPortalPage() {
                       <Button
                         type="submit"
                         disabled={submitLoading || !title || !abstract}
-                        className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full px-5 shadow-xs"
+                        className="bg-primary hover:bg-primary text-on-primary text-xs font-medium rounded-full px-5 shadow-xs"
                       >
                         {submitLoading ? (
                           <>
@@ -1155,40 +1158,40 @@ export default function AdminPortalPage() {
                 {/* STEP 2: DUAL FILE UPLOAD */}
                 {submissionStep === 2 && (
                   <div className="space-y-5">
-                    <p className="text-xs text-[#86868b]">
+                    <p className="text-xs text-on-surface-variant">
                       Upload both files below. Your manuscript draft will be checked against the reference template.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
                       {/* Dropzone A: Target Journal Template */}
-                      <div className="flex flex-col p-4 rounded-2xl border border-indigo-200 bg-indigo-50/40 space-y-2.5">
+                      <div className="flex flex-col p-4 rounded-2xl border border-primary/30 bg-primary-container/40 space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-[#1d1d1f] text-xs flex items-center gap-1.5">
-                            <Layers className="w-4 h-4 text-indigo-600" />
+                          <span className="font-bold text-on-surface text-xs flex items-center gap-1.5">
+                            <Layers className="w-4 h-4 text-primary" />
                             1. Template / Pedoman Jurnal Sasaran (PDF)
                           </span>
-                          <Badge className="bg-indigo-600 text-white text-[10px]">
+                          <Badge className="bg-primary text-on-primary text-[10px]">
                             Acuan Format
                           </Badge>
                         </div>
 
-                        <p className="text-[11px] text-[#86868b]">
+                        <p className="text-[11px] text-on-surface-variant">
                           Unggah <strong>Pedoman Penulisan (Author Guidelines)</strong> atau <strong>Contoh Artikel Jurnal</strong> dari jurnal tujuan. Sistem akan mendeteksi aturan formatnya secara otomatis.
                         </p>
 
-                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-indigo-300 rounded-xl bg-white text-center">
-                          <UploadCloud className="w-6 h-6 text-indigo-600 mb-1" />
+                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-primary/50 rounded-xl bg-surface-container-low text-center">
+                          <UploadCloud className="w-6 h-6 text-primary mb-1" />
                           {templateFile ? (
-                            <div className="text-xs text-emerald-600 font-bold">
+                            <div className="text-xs text-success font-bold">
                               {templateFile.name} ({(templateFile.size / 1024).toFixed(1)} KB)
                             </div>
                           ) : (
-                            <div className="text-xs text-[#86868b]">Pilih file PDF Pedoman atau Contoh Jurnal</div>
+                            <div className="text-xs text-on-surface-variant">Pilih file PDF Pedoman atau Contoh Jurnal</div>
                           )}
                           <input
                             type="file"
                             accept=".pdf"
-                            className="mt-2 text-xs text-[#86868b] file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:bg-indigo-100 file:text-indigo-800 cursor-pointer"
+                            className="mt-2 text-xs text-on-surface-variant file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:bg-primary-container file:text-on-primary-container cursor-pointer"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
                                 setTemplateFile(e.target.files[0]);
@@ -1198,7 +1201,7 @@ export default function AdminPortalPage() {
                         </div>
 
                         <div className="pt-1">
-                          <span className="text-[10px] text-slate-500 block mb-1">
+                          <span className="text-[10px] text-on-surface-variant block mb-1">
                             Atau gunakan starter preset jika belum memiliki file template:
                           </span>
                           <TemplatePresetSelect
@@ -1210,10 +1213,10 @@ export default function AdminPortalPage() {
                       </div>
 
                       {/* Dropzone B: Draft */}
-                      <div className="flex flex-col p-4 rounded-2xl border border-[#0071e3]/20 bg-[#0071e3]/5 space-y-2.5">
+                      <div className="flex flex-col p-4 rounded-2xl border border-primary/20 bg-primary/5 space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-[#1d1d1f] text-xs flex items-center gap-1.5">
-                            <FileText className="w-4 h-4 text-[#0071e3]" />
+                          <span className="font-semibold text-on-surface text-xs flex items-center gap-1.5">
+                            <FileText className="w-4 h-4 text-primary" />
                             2. Manuscript Draft (PDF)
                           </span>
                           <Badge variant="default" className="text-[10px]">
@@ -1221,24 +1224,24 @@ export default function AdminPortalPage() {
                           </Badge>
                         </div>
 
-                        <p className="text-[11px] text-[#86868b]">
+                        <p className="text-[11px] text-on-surface-variant">
                           Your draft paper to be reviewed for margins, columns, double-blind privacy, and citations.
                         </p>
 
-                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-[#0071e3]/30 rounded-xl bg-white text-center">
-                          <UploadCloud className="w-6 h-6 text-[#0071e3] mb-1" />
+                        <div className="flex-1 flex flex-col justify-center items-center py-5 border border-dashed border-primary/30 rounded-xl bg-surface-container-low text-center">
+                          <UploadCloud className="w-6 h-6 text-primary mb-1" />
                           {draftFile ? (
-                            <div className="text-xs text-[#34c759] font-medium">
+                            <div className="text-xs text-success font-medium">
                               {draftFile.name} ({(draftFile.size / 1024).toFixed(1)} KB)
                             </div>
                           ) : (
-                            <div className="text-xs text-[#86868b]">Choose manuscript PDF</div>
+                            <div className="text-xs text-on-surface-variant">Choose manuscript PDF</div>
                           )}
                           <input
                             type="file"
                             accept=".pdf"
                             required
-                            className="mt-2 text-xs text-[#86868b] file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:bg-[#0071e3] file:text-white cursor-pointer"
+                            className="mt-2 text-xs text-on-surface-variant file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-xs file:bg-primary file:text-on-primary cursor-pointer"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
                                 setDraftFile(e.target.files[0]);
@@ -1250,7 +1253,7 @@ export default function AdminPortalPage() {
                     </div>
 
                     {uploadProgress && (
-                      <div className="p-3.5 rounded-2xl bg-[#0071e3]/10 border border-[#0071e3]/20 text-xs text-[#0071e3] flex items-center gap-2">
+                      <div className="p-3.5 rounded-2xl bg-primary/10 border border-primary/20 text-xs text-primary flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                         <span>{uploadProgress}</span>
                       </div>
@@ -1271,7 +1274,7 @@ export default function AdminPortalPage() {
                         type="button"
                         disabled={submitLoading || !draftFile}
                         onClick={handleDualUploadToBox}
-                        className="bg-[#0071e3] hover:bg-[#0077ed] font-medium text-xs px-5 rounded-full text-white shadow-xs"
+                        className="bg-primary hover:bg-primary font-medium text-xs px-5 rounded-full text-on-primary shadow-xs"
                       >
                         {submitLoading ? (
                           <>
@@ -1292,38 +1295,38 @@ export default function AdminPortalPage() {
                 {/* STEP 3: RESULT */}
                 {submissionStep === 3 && (
                   <div className="text-center py-8 space-y-4">
-                    <div className="w-12 h-12 rounded-full bg-[#34c759]/10 border border-[#34c759]/20 flex items-center justify-center text-[#34c759] mx-auto">
+                    <div className="w-12 h-12 rounded-full bg-success/10 border border-success/20 flex items-center justify-center text-success mx-auto">
                       <CheckCircle2 className="w-6 h-6" />
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-lg font-bold text-[#1d1d1f]">
+                      <h3 className="text-lg font-bold text-on-surface">
                         Upload &amp; Review Completed
                       </h3>
-                      <p className="text-xs text-[#86868b] max-w-sm mx-auto">
+                      <p className="text-xs text-on-surface-variant max-w-sm mx-auto">
                         Your files were uploaded and checked against the journal layout, double-blind and citation rules.
                       </p>
                     </div>
 
-                    <div className="max-w-xs mx-auto p-4 rounded-2xl bg-[#f5f5f7] border border-black/[0.06] space-y-1.5">
-                      <div className="text-xs text-[#86868b]">Compliance Score</div>
+                    <div className="max-w-xs mx-auto p-4 rounded-2xl bg-surface-container border border-outline-variant space-y-1.5">
+                      <div className="text-xs text-on-surface-variant">Compliance Score</div>
                       {!submittedReport ||
                       submittedReport.status === "QUEUED" ||
                       submittedReport.status === "PROCESSING" ? (
-                        <div className="flex items-center justify-center gap-2 py-1 text-sm font-semibold text-[#86868b]">
-                          <Loader2 className="w-4 h-4 animate-spin text-[#0071e3]" />
+                        <div className="flex items-center justify-center gap-2 py-1 text-sm font-semibold text-on-surface-variant">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
                           <span>Checking format...</span>
                         </div>
                       ) : submittedReport.status === "FAILED" ? (
                         <>
-                          <div className="text-2xl font-bold text-[#ff3b30]">&ndash;</div>
+                          <div className="text-2xl font-bold text-error">&ndash;</div>
                           <Badge variant="destructive">Audit failed</Badge>
                         </>
                       ) : (
                         <>
                           <div
                             className={`text-2xl font-bold ${
-                              submittedReport.summary.status === "PASS" ? "text-[#34c759]" : "text-[#ff3b30]"
+                              submittedReport.summary.status === "PASS" ? "text-success" : "text-error"
                             }`}
                           >
                             {submittedReport.overall_score} / 100
@@ -1340,7 +1343,7 @@ export default function AdminPortalPage() {
                     <div className="flex flex-wrap items-center justify-center gap-2.5 pt-3">
                       {submittedAuditId && (
                         <Link href={`/submissions/${manuscriptId}/audit?audit_id=${submittedAuditId}`}>
-                          <Button className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium rounded-full gap-1.5 shadow-xs">
+                          <Button className="bg-primary hover:bg-primary text-on-primary text-xs font-medium rounded-full gap-1.5 shadow-xs">
                             <Sparkles className="w-3.5 h-3.5" />
                             View Detailed Report
                           </Button>
@@ -1375,10 +1378,10 @@ export default function AdminPortalPage() {
           {activeTab === "templates" && (
             <div className="space-y-4">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-[#1d1d1f]">
+                <h1 className="text-xl font-bold tracking-tight text-on-surface">
                   Journal Template Guidelines
                 </h1>
-                <p className="text-xs text-[#86868b]">
+                <p className="text-xs text-on-surface-variant">
                   Pre-configured layout specifications used to check submitted papers.
                 </p>
               </div>
@@ -1398,14 +1401,14 @@ function TemplateVault() {
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-xs text-[#86868b]">
-        <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#0071e3]" />
+      <div className="p-8 text-center text-xs text-on-surface-variant">
+        <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-primary" />
         Loading templates...
       </div>
     );
   }
   if (error) {
-    return <div className="p-4 rounded-2xl bg-[#ff3b30]/10 text-[#ff3b30] text-xs">{error}</div>;
+    return <div className="p-4 rounded-2xl bg-error/10 text-error text-xs">{error}</div>;
   }
 
   return (
@@ -1414,14 +1417,14 @@ function TemplateVault() {
         <Card key={p.id}>
           <CardHeader>
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-base text-[#1d1d1f]">{p.name}</CardTitle>
+              <CardTitle className="text-base text-on-surface">{p.name}</CardTitle>
               <Badge variant={p.specs.column_count === 2 ? "default" : "secondary"}>
                 {p.specs.column_count === 2 ? "Double Column" : "Single Column"}
               </Badge>
             </div>
-            <CardDescription className="text-xs text-[#86868b]">{p.description}</CardDescription>
+            <CardDescription className="text-xs text-on-surface-variant">{p.description}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-1.5 text-xs text-[#86868b]">
+          <CardContent className="space-y-1.5 text-xs text-on-surface-variant">
             <div>Font: {p.font}</div>
             <div>
               Page: {p.specs.page_format} ({p.specs.page_width_mm} &times; {p.specs.page_height_mm} mm)

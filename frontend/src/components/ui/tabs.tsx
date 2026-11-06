@@ -26,6 +26,7 @@ export function Tabs({
   );
 }
 
+/** M3 primary tabs: a row on a divider, the active tab gets a 3px indicator. */
 export function TabsList({
   className,
   children,
@@ -35,10 +36,8 @@ export function TabsList({
 }) {
   return (
     <div
-      className={cn(
-        "inline-flex h-10 items-center justify-start rounded-lg bg-slate-100 p-1 text-slate-600 border border-slate-200",
-        className
-      )}
+      role="tablist"
+      className={cn("flex items-end overflow-x-auto border-b border-outline-variant", className)}
     >
       {children}
     </div>
@@ -64,17 +63,20 @@ export function TabsTrigger({
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={isSelected}
       onClick={() => context.onValueChange(value)}
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-all select-none gap-1.5",
-        isSelected
-          ? "bg-white text-slate-900 shadow-sm font-semibold border border-slate-200/80"
-          : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50",
+        "state-layer relative inline-flex h-12 items-center justify-center gap-1.5 whitespace-nowrap px-4 text-title-sm select-none transition-colors",
+        isSelected ? "text-primary" : "text-on-surface-variant hover:text-on-surface",
         className
       )}
     >
       {children}
       {badge}
+      {isSelected && (
+        <span className="absolute inset-x-4 bottom-0 h-[3px] rounded-t-full bg-primary" aria-hidden="true" />
+      )}
     </button>
   );
 }
@@ -94,12 +96,7 @@ export function TabsContent({
   if (context.value !== value) return null;
 
   return (
-    <div
-      className={cn(
-        "animate-in fade-in duration-150 focus-visible:outline-none",
-        className
-      )}
-    >
+    <div role="tabpanel" className={cn("animate-in focus-visible:outline-none", className)}>
       {children}
     </div>
   );
