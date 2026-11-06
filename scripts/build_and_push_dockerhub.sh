@@ -39,8 +39,19 @@ if ! docker login >/dev/null 2>&1; then
 fi
 echo -e "${GREEN}✓ Docker Hub authentication verified.${NC}"
 
-# 2. Build & Push AI Worker (Python PyMuPDF Engine)
-echo -e "\n${BOLD}[2/4] Building & Pushing AI Worker (PyMuPDF Engine)...${NC}"
+# 2. Build & Push Database (PostgreSQL with pre-baked migrations & seeds)
+echo -e "\n${BOLD}[2/5] Building & Pushing Database (PostgreSQL)...${NC}"
+DB_IMG="${DOCKER_USER}/format-kilat-db:${TAG}"
+docker build \
+  --platform linux/amd64 \
+  -t "${DB_IMG}" \
+  -f backend/db/Dockerfile \
+  backend/db
+docker push "${DB_IMG}"
+echo -e "${GREEN}✓ Pushed ${DB_IMG}${NC}"
+
+# 3. Build & Push AI Worker (Python PyMuPDF Engine)
+echo -e "\n${BOLD}[3/5] Building & Pushing AI Worker (PyMuPDF Engine)...${NC}"
 WORKER_IMG="${DOCKER_USER}/format-kilat-ai-worker:${TAG}"
 docker build \
   --platform linux/amd64 \
@@ -50,8 +61,8 @@ docker build \
 docker push "${WORKER_IMG}"
 echo -e "${GREEN}✓ Pushed ${WORKER_IMG}${NC}"
 
-# 3. Build & Push Gateway (Go API Gateway)
-echo -e "\n${BOLD}[3/4] Building & Pushing Go API Gateway...${NC}"
+# 4. Build & Push Gateway (Go API Gateway)
+echo -e "\n${BOLD}[4/5] Building & Pushing Go API Gateway...${NC}"
 GATEWAY_IMG="${DOCKER_USER}/format-kilat-gateway:${TAG}"
 docker build \
   --platform linux/amd64 \
@@ -61,8 +72,8 @@ docker build \
 docker push "${GATEWAY_IMG}"
 echo -e "${GREEN}✓ Pushed ${GATEWAY_IMG}${NC}"
 
-# 4. Build & Push Frontend (Next.js 15)
-echo -e "\n${BOLD}[4/4] Building & Pushing Frontend (Next.js 15 UI)...${NC}"
+# 5. Build & Push Frontend (Next.js 15)
+echo -e "\n${BOLD}[5/5] Building & Pushing Frontend (Next.js 15 UI)...${NC}"
 FRONTEND_IMG="${DOCKER_USER}/format-kilat-frontend:${TAG}"
 PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}"
 
@@ -77,7 +88,9 @@ echo -e "${GREEN}✓ Pushed ${FRONTEND_IMG}${NC}"
 
 echo -e "\n${GREEN}${BOLD}======================================================================${NC}"
 echo -e "${GREEN}${BOLD}🎉 ALL IMAGES SUCCESSFULLY BUILT AND PUSHED TO DOCKER HUB!${NC}"
+echo -e "   • ${DB_IMG}"
 echo -e "   • ${WORKER_IMG}"
 echo -e "   • ${GATEWAY_IMG}"
 echo -e "   • ${FRONTEND_IMG}"
 echo -e "${GREEN}${BOLD}======================================================================${NC}"
+
