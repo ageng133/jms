@@ -122,9 +122,13 @@ type JWTConfig struct {
 }
 
 func LoadConfig() (*Config, error) {
-	// Try loading from .env if present (check current, parent, grandparent dirs)
+	// Load .env files if present (current, parent, grandparent dirs).
+	// godotenv.Load never replaces a variable that is already set, so real
+	// environment variables (docker-compose, shell, CI) win over .env, and
+	// the nearest .env wins over the ones further up. Runtime hot-reload of
+	// Box/Gemini keys lives in health_handler.go and box_storage.go.
 	for _, envFile := range []string{".env", "../.env", "../../.env"} {
-		_ = godotenv.Overload(envFile)
+		_ = godotenv.Load(envFile)
 	}
 
 	expiryHours, err := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "72"))
