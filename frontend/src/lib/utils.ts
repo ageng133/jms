@@ -1,5 +1,25 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+/*
+ * tailwind-merge has to know the custom M3 utilities from tailwind.config.ts.
+ * Without this it reads `text-label-md` as a text color and drops
+ * `text-on-primary` (or the other way round).
+ */
+const M3_TYPE_SCALE = ["display", "headline", "title", "body", "label"].flatMap((role) =>
+  ["lg", "md", "sm"].map((size) => `${role}-${size}`)
+);
+
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [{ text: M3_TYPE_SCALE }],
+      shadow: [{ shadow: ["elevation-1", "elevation-2", "elevation-3", "elevation-4", "elevation-5"] }],
+      rounded: [{ rounded: ["m3-xs", "m3-sm", "m3-md", "m3-lg", "m3-xl"] }],
+      "rounded-r": [{ "rounded-r": ["m3-xs", "m3-sm", "m3-md", "m3-lg", "m3-xl"] }],
+    },
+  },
+});
 
 /**
  * Merges Tailwind classes safely with clsx and twMerge.
@@ -52,19 +72,19 @@ export function getComplianceBadge(score: number): {
     return {
       label: "Camera-Ready (PASS)",
       variant: "success",
-      colorClass: "text-[#34c759] bg-[#34c759]/10 border-[#34c759]/20",
+      colorClass: "text-success bg-success/10 border-success/20",
     };
   }
   if (score >= 75) {
     return {
       label: "Advisories (PASS)",
       variant: "warning",
-      colorClass: "text-[#ff9500] bg-[#ff9500]/10 border-[#ff9500]/20",
+      colorClass: "text-warning bg-warning/10 border-warning/20",
     };
   }
   return {
     label: "Revisions Required",
     variant: "destructive",
-    colorClass: "text-[#ff3b30] bg-[#ff3b30]/10 border-[#ff3b30]/20",
+    colorClass: "text-error bg-error/10 border-error/20",
   };
 }

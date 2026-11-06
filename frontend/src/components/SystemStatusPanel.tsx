@@ -20,15 +20,15 @@ function engineLabel(name: string): string {
 }
 
 const STATUS_STYLE: Record<string, { text: string; className: string }> = {
-  online: { text: "Online", className: "text-[#34c759]" },
-  configured: { text: "Configured", className: "text-[#0071e3]" },
-  offline: { text: "Offline", className: "text-[#ff3b30]" },
+  online: { text: "Online", className: "text-success" },
+  configured: { text: "Configured", className: "text-primary" },
+  offline: { text: "Offline", className: "text-error" },
 };
 
 function Row({ icon, label, status }: { icon: React.ReactNode; label: string; status: string }) {
-  const s = STATUS_STYLE[status] ?? { text: status, className: "text-[#86868b]" };
+  const s = STATUS_STYLE[status] ?? { text: status, className: "text-on-surface-variant" };
   return (
-    <div className="flex items-center justify-between text-[#1d1d1f]">
+    <div className="flex items-center justify-between text-on-surface">
       <span className="flex items-center gap-1.5">
         {icon}
         {label}
@@ -66,36 +66,36 @@ export function SystemStatusPanel() {
   }, []);
 
   return (
-    <div className="px-4 py-3 mx-3 my-2 rounded-2xl bg-black/[0.02] border border-black/[0.04] text-[11px] space-y-1.5">
-      <div className="font-semibold text-[#86868b] uppercase tracking-wider text-[10px]">System Status</div>
+    <div className="px-4 py-3 mx-3 my-2 rounded-2xl bg-on-surface/[0.02] border border-outline-variant text-[11px] space-y-1.5">
+      <div className="font-semibold text-on-surface-variant uppercase tracking-wider text-[10px]">System Status</div>
 
-      {error && <Row icon={<Cpu className="w-3 h-3 text-[#86868b]" />} label="Gateway" status="offline" />}
-      {!error && !data && <div className="text-[#86868b]">Checking...</div>}
+      {error && <Row icon={<Cpu className="w-3 h-3 text-on-surface-variant" />} label="Gateway" status="offline" />}
+      {!error && !data && <div className="text-on-surface-variant">Checking...</div>}
 
       {data && (
         <>
           <Row
             icon={
               data.storage === "box-cloud" ? (
-                <Box className="w-3 h-3 text-[#0071e3]" />
+                <Box className="w-3 h-3 text-primary" />
               ) : (
-                <HardDrive className="w-3 h-3 text-[#0071e3]" />
+                <HardDrive className="w-3 h-3 text-primary" />
               )
             }
             label={STORAGE_LABEL[data.storage] ?? data.storage}
             status="online"
           />
           {data.engines.length === 0 && (
-            <Row icon={<Cpu className="w-3 h-3 text-[#ff3b30]" />} label="Audit engine" status="offline" />
+            <Row icon={<Cpu className="w-3 h-3 text-error" />} label="Audit engine" status="offline" />
           )}
           {data.engines.map((e) => (
             <Row
               key={e.name}
               icon={
                 e.name.startsWith("gemini:") ? (
-                  <Sparkles className="w-3 h-3 text-[#af52de]" />
+                  <Sparkles className="w-3 h-3 text-tertiary" />
                 ) : (
-                  <Cpu className="w-3 h-3 text-[#34c759]" />
+                  <Cpu className="w-3 h-3 text-success" />
                 )
               }
               label={engineLabel(e.name)}
@@ -103,7 +103,7 @@ export function SystemStatusPanel() {
             />
           ))}
           {data.status === "DEGRADED" && (
-            <p className="text-[10px] text-[#ff3b30] leading-snug pt-0.5">
+            <p className="text-[10px] text-error leading-snug pt-0.5">
               No audit engine reachable. New audits will fail until the worker is started.
             </p>
           )}

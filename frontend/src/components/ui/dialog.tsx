@@ -30,17 +30,20 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150">
+    <div className="animate-in fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-scrim/[0.32] transition-opacity"
         onClick={() => onOpenChange(false)}
         aria-hidden="true"
       />
-      <div className="relative z-50 w-full max-w-lg scale-100">{children}</div>
+      <div role="dialog" aria-modal="true" className="relative z-50 w-full max-w-lg">
+        {children}
+      </div>
     </div>
   );
 }
 
+/** M3 basic dialog surface: 28px corners, surface-container-high, elevation 3. */
 export function DialogContent({
   className,
   children,
@@ -53,16 +56,17 @@ export function DialogContent({
   return (
     <div
       className={cn(
-        "relative rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-7 text-slate-900",
+        "relative rounded-m3-xl bg-surface-container-high p-6 text-on-surface shadow-elevation-3",
         className
       )}
     >
       {onClose && (
         <button
+          type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+          className="state-layer absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
           <span className="sr-only">Close</span>
         </button>
       )}
@@ -75,12 +79,7 @@ export function DialogHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("flex flex-col space-y-1.5 text-left mb-5", className)}
-      {...props}
-    />
-  );
+  return <div className={cn("mb-4 flex flex-col space-y-4 text-left", className)} {...props} />;
 }
 
 export function DialogTitle({
@@ -89,10 +88,7 @@ export function DialogTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h2
-      className={cn(
-        "text-lg font-bold tracking-tight text-slate-900 flex items-center gap-2",
-        className
-      )}
+      className={cn("flex items-center gap-2 text-headline-sm text-on-surface", className)}
       {...props}
     />
   );
@@ -102,12 +98,7 @@ export function DialogDescription({
   className,
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return (
-    <p
-      className={cn("text-xs text-slate-500 leading-relaxed", className)}
-      {...props}
-    />
-  );
+  return <p className={cn("text-body-md text-on-surface-variant", className)} {...props} />;
 }
 
 export function DialogFooter({
@@ -116,10 +107,7 @@ export function DialogFooter({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-5 pt-3 border-t border-slate-100",
-        className
-      )}
+      className={cn("mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   );

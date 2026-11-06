@@ -178,29 +178,29 @@ export function GoogleAuthModal() {
 
   return (
     <Dialog open={isGoogleModalOpen} onOpenChange={(open) => !open && closeGoogleModal()}>
-      <DialogContent onClose={closeGoogleModal} className="max-w-md bg-white border border-black/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-3xl p-6 sm:p-7">
+      <DialogContent onClose={closeGoogleModal} className="max-w-md">
         <DialogHeader className="space-y-2 text-center sm:text-left">
           <div className="flex items-center justify-between">
-            <div className="w-11 h-11 rounded-2xl bg-black/[0.03] border border-black/[0.06] flex items-center justify-center shadow-2xs">
+            <div className="w-11 h-11 rounded-2xl bg-on-surface/[0.03] border border-outline-variant flex items-center justify-center shadow-2xs">
               <GoogleLogo className="w-6 h-6" />
             </div>
-            <Badge variant="secondary" className="text-[11px] font-semibold bg-[#0071e3]/10 text-[#0071e3] border-[#0071e3]/20 rounded-full">
+            <Badge variant="secondary" className="text-[11px] font-semibold bg-primary/10 text-primary border-primary/20 rounded-full">
               Format Kilat SSO
             </Badge>
           </div>
           <div>
-            <DialogTitle className="text-xl font-bold tracking-tight text-[#1d1d1f]">
+            <DialogTitle className="text-xl font-bold tracking-tight text-on-surface">
               Sign in with Google
             </DialogTitle>
-            <DialogDescription className="text-xs text-[#86868b] mt-1 leading-relaxed">
+            <DialogDescription className="text-xs text-on-surface-variant mt-1 leading-relaxed">
               Authenticate using your Google Workspace or university credentials to run automated pre-submission compliance audits.
             </DialogDescription>
           </div>
         </DialogHeader>
 
         {error && (
-          <div className="my-3 p-3.5 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-[#ff3b30]" />
+          <div className="my-3 p-3.5 rounded-2xl bg-error/10 border border-error/20 text-error text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-error" />
             <span className="font-medium">{error}</span>
           </div>
         )}
@@ -211,16 +211,16 @@ export function GoogleAuthModal() {
             <div ref={googleBtnRef} className="w-full flex justify-center" />
             {demoLoginEnabled && (
             <div className="flex items-center gap-2 w-full my-1">
-              <div className="flex-1 h-px bg-black/[0.06]" />
-              <span className="text-[11px] uppercase font-semibold text-[#86868b]">Or continue with email</span>
-              <div className="flex-1 h-px bg-black/[0.06]" />
+              <div className="flex-1 h-px bg-on-surface/[0.06]" />
+              <span className="text-[11px] uppercase font-semibold text-on-surface-variant">Or continue with email</span>
+              <div className="flex-1 h-px bg-on-surface/[0.06]" />
             </div>
             )}
           </div>
         )}
 
         {!googleClientId && !demoLoginEnabled && (
-          <div className="my-3 p-3.5 rounded-2xl bg-[#ff9500]/10 border border-[#ff9500]/20 text-[#c76f00] text-xs">
+          <div className="my-3 p-3.5 rounded-2xl bg-warning-container text-on-warning-container text-xs">
             Google sign-in is not configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID (frontend) and GOOGLE_CLIENT_ID (gateway).
           </div>
         )}
@@ -229,8 +229,8 @@ export function GoogleAuthModal() {
         {demoLoginEnabled && (
         <form onSubmit={handleEnterpriseSignIn} className="space-y-3.5 mt-2">
           <div className="space-y-1">
-            <Label htmlFor="auth-email" className="text-xs font-semibold text-[#1d1d1f] flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5 text-[#86868b]" />
+            <Label htmlFor="auth-email" className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-on-surface-variant" />
               Institutional / Google Email
             </Label>
             <Input
@@ -240,13 +240,13 @@ export function GoogleAuthModal() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="text-xs rounded-xl border-black/[0.1] focus-visible:ring-[#0071e3]"
+              className="text-xs rounded-xl border-outline-variant focus-visible:ring-primary"
             />
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="auth-name" className="text-xs font-semibold text-[#1d1d1f] flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-[#86868b]" />
+            <Label htmlFor="auth-name" className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-on-surface-variant" />
               Full Name &amp; Academic Title
             </Label>
             <Input
@@ -255,44 +255,44 @@ export function GoogleAuthModal() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
-              className="text-xs rounded-xl border-black/[0.1] focus-visible:ring-[#0071e3]"
+              className="text-xs rounded-xl border-outline-variant focus-visible:ring-primary"
             />
           </div>
 
           {/* Dynamic Affiliation Resolution Pill */}
-          <div className="p-3 rounded-2xl bg-black/[0.02] border border-black/[0.05] flex items-center justify-between text-xs">
+          <div className="p-3 rounded-2xl bg-on-surface/[0.02] border border-outline-variant flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-[#86868b] shrink-0" />
+              <Building2 className="w-4 h-4 text-on-surface-variant shrink-0" />
               <div className="space-y-0.5">
-                <div className="text-[10px] uppercase font-semibold text-[#86868b]">Detected Affiliation</div>
-                <div className="font-medium text-[#1d1d1f] text-xs truncate max-w-[220px]">
+                <div className="text-[10px] uppercase font-semibold text-on-surface-variant">Detected Affiliation</div>
+                <div className="font-medium text-on-surface text-xs truncate max-w-[220px]">
                   {detectedAffiliation}
                 </div>
               </div>
             </div>
-            <Badge variant="secondary" className="text-[10px] text-[#0071e3] bg-[#0071e3]/10">
+            <Badge variant="secondary" className="text-[10px] text-primary bg-primary/10">
               Auto-detected
             </Badge>
           </div>
 
           {/* Role Selection */}
           <div className="space-y-1">
-            <Label className="text-xs font-semibold text-[#1d1d1f]">Journal Desk Access Role</Label>
+            <Label className="text-xs font-semibold text-on-surface">Journal Desk Access Role</Label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setRole("AUTHOR")}
                 className={`py-2 px-3 rounded-xl border text-left text-xs transition-all ${
                   role === "AUTHOR"
-                    ? "border-[#0071e3] bg-[#0071e3]/5 text-[#0071e3] font-semibold shadow-2xs"
-                    : "border-black/[0.08] hover:bg-black/[0.02] text-[#86868b]"
+                    ? "border-primary bg-primary/5 text-primary font-semibold shadow-2xs"
+                    : "border-outline-variant hover:bg-on-surface/[0.02] text-on-surface-variant"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span>Author</span>
-                  {role === "AUTHOR" && <CheckCircle2 className="w-3.5 h-3.5 text-[#0071e3]" />}
+                  {role === "AUTHOR" && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
                 </div>
-                <div className="text-[10px] text-[#86868b] font-normal mt-0.5">Submissions &amp; Audits</div>
+                <div className="text-[10px] text-on-surface-variant font-normal mt-0.5">Submissions &amp; Audits</div>
               </button>
 
               <button
@@ -300,18 +300,18 @@ export function GoogleAuthModal() {
                 onClick={() => setRole("ADMIN")}
                 className={`py-2 px-3 rounded-xl border text-left text-xs transition-all ${
                   role === "ADMIN"
-                    ? "border-[#0071e3] bg-[#0071e3]/5 text-[#0071e3] font-semibold shadow-2xs"
-                    : "border-black/[0.08] hover:bg-black/[0.02] text-[#86868b]"
+                    ? "border-primary bg-primary/5 text-primary font-semibold shadow-2xs"
+                    : "border-outline-variant hover:bg-on-surface/[0.02] text-on-surface-variant"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span>Managing Editor</span>
-                  {role === "ADMIN" && <CheckCircle2 className="w-3.5 h-3.5 text-[#0071e3]" />}
+                  {role === "ADMIN" && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
                 </div>
-                <div className="text-[10px] text-[#86868b] font-normal mt-0.5">Desk Review Portal</div>
+                <div className="text-[10px] text-on-surface-variant font-normal mt-0.5">Desk Review Portal</div>
               </button>
             </div>
-            <p className="text-[10px] text-[#86868b]">
+            <p className="text-[10px] text-on-surface-variant">
               Editor access is granted by the server (ADMIN_EMAILS / EDITOR_EMAILS); other accounts sign in as Author.
             </p>
           </div>
@@ -319,7 +319,7 @@ export function GoogleAuthModal() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold text-xs gap-2 mt-2 rounded-full shadow-xs active:scale-[0.98] h-10"
+            className="w-full bg-primary hover:bg-primary text-on-primary font-semibold text-xs gap-2 mt-2 rounded-full shadow-xs active:scale-[0.98] h-10"
           >
             {loading ? (
               <>
@@ -338,27 +338,27 @@ export function GoogleAuthModal() {
 
         {/* Developer Sandbox Options: Strictly sequestered and collapsible, visible in dev only */}
         {isDevMode && demoLoginEnabled && (
-          <details className="mt-4 pt-3 border-t border-black/[0.06] text-xs group">
-            <summary className="cursor-pointer text-[11px] font-medium text-[#86868b] hover:text-[#1d1d1f] flex items-center justify-between transition-colors">
+          <details className="mt-4 pt-3 border-t border-outline-variant text-xs group">
+            <summary className="cursor-pointer text-[11px] font-medium text-on-surface-variant hover:text-on-surface flex items-center justify-between transition-colors">
               <span>Developer Sandbox Diagnostics (Local Dev Only)</span>
               <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
             </summary>
             <div className="pt-2.5 pb-1 space-y-2">
-              <p className="text-[10px] text-[#86868b]">
+              <p className="text-[10px] text-on-surface-variant">
                 Auto-fill standard test identities into the form above to verify multi-role workflows without manual typing:
               </p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => applyDevSandboxIdentity("AUTHOR")}
-                  className="flex-1 py-1.5 px-2.5 rounded-lg border border-black/[0.06] bg-black/[0.02] hover:bg-black/[0.05] text-[11px] font-medium text-[#1d1d1f] transition"
+                  className="flex-1 py-1.5 px-2.5 rounded-lg border border-outline-variant bg-on-surface/[0.02] hover:bg-on-surface/[0.05] text-[11px] font-medium text-on-surface transition"
                 >
                   Fill Author Identity
                 </button>
                 <button
                   type="button"
                   onClick={() => applyDevSandboxIdentity("ADMIN")}
-                  className="flex-1 py-1.5 px-2.5 rounded-lg border border-black/[0.06] bg-black/[0.02] hover:bg-black/[0.05] text-[11px] font-medium text-[#1d1d1f] transition"
+                  className="flex-1 py-1.5 px-2.5 rounded-lg border border-outline-variant bg-on-surface/[0.02] hover:bg-on-surface/[0.05] text-[11px] font-medium text-on-surface transition"
                 >
                   Fill Editor Identity
                 </button>
@@ -367,9 +367,9 @@ export function GoogleAuthModal() {
           </details>
         )}
 
-        <div className="pt-3 mt-2 border-t border-black/[0.06] flex items-center justify-between text-[11px] text-[#86868b]">
+        <div className="pt-3 mt-2 border-t border-outline-variant flex items-center justify-between text-[11px] text-on-surface-variant">
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#34c759]" />
+            <ShieldCheck className="w-3.5 h-3.5 text-success" />
             <span>OAuth 2.0 / OpenID Connect Enterprise</span>
           </div>
           <span>University of Technology Sydney</span>

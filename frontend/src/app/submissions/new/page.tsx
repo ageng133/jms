@@ -151,8 +151,8 @@ export default function NewSubmissionPage() {
   if (authLoading) {
     return (
       <div className="py-24 text-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0071e3] mx-auto mb-3" />
-        <p className="text-xs text-[#86868b]">Checking authentication state...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+        <p className="text-xs text-on-surface-variant">Checking authentication state...</p>
       </div>
     );
   }
@@ -170,23 +170,23 @@ export default function NewSubmissionPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Step Indicator */}
-      <div className="flex items-center justify-between border-b border-black/[0.06] pb-5">
-        <div className={`flex items-center gap-2 text-xs font-semibold transition ${step >= 1 ? "text-[#0071e3]" : "text-[#86868b]"}`}>
-          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition shadow-xs ${step >= 1 ? "bg-[#0071e3] text-white" : "bg-black/[0.05] text-[#86868b]"}`}>
+      <div className="flex items-center justify-between border-b border-outline-variant pb-5">
+        <div className={`flex items-center gap-2 text-xs font-semibold transition ${step >= 1 ? "text-primary" : "text-on-surface-variant"}`}>
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition shadow-xs ${step >= 1 ? "bg-primary text-on-primary" : "bg-on-surface/[0.05] text-on-surface-variant"}`}>
             1
           </span>
           <span className="hidden sm:inline">Metadata</span>
         </div>
-        <div className={`flex-1 h-0.5 mx-3 sm:mx-4 rounded-full transition-colors ${step >= 2 ? "bg-[#0071e3]" : "bg-black/[0.06]"}`} />
-        <div className={`flex items-center gap-2 text-xs font-semibold transition ${step >= 2 ? "text-[#0071e3]" : "text-[#86868b]"}`}>
-          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition shadow-xs ${step >= 2 ? "bg-[#0071e3] text-white" : "bg-black/[0.05] text-[#86868b]"}`}>
+        <div className={`flex-1 h-0.5 mx-3 sm:mx-4 rounded-full transition-colors ${step >= 2 ? "bg-primary" : "bg-on-surface/[0.06]"}`} />
+        <div className={`flex items-center gap-2 text-xs font-semibold transition ${step >= 2 ? "text-primary" : "text-on-surface-variant"}`}>
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition shadow-xs ${step >= 2 ? "bg-primary text-on-primary" : "bg-on-surface/[0.05] text-on-surface-variant"}`}>
             2
           </span>
           <span className="hidden sm:inline">Upload Template &amp; Draft</span>
         </div>
-        <div className={`flex-1 h-0.5 mx-3 sm:mx-4 rounded-full transition-colors ${step === 3 ? "bg-[#34c759]" : "bg-black/[0.06]"}`} />
-        <div className={`flex items-center gap-2 text-xs font-semibold transition ${step === 3 ? "text-[#34c759]" : "text-[#86868b]"}`}>
-          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition shadow-xs ${step === 3 ? "bg-[#34c759] text-white" : "bg-black/[0.05] text-[#86868b]"}`}>
+        <div className={`flex-1 h-0.5 mx-3 sm:mx-4 rounded-full transition-colors ${step === 3 ? "bg-success" : "bg-on-surface/[0.06]"}`} />
+        <div className={`flex items-center gap-2 text-xs font-semibold transition ${step === 3 ? "text-success" : "text-on-surface-variant"}`}>
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition shadow-xs ${step === 3 ? "bg-success text-on-success" : "bg-on-surface/[0.05] text-on-surface-variant"}`}>
             3
           </span>
           <span className="hidden sm:inline">AI Pre-Check</span>
@@ -194,7 +194,7 @@ export default function NewSubmissionPage() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-2xl bg-[#ff3b30]/10 border border-[#ff3b30]/20 text-[#ff3b30] text-xs flex items-center gap-3">
+        <div className="p-4 rounded-2xl bg-error/10 border border-error/20 text-error text-xs flex items-center gap-3">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -202,18 +202,18 @@ export default function NewSubmissionPage() {
 
       {/* Step 1: Metadata Form */}
       {step === 1 && (
-        <form onSubmit={handleMetadataSubmit} className="bg-white p-6 sm:p-8 rounded-3xl border border-black/[0.06] shadow-apple-card space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-black/[0.06] pb-4">
+        <form onSubmit={handleMetadataSubmit} className="bg-surface-container-low p-6 sm:p-8 rounded-3xl border border-outline-variant shadow-elevation-1 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant pb-4">
             <div className="space-y-0.5">
-              <h2 className="text-xl font-bold text-[#1d1d1f]">Manuscript Metadata</h2>
-              <p className="text-xs text-[#86868b]">Enter article title, abstract, and research indexing keywords.</p>
+              <h2 className="text-xl font-bold text-on-surface">Manuscript Metadata</h2>
+              <p className="text-xs text-on-surface-variant">Enter article title, abstract, and research indexing keywords.</p>
             </div>
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={handlePrefillDemo}
-              className="text-xs text-[#0071e3] rounded-full border-black/[0.08] gap-1.5 self-start sm:self-auto"
+              className="text-xs text-primary rounded-full border-outline-variant gap-1.5 self-start sm:self-auto"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Auto-Fill Demo Data</span>
@@ -222,7 +222,7 @@ export default function NewSubmissionPage() {
 
           <div className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="title" className="text-xs text-[#86868b]">Manuscript Title</Label>
+              <Label htmlFor="title" className="text-xs text-on-surface-variant">Manuscript Title</Label>
               <Input
                 id="title"
                 type="text"
@@ -235,7 +235,7 @@ export default function NewSubmissionPage() {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="abstract" className="text-xs text-[#86868b]">Abstract</Label>
+              <Label htmlFor="abstract" className="text-xs text-on-surface-variant">Abstract</Label>
               <Textarea
                 id="abstract"
                 required
@@ -248,7 +248,7 @@ export default function NewSubmissionPage() {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="keywords" className="text-xs text-[#86868b]">Keywords (comma separated)</Label>
+              <Label htmlFor="keywords" className="text-xs text-on-surface-variant">Keywords (comma separated)</Label>
               <Input
                 id="keywords"
                 type="text"
@@ -265,7 +265,7 @@ export default function NewSubmissionPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-xs rounded-full px-6 shadow-xs disabled:opacity-50 gap-2 h-10 active:scale-[0.98] transition-all"
+              className="bg-primary hover:bg-primary text-on-primary font-medium text-xs rounded-full px-6 shadow-xs disabled:opacity-50 gap-2 h-10 active:scale-[0.98] transition-all"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Next: Upload Files"}
               <ArrowRight className="w-4 h-4" />
@@ -276,7 +276,7 @@ export default function NewSubmissionPage() {
 
       {/* Step 2: Dual File Direct S3 Upload (Template + Draft) - Side by Side */}
       {step === 2 && (
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-black/[0.06] shadow-apple-card space-y-8">
+        <div className="bg-surface-container-low p-6 sm:p-8 rounded-3xl border border-outline-variant shadow-elevation-1 space-y-8">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-[10px]">
@@ -286,8 +286,8 @@ export default function NewSubmissionPage() {
                 Verifikasi Berpasangan
               </Badge>
             </div>
-            <h2 className="text-xl font-bold text-[#1d1d1f]">Unggah Template Jurnal &amp; Naskah Draft</h2>
-            <p className="text-xs sm:text-sm text-[#86868b]">
+            <h2 className="text-xl font-bold text-on-surface">Unggah Template Jurnal &amp; Naskah Draft</h2>
+            <p className="text-xs sm:text-sm text-on-surface-variant">
               Unggah template atau pedoman penulisan jurnal sasaran bersama draft naskah Anda. Sistem akan memeriksa margin, kolom, dan sitasi.
             </p>
           </div>
@@ -295,22 +295,22 @@ export default function NewSubmissionPage() {
           {/* Side-by-Side Dual Upload Grid: Target Journal Template & Author Draft */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             {/* Upload Zone A: Target Journal Template (Left) */}
-            <div className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl border border-indigo-200 bg-indigo-50/40 space-y-4">
+            <div className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl border border-primary/30 bg-primary-container/40 space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+                    <span className="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold">
                       1
                     </span>
-                    <label className="text-xs font-bold text-[#1d1d1f]">
+                    <label className="text-xs font-bold text-on-surface">
                       Template / Pedoman Jurnal Sasaran (.pdf)
                     </label>
                   </div>
-                  <Badge className="bg-indigo-600 text-white text-[10px] font-semibold">
+                  <Badge className="bg-primary text-on-primary text-[10px] font-semibold">
                     Acuan Format
                   </Badge>
                 </div>
-                <p className="text-xs text-[#86868b]">
+                <p className="text-xs text-on-surface-variant">
                   Unggah file <strong>Pedoman Penulisan (Author Guidelines)</strong> atau <strong>Contoh Artikel Jurnal</strong> dari jurnal tujuan Anda. Format Kilat akan mendeteksi aturannya secara otomatis.
                 </p>
 
@@ -343,53 +343,53 @@ export default function NewSubmissionPage() {
                         setTemplateFile(e.dataTransfer.files[0]);
                       }
                     }}
-                    className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer block space-y-2.5 bg-white hover:bg-indigo-50/50 ${
-                      templateDragOver ? "border-indigo-600 bg-indigo-50 scale-[1.01]" : "border-indigo-300"
+                    className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer block space-y-2.5 bg-surface-container-low hover:bg-primary-container/50 ${
+                      templateDragOver ? "border-primary bg-primary-container/60 scale-[1.01]" : "border-primary/50"
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto">
+                    <div className="w-10 h-10 rounded-2xl bg-primary-container text-primary flex items-center justify-center mx-auto">
                       <Layers className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-[#1d1d1f]">
+                      <p className="text-xs font-bold text-on-surface">
                         Tarik &amp; lepas PDF Template / Pedoman Jurnal di sini
                       </p>
-                      <p className="text-[11px] text-[#86868b] mt-0.5">atau klik untuk telusuri dari komputer</p>
+                      <p className="text-[11px] text-on-surface-variant mt-0.5">atau klik untuk telusuri dari komputer</p>
                     </div>
-                    <span className="inline-block text-[10px] font-semibold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full">
+                    <span className="inline-block text-[10px] font-semibold text-on-primary-container bg-primary-container px-3 py-1 rounded-full">
                       Mendeteksi margin, kolom, font &amp; gaya sitasi
                     </span>
                   </label>
                 ) : (
-                  <div className="bg-white rounded-2xl border border-indigo-200 p-4 shadow-xs space-y-3">
+                  <div className="bg-surface-container-low rounded-2xl border border-primary/30 p-4 shadow-xs space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-primary-container text-primary flex items-center justify-center shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-[#1d1d1f] truncate">{templateFile.name}</p>
-                          <p className="text-[10px] text-[#86868b] font-mono">
+                          <p className="text-xs font-bold text-on-surface truncate">{templateFile.name}</p>
+                          <p className="text-[10px] text-on-surface-variant font-mono">
                             {(templateFile.size / (1024 * 1024)).toFixed(2)} MB &bull; Target Journal Spec Loaded
                           </p>
                         </div>
                       </div>
-                      <Badge className="bg-emerald-600 text-white text-[10px]">
+                      <Badge className="bg-success text-on-success text-[10px]">
                         Siap Diekstrak
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-black/[0.06] text-xs">
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant text-xs">
                       <label
                         htmlFor="template-upload"
-                        className="font-medium text-[#86868b] hover:text-indigo-600 cursor-pointer"
+                        className="font-medium text-on-surface-variant hover:text-primary cursor-pointer"
                       >
                         Ganti File Template
                       </label>
-                      <span className="text-[#86868b]">&bull;</span>
+                      <span className="text-on-surface-variant">&bull;</span>
                       <button
                         type="button"
                         onClick={() => setTemplateFile(null)}
-                        className="font-medium text-[#ff3b30] hover:underline"
+                        className="font-medium text-error hover:underline"
                       >
                         Hapus
                       </button>
@@ -399,7 +399,7 @@ export default function NewSubmissionPage() {
 
                 {/* Optional Preset Selector Fallback Accordion */}
                 <div className="pt-2">
-                  <p className="text-[11px] font-medium text-slate-500 mb-1.5">
+                  <p className="text-[11px] font-medium text-on-surface-variant mb-1.5">
                     Atau gunakan starter preset jika belum memiliki file template jurnal:
                   </p>
                   <TemplatePresetSelect
@@ -411,28 +411,28 @@ export default function NewSubmissionPage() {
               </div>
 
               {/* Status / Selected File Info */}
-              <div className="p-3 bg-white/80 border border-indigo-100 rounded-xl text-[11px] text-indigo-950">
-                <span className="font-bold text-indigo-700">Catatan:</span> Naskah Anda diperiksa langsung terhadap file template jurnal yang diunggah, baik berupa pedoman tertulis maupun contoh artikel.
+              <div className="p-3 bg-surface/80 border border-primary/20 rounded-xl text-[11px] text-on-primary-container">
+                <span className="font-bold text-on-primary-container">Catatan:</span> Naskah Anda diperiksa langsung terhadap file template jurnal yang diunggah, baik berupa pedoman tertulis maupun contoh artikel.
               </div>
             </div>
 
             {/* Upload Zone B: Author Manuscript Draft (Right) */}
-            <div className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl border border-[#0071e3]/20 bg-[#0071e3]/5 space-y-4">
+            <div className="flex flex-col justify-between p-5 sm:p-6 rounded-2xl border border-primary/20 bg-primary/5 space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-[#0071e3] text-white flex items-center justify-center text-xs font-bold">
+                    <span className="w-5 h-5 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold">
                       2
                     </span>
-                    <label className="text-xs font-bold text-[#1d1d1f]">
-                      Draft Naskah Anda (.pdf) <span className="text-[#ff3b30]">*</span>
+                    <label className="text-xs font-bold text-on-surface">
+                      Draft Naskah Anda (.pdf) <span className="text-error">*</span>
                     </label>
                   </div>
                   <Badge variant="default" className="text-[10px]">
                     Naskah Penulis
                   </Badge>
                 </div>
-                <p className="text-xs text-[#86868b]">
+                <p className="text-xs text-on-surface-variant">
                   File draft naskah Anda yang akan diperiksa terhadap standar template jurnal di sebelah kiri.
                 </p>
 
@@ -465,33 +465,33 @@ export default function NewSubmissionPage() {
                         setDraftFile(e.dataTransfer.files[0]);
                       }
                     }}
-                    className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer block space-y-2.5 bg-white hover:bg-[#0071e3]/5 ${
-                      draftDragOver ? "border-[#0071e3] bg-[#0071e3]/10 scale-[1.01]" : "border-[#0071e3]/30"
+                    className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer block space-y-2.5 bg-surface-container-low hover:bg-primary/5 ${
+                      draftDragOver ? "border-primary bg-primary/10 scale-[1.01]" : "border-primary/30"
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-2xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center mx-auto">
+                    <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
                       <UploadCloud className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-[#1d1d1f]">
+                      <p className="text-xs font-semibold text-on-surface">
                         Drop Author Manuscript PDF here
                       </p>
-                      <p className="text-[11px] text-[#86868b] mt-0.5">or browse from your computer (Max 50MB)</p>
+                      <p className="text-[11px] text-on-surface-variant mt-0.5">or browse from your computer (Max 50MB)</p>
                     </div>
-                    <span className="inline-block text-[10px] font-medium text-[#0071e3] bg-[#0071e3]/10 px-2.5 py-0.5 rounded-full">
+                    <span className="inline-block text-[10px] font-medium text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
                       Direct-to-S3 pre-signed upload
                     </span>
                   </label>
                 ) : (
-                  <div className="bg-white rounded-2xl border border-[#0071e3]/20 p-4 shadow-xs space-y-3">
+                  <div className="bg-surface-container-low rounded-2xl border border-primary/20 p-4 shadow-xs space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-[#1d1d1f] truncate">{draftFile.name}</p>
-                          <p className="text-[10px] text-[#86868b] font-mono">
+                          <p className="text-xs font-bold text-on-surface truncate">{draftFile.name}</p>
+                          <p className="text-[10px] text-on-surface-variant font-mono">
                             {(draftFile.size / (1024 * 1024)).toFixed(2)} MB &bull; Author Manuscript
                           </p>
                         </div>
@@ -500,18 +500,18 @@ export default function NewSubmissionPage() {
                         <CheckCircle className="w-3 h-3" /> Ready
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-black/[0.06] text-xs">
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant text-xs">
                       <label
                         htmlFor="draft-upload"
-                        className="font-medium text-[#86868b] hover:text-[#0071e3] cursor-pointer"
+                        className="font-medium text-on-surface-variant hover:text-primary cursor-pointer"
                       >
                         Change File
                       </label>
-                      <span className="text-[#86868b]">&bull;</span>
+                      <span className="text-on-surface-variant">&bull;</span>
                       <button
                         type="button"
                         onClick={() => setDraftFile(null)}
-                        className="font-medium text-[#ff3b30] hover:underline"
+                        className="font-medium text-error hover:underline"
                       >
                         Remove
                       </button>
@@ -522,12 +522,12 @@ export default function NewSubmissionPage() {
 
               {/* Status / Selected File Info */}
               {draftFile ? (
-                <div className="p-3 bg-[#34c759]/10 border border-[#34c759]/20 rounded-xl text-[11px] text-[#34c759] flex items-center gap-2">
+                <div className="p-3 bg-success/10 border border-success/20 rounded-xl text-[11px] text-success flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 shrink-0" />
                   <span>Draft manuscript verified. Ready for asynchronous pre-submission audit.</span>
                 </div>
               ) : (
-                <div className="p-3 bg-[#ff3b30]/10 border border-[#ff3b30]/20 rounded-xl text-[11px] text-[#ff3b30]">
+                <div className="p-3 bg-error/10 border border-error/20 rounded-xl text-[11px] text-error">
                   <span className="font-semibold">Action required:</span> Please select a draft manuscript PDF to proceed.
                 </div>
               )}
@@ -535,19 +535,19 @@ export default function NewSubmissionPage() {
           </div>
 
           {uploadProgress && (
-            <div className="p-3.5 bg-[#0071e3]/10 border border-[#0071e3]/20 rounded-2xl flex items-center gap-2 text-xs font-medium text-[#0071e3] animate-pulse">
+            <div className="p-3.5 bg-primary/10 border border-primary/20 rounded-2xl flex items-center gap-2 text-xs font-medium text-primary animate-pulse">
               <Loader2 className="w-4 h-4 animate-spin shrink-0" />
               <span>{uploadProgress}</span>
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-4 border-t border-black/[0.06]">
+          <div className="flex items-center justify-between pt-4 border-t border-outline-variant">
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => setStep(1)}
-              className="text-xs rounded-full text-[#86868b] hover:text-[#1d1d1f]"
+              className="text-xs rounded-full text-on-surface-variant hover:text-on-surface"
             >
               &larr; Back
             </Button>
@@ -555,7 +555,7 @@ export default function NewSubmissionPage() {
               type="button"
               onClick={handleFileUploadAndDispatch}
               disabled={!draftFile || loading}
-              className="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-xs rounded-full px-6 shadow-xs disabled:opacity-50 gap-2 h-10 active:scale-[0.98] transition-all"
+              className="bg-primary hover:bg-primary text-on-primary font-medium text-xs rounded-full px-6 shadow-xs disabled:opacity-50 gap-2 h-10 active:scale-[0.98] transition-all"
             >
               {loading ? (
                 <>
@@ -576,15 +576,15 @@ export default function NewSubmissionPage() {
 
       {/* Step 3: Success & Redirecting */}
       {step === 3 && (
-        <div className="bg-white p-10 sm:p-14 rounded-3xl border border-black/[0.06] shadow-apple-card text-center space-y-4">
-          <div className="w-14 h-14 rounded-full bg-[#34c759]/10 text-[#34c759] flex items-center justify-center mx-auto">
+        <div className="bg-surface-container-low p-10 sm:p-14 rounded-3xl border border-outline-variant shadow-elevation-1 text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-success/10 text-success flex items-center justify-center mx-auto">
             <CheckCircle className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-bold text-[#1d1d1f] tracking-tight">Manuscript &amp; Template Submitted</h2>
-          <p className="text-xs sm:text-sm text-[#86868b] max-w-md mx-auto">
+          <h2 className="text-2xl font-bold text-on-surface tracking-tight">Manuscript &amp; Template Submitted</h2>
+          <p className="text-xs sm:text-sm text-on-surface-variant max-w-md mx-auto">
             Both files are securely uploaded to S3. AI Worker is comparing draft layout against template guidelines. Redirecting to live audit report...
           </p>
-          <div className="flex items-center justify-center gap-2 text-xs text-[#0071e3] font-medium pt-2">
+          <div className="flex items-center justify-center gap-2 text-xs text-primary font-medium pt-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>Connecting to comparative audit report...</span>
           </div>
