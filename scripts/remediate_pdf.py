@@ -281,12 +281,8 @@ class TemplateExtractor:
             pass
 
         try:
-            doc = fitz.open(template_path)
-            if len(doc) == 0:
-                return TemplateExtractor.get_default_ieee_specs()
-
-            ast_data = XmlAstExtractor.parse_xml_ast(doc)
-            doc.close()
+            with fitz.open(template_path) as doc:
+                ast_data = XmlAstExtractor.parse_xml_ast(doc)
 
             specs = {
                 "page_format": ast_data["page_format"],

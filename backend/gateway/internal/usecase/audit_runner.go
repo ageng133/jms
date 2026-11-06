@@ -100,6 +100,7 @@ func (r *AuditRunner) AuditManuscript(parent context.Context, job domain.AuditJo
 		return fmt.Errorf("mark processing: %w", err)
 	}
 
+	log.Printf("[Audit] ☁️ Ingesting manuscript files from Box Cloud Storage for audit %s (Draft: %s, Template: %s)...", job.AuditID, job.DraftKey, job.TemplateKey)
 	draft, err := r.storage.GetFile(ctx, job.DraftKey)
 	if err != nil {
 		return fmt.Errorf("load manuscript file: %w", err)
@@ -110,6 +111,7 @@ func (r *AuditRunner) AuditManuscript(parent context.Context, job domain.AuditJo
 			return fmt.Errorf("load template file: %w", err)
 		}
 	}
+	log.Printf("[Audit] 🤖 Feeding ingested Box files directly to multimodal AI engine pipeline (Draft: %d bytes, Template: %d bytes)...", len(draft), len(template))
 
 	input := domain.AuditInput{Draft: draft, Template: template, Specs: job.Specs}
 

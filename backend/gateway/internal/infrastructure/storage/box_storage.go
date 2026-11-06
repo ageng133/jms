@@ -48,6 +48,9 @@ type BoxStorage struct {
 	tokenMu      sync.RWMutex
 	cachedToken  string
 	tokenExpires time.Time
+
+	indexMu  sync.RWMutex
+	boxIndex map[string]string // key -> Box File ID
 }
 
 // NewBoxStorage creates the Box driver. publicBaseURL is the externally
@@ -67,14 +70,28 @@ func NewBoxStorage(cfg *config.BoxConfig, publicBaseURL string) (domain.StorageC
 	}
 	gatewayBase := strings.TrimRight(publicBaseURL, "/")
 
-	log.Printf("[BoxStorage] Initialized Box.com Cloud Storage Driver (Folder ID: %s, Local Cache: %s)\n",
-		cfg.FolderID, dir)
+	boxIdx := make(map[string]string)
+	indexPath := filepath.Join(dir, ".box_index.json")
+	if raw, err := os.ReadFile(indexPath); err == nil {
+		_ = json.Unmarshal(raw, &boxIdx)
+	}
+
+	log.Printf("[BoxStorage] Initialized Box.com Cloud Storage Driver (Folder ID: %s, Local Cache: %s, Mapped Files: %d)\n",
+		cfg.FolderID, dir, len(boxIdx))
 
 	return &BoxStorage{
 		cfg:            cfg,
 		httpClient:     &http.Client{Timeout: 60 * time.Second},
 		gatewayBaseURL: gatewayBase,
+		boxIndex:       boxIdx,
 	}, nil
+}
+
+func (b *BoxStorage) saveIndexToFile() {
+	indexPath := filepath.Join(b.cfg.LocalFallbackDir, ".box_index.json")
+	if data, err := json.MarshalIndent(b.boxIndex, "", "  "); err == nil {
+		_ = os.WriteFile(indexPath, data, 0644)
+	}
 }
 
 func (b *BoxStorage) resolveSafePath(key string) (string, error) {
@@ -143,28 +160,136 @@ func (b *BoxStorage) SaveFile(ctx context.Context, key string, data []byte) erro
 	}
 	log.Printf("[BoxStorage] Saved file locally to %s (%d bytes)", localPath, len(data))
 
-	// 2. Asynchronously upload to Box.com Cloud via JWT or Developer Token
-	go func() {
-		err := b.uploadToBoxCloud(key, data)
-		if err != nil {
-			log.Printf("[BoxStorage] Warning: Cloud upload to Box.com API failed: %v", err)
-		}
-	}()
+	// 2. Synchronously sync to Box.com Cloud via Enterprise JWT and index Box File ID
+	if fileID, err := b.uploadToBoxCloud(key, data); err != nil {
+		log.Printf("[BoxStorage] Warning: Cloud upload to Box.com API failed: %v", err)
+	} else if fileID != "" {
+		b.indexMu.Lock()
+		b.boxIndex[key] = fileID
+		b.saveIndexToFile()
+		b.indexMu.Unlock()
+	}
 
 	return nil
 }
 
 func (b *BoxStorage) GetFile(ctx context.Context, key string) ([]byte, error) {
+	// 1. AI Engine reading directly from Box Cloud Storage when prompted
+	fileID, _ := b.lookupBoxFileID(ctx, key)
+	if fileID != "" {
+		cloudData, err := b.downloadFromBoxCloud(ctx, fileID)
+		if err == nil && len(cloudData) > 0 {
+			log.Printf("[BoxStorage] 📥 AI Engine reading file directly from Box.com Cloud Storage (Key: %s, Box File ID: %s, %d bytes)", key, fileID, len(cloudData))
+			// Keep local cache in sync
+			if localPath, lerr := b.localPath(key); lerr == nil {
+				_ = os.WriteFile(localPath, cloudData, 0644)
+			}
+			return cloudData, nil
+		}
+		if err != nil {
+			log.Printf("[BoxStorage] ℹ️ Box Cloud fetch for %s (ID %s) error: %v. Falling back to local cache.", key, fileID, err)
+		}
+	}
+
+	// 2. Resilient fallback to local Box cache
 	localPath, err := b.localPath(key)
 	if err != nil {
 		return nil, err
 	}
 	data, err := os.ReadFile(localPath)
 	if err == nil {
+		log.Printf("[BoxStorage] 📂 AI Engine reading file from local Box storage fallback (Key: %s, %d bytes)", key, len(data))
 		return data, nil
 	}
 
 	return nil, fmt.Errorf("file not found in box storage: %w", err)
+}
+
+func (b *BoxStorage) lookupBoxFileID(ctx context.Context, key string) (string, error) {
+	b.indexMu.RLock()
+	fileID := b.boxIndex[key]
+	b.indexMu.RUnlock()
+	if fileID != "" {
+		return fileID, nil
+	}
+
+	token, err := b.getValidAccessToken()
+	if err != nil {
+		return "", err
+	}
+
+	folderID := b.cfg.FolderID
+	if folderID == "" {
+		folderID = "0"
+	}
+
+	listURL := fmt.Sprintf("%s/folders/%s/items?limit=100&fields=id,name", b.cfg.BaseURL, folderID)
+	req, err := http.NewRequestWithContext(ctx, "GET", listURL, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		var folderResp struct {
+			Entries []struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
+			} `json:"entries"`
+		}
+		if json.NewDecoder(resp.Body).Decode(&folderResp) == nil {
+			base := filepath.Base(key)
+			for _, ent := range folderResp.Entries {
+				if ent.Name == base || strings.HasSuffix(ent.Name, "_"+base) {
+					b.indexMu.Lock()
+					b.boxIndex[key] = ent.ID
+					b.saveIndexToFile()
+					b.indexMu.Unlock()
+					return ent.ID, nil
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("box file ID not found for key %s", key)
+}
+
+func (b *BoxStorage) downloadFromBoxCloud(ctx context.Context, fileID string) ([]byte, error) {
+	token, err := b.getValidAccessToken()
+	if err != nil {
+		return nil, fmt.Errorf("unable to authenticate with Box Cloud: %w", err)
+	}
+
+	downloadURL := fmt.Sprintf("%s/files/%s/content", b.cfg.BaseURL, fileID)
+	req, err := http.NewRequestWithContext(ctx, "GET", downloadURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("box download request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("box download returned status %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed reading box download content: %w", err)
+	}
+
+	return data, nil
 }
 
 // findBoxConfigFile searches for any Box JWT config.json in standard directories
@@ -318,10 +443,10 @@ func (b *BoxStorage) getValidAccessToken() (string, error) {
 	return "", fmt.Errorf("no valid Box JWT config.json or BOX_DEVELOPER_TOKEN found")
 }
 
-func (b *BoxStorage) uploadToBoxCloud(key string, data []byte) error {
+func (b *BoxStorage) uploadToBoxCloud(key string, data []byte) (string, error) {
 	token, err := b.getValidAccessToken()
 	if err != nil {
-		return fmt.Errorf("unable to authenticate with Box Cloud: %w", err)
+		return "", fmt.Errorf("unable to authenticate with Box Cloud: %w", err)
 	}
 
 	var body bytes.Buffer
@@ -344,10 +469,10 @@ func (b *BoxStorage) uploadToBoxCloud(key string, data []byte) error {
 
 	part, err := writer.CreateFormFile("file", filename)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if _, err := part.Write(data); err != nil {
-		return err
+		return "", err
 	}
 	_ = writer.Close()
 
@@ -358,20 +483,20 @@ func (b *BoxStorage) uploadToBoxCloud(key string, data []byte) error {
 
 	req, err := http.NewRequest("POST", uploadURL, &body)
 	if err != nil {
-		return err
+		return "", err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	resp, err := b.httpClient.Do(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode >= 300 {
-		return fmt.Errorf("box.com upload returned status %d: %s", resp.StatusCode, string(respBody))
+		return "", fmt.Errorf("box.com upload returned status %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	var boxResp struct {
@@ -381,11 +506,11 @@ func (b *BoxStorage) uploadToBoxCloud(key string, data []byte) error {
 		} `json:"entries"`
 	}
 	_ = json.Unmarshal(respBody, &boxResp)
-	boxFileID := "unknown"
+	boxFileID := ""
 	if len(boxResp.Entries) > 0 {
 		boxFileID = boxResp.Entries[0].ID
 	}
 
 	log.Printf("[BoxStorage] 🎉 Successfully synced %s to Box.com cloud folder %s (Box File ID: %s)", key, folderID, boxFileID)
-	return nil
+	return boxFileID, nil
 }

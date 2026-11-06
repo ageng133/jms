@@ -10,9 +10,14 @@ import { GoogleAuthModal, GoogleLogo } from "@/components/GoogleAuthModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button, IconButton, cn } from "@/components/ui/button";
 
-const NAV_LINKS = [
+interface NavLinkItem {
+  href: string;
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
+const NAV_LINKS: NavLinkItem[] = [
   { href: "/", label: "Overview" },
-  { href: "/#ai-copilot", label: "AI Copilot", icon: Sparkles },
   { href: "/#how-it-works", label: "How It Works" },
   { href: "/admin", label: "Editorial Portal" },
 ];

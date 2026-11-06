@@ -326,6 +326,7 @@ func (h *SubmissionHandler) GetAuditReport(c *gin.Context) {
 		payload["ai_engine"] = "PyMuPDF Geometry Engine"
 		payload["ai_mode"] = "PYMUPDF_WORKER"
 	}
+	payload["storage_provider"] = "Box.com Cloud Storage (Enterprise JWT)"
 
 	response.Success(c, http.StatusOK, payload)
 }

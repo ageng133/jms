@@ -26,7 +26,6 @@ import { AuthGateCard } from "@/components/AuthGateCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LayoutComparisonViewer } from "@/components/audit/LayoutComparisonViewer";
-import { AICopilotWidget } from "@/components/audit/AICopilotWidget";
 import { TriadComparisonMatrix } from "@/components/audit/TriadComparisonMatrix";
 import { ComplianceCertificateCard } from "@/components/audit/ComplianceCertificateCard";
 
@@ -348,13 +347,6 @@ export default function AuditReportPage({ params }: { params: Promise<{ id: stri
 
           {/* Official Format Kilat Compliance Certificate */}
           <ComplianceCertificateCard report={report} />
-
-          {/* Interactive Format Kilat AI Academic Copilot */}
-          <AICopilotWidget
-            manuscriptId={resolvedParams.id}
-            auditId={report.audit_id}
-            initialTier="S1"
-          />
 
           {/* Format Kilat: Fixed Layout & Remediation Blueprint */}
           {report.fixed_layout && (

@@ -17,7 +17,6 @@ import { useAuth } from "@/context/AuthContext";
 import { GoogleLogo } from "@/components/GoogleAuthModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AICopilotWidget } from "@/components/audit/AICopilotWidget";
 import { AcademicTier } from "@/types/jms";
 
 export default function HomePage() {
@@ -163,13 +162,13 @@ export default function HomePage() {
                 variant="outline"
                 size="lg"
                 onClick={() => {
-                  const el = document.getElementById("ai-copilot");
+                  const el = document.getElementById("how-it-works");
                   el?.scrollIntoView({ behavior: "smooth" });
                 }}
                 className="gap-2 text-xs sm:text-sm rounded-full border-primary/30 hover:bg-primary-container/60 text-on-primary-container h-11 px-6 active:scale-[0.98] transition-all"
               >
-                <Sparkles className="w-4 h-4 text-tertiary" />
-                <span>Coba Format Kilat AI Copilot</span>
+                <Layers className="w-4 h-4 text-primary" />
+                <span>Pelajari Cara Kerja</span>
               </Button>
             </div>
 
@@ -221,31 +220,7 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================================
-          2. FORMAT KILAT AI ACADEMIC COPILOT (GROUNDED & AMUSING)
-         ===================================================================== */}
-      <section id="ai-copilot" className="space-y-8 scroll-mt-20">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-tertiary/20 text-xs font-bold text-on-tertiary-container shadow-xs">
-            <Sparkles className="w-4 h-4 text-tertiary" />
-            <span>Format Kilat AI Academic Copilot &bull; Multi-Tier Engine</span>
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-on-surface leading-tight">
-            Bukan Dukun Skripsi, Bukan Pula Tukang Review Gaib. <br />
-            <span className="gradient-text-aurora">Asisten Cek Format yang Kasih Solusi, Bukan Sekadar Marah-Marah.</span>
-          </h2>
-          <p className="text-xs sm:text-sm text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-            Ditenagai model cerdas yang bekerja secara offline (dan Gemini saat terhubung). AI Copilot kami membedah dokumenmu berdampingan dengan template resmi jurnal tujuan: dari margin yang nyerempet tepi, kolom yang belum dipisah, sampai referensi yang ada di daftar pustaka tapi ga pernah disebut di teks.
-          </p>
-        </div>
-
-        {/* Live Interactive Copilot Widget */}
-        <div className="max-w-4xl mx-auto">
-          <AICopilotWidget initialTier={selectedTier} className="w-full shadow-2xl" />
-        </div>
-      </section>
-
-      {/* =====================================================================
-          3. HOW IT WORKS: 3-STEP PIPELINE
+          2. HOW IT WORKS: 3-STEP PIPELINE
          ===================================================================== */}
       <section id="how-it-works" className="space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
