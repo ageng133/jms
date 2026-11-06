@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -34,10 +35,17 @@ func NewGeminiEngine(cfg *config.GoogleAIConfig) *GeminiEngine {
 func (g *GeminiEngine) Name() string { return "gemini:" + g.model() }
 
 func (g *GeminiEngine) model() string {
-	if g.cfg.Model == "" {
-		return "gemini-2.5-flash"
+	if g.cfg == nil || g.cfg.Model == "" {
+		return "gemini-3.5-flash"
 	}
 	return g.cfg.Model
+}
+
+func (g *GeminiEngine) baseURL() string {
+	if g.cfg == nil || g.cfg.BaseURL == "" {
+		return "https://generativelanguage.googleapis.com/v1beta"
+	}
+	return g.cfg.BaseURL
 }
 
 type geminiFindings struct {
@@ -52,8 +60,25 @@ type geminiFindings struct {
 }
 
 func (g *GeminiEngine) Audit(ctx context.Context, in domain.AuditInput) (*domain.AuditOutput, error) {
-	if g.cfg.APIKey == "" {
-		return nil, errors.New("gemini is not configured (GEMINI_API_KEY missing)")
+	apiKey := ""
+	if g.cfg != nil {
+		apiKey = g.cfg.APIKey
+	}
+	if apiKey == "" {
+		apiKey = os.Getenv("GEMINI_API_KEY")
+		if apiKey == "" {
+			apiKey = os.Getenv("GOOGLE_AI_APIKEY")
+		}
+		if apiKey == "" {
+			apiKey = os.Getenv("GOOGLE_API_KEY")
+		}
+		if g.cfg != nil {
+			g.cfg.APIKey = apiKey
+		}
+	}
+
+	if apiKey == "" {
+		return nil, errors.New("gemini is not configured (GEMINI_API_KEY or GOOGLE_AI_APIKEY missing)")
 	}
 	if len(in.Draft)+len(in.Template) > maxInlineBytes {
 		return nil, fmt.Errorf("files too large for Gemini inline upload (%d MB max)", maxInlineBytes>>20)
@@ -107,13 +132,13 @@ Respond with ONE JSON object and nothing else:
 		},
 	})
 
-	endpoint := fmt.Sprintf("%s/models/%s:generateContent", strings.TrimRight(g.cfg.BaseURL, "/"), g.model())
+	endpoint := fmt.Sprintf("%s/models/%s:generateContent", strings.TrimRight(g.baseURL(), "/"), g.model())
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-goog-api-key", g.cfg.APIKey) // keep the key out of URLs/logs
+	req.Header.Set("x-goog-api-key", apiKey) // keep the key out of URLs/logs
 
 	resp, err := g.httpClient.Do(req)
 	if err != nil {

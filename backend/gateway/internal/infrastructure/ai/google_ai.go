@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/jms-uts/backend/gateway/config"
 )
 
@@ -56,12 +58,32 @@ func (s *googleAIService) GenerateCopilotAdvice(ctx context.Context, req AICopil
 		req.Action = "CHAT"
 	}
 
-	// 1. Autonomous Turnkey Mode if Gemini API Key is missing or empty
-	if s.cfg == nil || s.cfg.APIKey == "" {
+	// 1. Dynamic API key resolution and fallback
+	apiKey := ""
+	if s.cfg != nil {
+		apiKey = s.cfg.APIKey
+	}
+	if apiKey == "" {
+		for _, envFile := range []string{".env", "../.env", "../../.env", "/Users/mac/Documents/Repositories/jms-uts/backend/.env"} {
+			_ = godotenv.Overload(envFile)
+		}
+		apiKey = os.Getenv("GEMINI_API_KEY")
+		if apiKey == "" {
+			apiKey = os.Getenv("GOOGLE_AI_APIKEY")
+		}
+		if apiKey == "" {
+			apiKey = os.Getenv("GOOGLE_API_KEY")
+		}
+		if s.cfg != nil {
+			s.cfg.APIKey = apiKey
+		}
+	}
+
+	if apiKey == "" {
 		return s.generateAutonomousCopilotAdvice(req), nil
 	}
 
-	// 2. Call Google Gemini 1.5 Flash when API key is provided
+	// 2. Call Google Gemini when API key is provided
 	systemPrompt := fmt.Sprintf(`You are Format Kilat AI Academic Copilot, an elite academic advising system for Indonesian higher education researchers (S1 Skripsi, S2 Tesis, S3 Disertasi Scopus, and Early-Career Lecturers / Dosen Muda).
 The user academic level is %s and requested action is %s.
 Respond with actionable, encouraging, high-density advice in Indonesian (or technical English for LaTeX/BibTeX).
@@ -72,7 +94,11 @@ Return JSON with keys:
 - checklist (array of string compliance steps)
 User Query: %s`, req.AcademicLevel, req.Action, req.Prompt)
 
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=%s", s.cfg.APIKey)
+	model := "gemini-3.5-flash"
+	if s.cfg != nil && s.cfg.Model != "" {
+		model = s.cfg.Model
+	}
+	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 
 	payload := map[string]interface{}{
 		"contents": []map[string]interface{}{

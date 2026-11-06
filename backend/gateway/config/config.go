@@ -122,13 +122,11 @@ type JWTConfig struct {
 }
 
 func LoadConfig() (*Config, error) {
-	// Load .env files if present (current, parent, grandparent dirs).
-	// godotenv.Load never replaces a variable that is already set, so real
-	// environment variables (docker-compose, shell, CI) win over .env, and
-	// the nearest .env wins over the ones further up. Runtime hot-reload of
-	// Box/Gemini keys lives in health_handler.go and box_storage.go.
-	for _, envFile := range []string{".env", "../.env", "../../.env"} {
-		_ = godotenv.Load(envFile)
+	// Load .env files if present (current, parent, grandparent dirs, and repo path).
+	// Overload ensures latest configured credentials in .env take effect.
+	for _, envFile := range []string{".env", "../.env", "../../.env", "/Users/mac/Documents/Repositories/jms-uts/backend/.env", "/Users/mac/Documents/Repositories/jms-uts/backend/gateway/.env"} {
+		_ = godotenv.Overload(envFile)
+	}
 	}
 
 	expiryHours, err := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "72"))
@@ -223,8 +221,8 @@ func LoadConfig() (*Config, error) {
 			LocalFallbackDir: getEnv("BOX_LOCAL_FALLBACK_DIR", "./storage/box"),
 		},
 		GoogleAI: GoogleAIConfig{
-			APIKey:  getEnv("GEMINI_API_KEY", getEnv("GOOGLE_API_KEY", "")),
-			Model:   getEnv("GEMINI_MODEL", "gemini-2.5-flash"),
+			APIKey:  getEnv("GEMINI_API_KEY", getEnv("GOOGLE_AI_APIKEY", getEnv("GOOGLE_API_KEY", ""))),
+			Model:   getEnv("GEMINI_MODEL", "gemini-3.5-flash"),
 			BaseURL: getEnv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta"),
 		},
 		JWT: JWTConfig{

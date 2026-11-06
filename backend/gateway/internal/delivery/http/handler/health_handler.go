@@ -70,6 +70,9 @@ func (h *HealthHandler) SystemReadiness(c *gin.Context) {
 
 	geminiKey := os.Getenv("GEMINI_API_KEY")
 	if geminiKey == "" {
+		geminiKey = os.Getenv("GOOGLE_AI_APIKEY")
+	}
+	if geminiKey == "" {
 		geminiKey = os.Getenv("GOOGLE_API_KEY")
 	}
 
