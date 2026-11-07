@@ -68,6 +68,8 @@ out/
 *_config.json
 box_config.json
 backend/*config.json
+client_secret*.json
+*.apps.googleusercontent.com.json
 
 # OS
 .DS_Store
