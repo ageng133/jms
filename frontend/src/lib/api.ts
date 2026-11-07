@@ -313,10 +313,24 @@ export async function requestUploadPresign(
   fileType: FileType,
   fileRole: "MANUSCRIPT" | "TEMPLATE" = "MANUSCRIPT"
 ): Promise<PresignResult> {
-  return fetchWithAuth<PresignResult>(`/manuscripts/${encodeURIComponent(manuscriptId)}/files/presign`, {
+  const result = await fetchWithAuth<PresignResult>(`/manuscripts/${encodeURIComponent(manuscriptId)}/files/presign`, {
     method: "POST",
     body: JSON.stringify({ filename, file_type: fileType, file_role: fileRole }),
   });
+
+  // Normalize upload_url if it points to internal gateway endpoint (avoid localhost:8080 leaks)
+  if (result.upload_url && result.upload_url.includes("/files/upload")) {
+    try {
+      const parsed = new URL(result.upload_url, typeof window !== "undefined" ? window.location.origin : "http://localhost:8080");
+      result.upload_url = `${getApiBaseUrl()}/files/upload${parsed.search}`;
+    } catch {
+      const queryIdx = result.upload_url.indexOf("?");
+      const query = queryIdx !== -1 ? result.upload_url.substring(queryIdx) : "";
+      result.upload_url = `${getApiBaseUrl()}/files/upload${query}`;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -330,12 +344,25 @@ export async function uploadDirectToS3(uploadUrl: string, file: File): Promise<v
     "Content-Type": file.type || "application/pdf",
   };
 
+  // If uploadUrl points to the gateway's file upload endpoint, normalize it to the client's active API base URL
+  let targetUrl = uploadUrl;
+  if (targetUrl.includes("/files/upload")) {
+    try {
+      const parsed = new URL(targetUrl, typeof window !== "undefined" ? window.location.origin : "http://localhost:8080");
+      targetUrl = `${getApiBaseUrl()}/files/upload${parsed.search}`;
+    } catch {
+      const queryIdx = targetUrl.indexOf("?");
+      const query = queryIdx !== -1 ? targetUrl.substring(queryIdx) : "";
+      targetUrl = `${getApiBaseUrl()}/files/upload${query}`;
+    }
+  }
+
   const token = getStoredToken();
-  if (token && isSameOrigin(uploadUrl, getApiBaseUrl())) {
+  if (token && (targetUrl.includes("/files/upload") || isSameOrigin(targetUrl, getApiBaseUrl()))) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(uploadUrl, { method: "PUT", headers, body: file });
+  const res = await fetch(targetUrl, { method: "PUT", headers, body: file });
   if (!res.ok) {
     let message = `Upload failed with status ${res.status}`;
     try {

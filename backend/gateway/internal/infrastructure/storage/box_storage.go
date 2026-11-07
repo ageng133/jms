@@ -120,11 +120,19 @@ func (b *BoxStorage) resolveSafePath(key string) (string, error) {
 }
 
 func (b *BoxStorage) GeneratePresignedPutURL(ctx context.Context, key string, contentType string, expiry time.Duration) (string, error) {
-	return fmt.Sprintf("%s/api/v1/files/upload?key=%s", b.gatewayBaseURL, url.QueryEscape(key)), nil
+	baseURL := strings.TrimRight(b.gatewayBaseURL, "/")
+	if baseURL == "" || strings.Contains(baseURL, "localhost") || strings.Contains(baseURL, "127.0.0.1") {
+		return fmt.Sprintf("/api/v1/files/upload?key=%s", url.QueryEscape(key)), nil
+	}
+	return fmt.Sprintf("%s/api/v1/files/upload?key=%s", baseURL, url.QueryEscape(key)), nil
 }
 
 func (b *BoxStorage) GeneratePresignedGetURL(ctx context.Context, key string, expiry time.Duration) (string, error) {
-	return fmt.Sprintf("%s/api/v1/files/download?key=%s", b.gatewayBaseURL, url.QueryEscape(key)), nil
+	baseURL := strings.TrimRight(b.gatewayBaseURL, "/")
+	if baseURL == "" || strings.Contains(baseURL, "localhost") || strings.Contains(baseURL, "127.0.0.1") {
+		return fmt.Sprintf("/api/v1/files/download?key=%s", url.QueryEscape(key)), nil
+	}
+	return fmt.Sprintf("%s/api/v1/files/download?key=%s", baseURL, url.QueryEscape(key)), nil
 }
 
 // localPath resolves key inside the storage root and refuses anything that
