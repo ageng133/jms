@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, ArrowRight, Sparkles } from "lucide-react";
+import { Menu, X, LogOut, ArrowRight, Sparkles, Zap } from "lucide-react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { GoogleAuthModal, GoogleLogo } from "@/components/GoogleAuthModal";
@@ -87,9 +87,9 @@ function AppShell({ children }: { children: React.ReactNode }) {
                   </IconButton>
                 </>
               ) : (
-                <Button size="sm" onClick={openGoogleModal}>
-                  <GoogleLogo className="w-4 h-4" />
-                  <span>Sign In with Google</span>
+                <Button size="sm" onClick={openGoogleModal} className="gap-1.5">
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
                 </Button>
               )}
             </div>
@@ -149,14 +149,14 @@ function AppShell({ children }: { children: React.ReactNode }) {
                   </div>
                 ) : (
                   <Button
-                    className="w-full"
+                    className="w-full gap-1.5"
                     onClick={() => {
                       setMobileMenuOpen(false);
                       openGoogleModal();
                     }}
                   >
-                    <GoogleLogo className="w-4 h-4" />
-                    <span>Sign In with Google</span>
+                    <Zap className="w-4 h-4" />
+                    <span>Sign In</span>
                   </Button>
                 )}
               </div>

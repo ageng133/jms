@@ -12,7 +12,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, AlertCircle, Loader2, CheckCircle2, ChevronDown, Building2, User, Mail } from "lucide-react";
+import {
+  ShieldCheck,
+  AlertCircle,
+  Loader2,
+  CheckCircle2,
+  Lock,
+  Mail,
+  Zap,
+  UserCheck,
+  User,
+  Sparkles,
+} from "lucide-react";
 
 export function GoogleLogo({ className = "w-5 h-5" }: { className?: string }) {
   return (
@@ -37,48 +48,30 @@ export function GoogleLogo({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
-// RFC 5322 Compliant Email Validation Regex
-const RFC_EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
-
 export function GoogleAuthModal() {
-  const { isGoogleModalOpen, closeGoogleModal, signInWithGoogle } = useAuth();
+  const {
+    isGoogleModalOpen,
+    closeGoogleModal,
+    signInWithGoogle,
+    signInWithPassword,
+    signInAsDemo,
+  } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<"demo" | "password" | "google">("demo");
   const [loading, setLoading] = useState(false);
+  const [loadingRole, setLoadingRole] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Enterprise Academic Credentials Form State
-  const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<"AUTHOR" | "ADMIN">("AUTHOR");
-  const [customAffiliation, setCustomAffiliation] = useState("");
+  // Email & Password Form State
+  const [email, setEmail] = useState("author@jms.org");
+  const [password, setPassword] = useState("password123");
 
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  const isDevMode = process.env.NODE_ENV === "development";
-  // The e-mail form is the demo (unverified) login. It must match AUTH_DEMO_LOGIN
-  // on the gateway; set NEXT_PUBLIC_DEMO_LOGIN=false in production.
-  const demoLoginEnabled = process.env.NEXT_PUBLIC_DEMO_LOGIN !== "false";
-
-  // Derive academic affiliation dynamically from email domain
-  const detectedAffiliation = React.useMemo(() => {
-    if (customAffiliation.trim()) return customAffiliation.trim();
-    const lower = email.toLowerCase();
-    if (lower.includes("uts.edu.au")) return "University of Technology Sydney (UTS)";
-    if (lower.includes("mit.edu")) return "Massachusetts Institute of Technology (MIT)";
-    if (lower.includes("stanford.edu")) return "Stanford University";
-    if (lower.includes("harvard.edu")) return "Harvard University";
-    if (lower.includes("ox.ac.uk")) return "University of Oxford";
-    if (lower.includes("cam.ac.uk")) return "University of Cambridge";
-    if (lower.includes("ui.ac.id")) return "Universitas Indonesia";
-    if (lower.includes("itb.ac.id")) return "Institut Teknologi Bandung";
-    if (lower.includes("ugm.ac.id")) return "Universitas Gadjah Mada";
-    if (lower.includes(".edu")) return "Higher Education & Research Institution";
-    if (lower.includes(".ac.")) return "Academic Research Institution";
-    return "Independent Academic Researcher";
-  }, [email, customAffiliation]);
 
   // Initialize real Google Identity Services (GSI) when client ID is configured
   useEffect(() => {
-    if (!isGoogleModalOpen || !googleClientId) return;
+    if (!isGoogleModalOpen || !googleClientId || activeTab !== "google") return;
 
     function initGoogleGSI() {
       if (typeof window !== "undefined" && (window as any).google?.accounts?.id) {
@@ -109,7 +102,7 @@ export function GoogleAuthModal() {
               shape: "rectangular",
               text: "signin_with",
               logo_alignment: "left",
-              width: 380,
+              width: 360,
             });
           }
         } catch (e) {
@@ -128,251 +121,324 @@ export function GoogleAuthModal() {
     } else {
       initGoogleGSI();
     }
-  }, [isGoogleModalOpen, googleClientId, signInWithGoogle]);
+  }, [isGoogleModalOpen, googleClientId, activeTab, signInWithGoogle]);
 
-  async function handleEnterpriseSignIn(e: React.FormEvent) {
+  // 1-Click Demo Sign-In Handler
+  async function handleDemoSignIn(role: "AUTHOR" | "EDITOR" | "ADMIN") {
+    setLoading(true);
+    setLoadingRole(role);
+    setError(null);
+    try {
+      await signInAsDemo(role);
+    } catch (err: any) {
+      setError(err.message || "Failed to sign in with demo credentials.");
+    } finally {
+      setLoading(false);
+      setLoadingRole(null);
+    }
+  }
+
+  // Standard Email & Password Sign-In Handler
+  async function handlePasswordSignIn(e: React.FormEvent) {
     e.preventDefault();
     const cleanEmail = email.trim();
-    const cleanName = fullName.trim();
-
     if (!cleanEmail) {
-      setError("Please enter your academic or institutional Google email.");
+      setError("Please enter your email address.");
       return;
     }
-
-    if (!RFC_EMAIL_REGEX.test(cleanEmail)) {
-      setError("Please enter a valid RFC-compliant email address (e.g., name@university.edu).");
-      return;
-    }
-
-    if (!cleanName || cleanName.length < 2) {
-      setError("Please enter your full name and academic title.");
+    if (!password) {
+      setError("Please enter your password.");
       return;
     }
 
     setLoading(true);
     setError(null);
     try {
-      await signInWithGoogle({
-        email: cleanEmail,
-        full_name: cleanName,
-        role,
-        affiliation: detectedAffiliation,
-      });
+      await signInWithPassword(cleanEmail, password);
     } catch (err: any) {
-      setError(err.message || "Failed to authenticate with academic credentials.");
+      setError(err.message || "Invalid email or password.");
     } finally {
       setLoading(false);
     }
   }
 
-  // Developer mode simulation helper
-  async function applyDevSandboxIdentity(devRole: "AUTHOR" | "ADMIN") {
-    const devEmail = devRole === "ADMIN" ? "editor.google@uts.edu.au" : "author.google@uts.edu.au";
-    const devName = devRole === "ADMIN" ? "Prof. Dr. Sarah Connor" : "Dr. Alexander Wright";
-    setEmail(devEmail);
-    setFullName(devName);
-    setRole(devRole);
-    setCustomAffiliation("University of Technology Sydney (UTS)");
-  }
-
   return (
     <Dialog open={isGoogleModalOpen} onOpenChange={(open) => !open && closeGoogleModal()}>
-      <DialogContent onClose={closeGoogleModal} className="max-w-md">
+      <DialogContent onClose={closeGoogleModal} className="max-w-md p-6">
         <DialogHeader className="space-y-2 text-center sm:text-left">
           <div className="flex items-center justify-between">
-            <div className="w-11 h-11 rounded-2xl bg-on-surface/[0.03] border border-outline-variant flex items-center justify-center shadow-2xs">
-              <GoogleLogo className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-2xs">
+              <span className="text-xl">⚡</span>
             </div>
             <Badge variant="secondary" className="text-[11px] font-semibold bg-primary/10 text-primary border-primary/20 rounded-full">
-              Format Kilat SSO
+              Format Kilat Auth
             </Badge>
           </div>
           <div>
             <DialogTitle className="text-xl font-bold tracking-tight text-on-surface">
-              Sign in with Google
+              Sign In to Format Kilat
             </DialogTitle>
             <DialogDescription className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-              Authenticate using your Google Workspace or university credentials to run automated pre-submission compliance audits.
+              Pilih metode masuk yang Anda inginkan. Tidak memerlukan akun Google untuk mencoba demo.
             </DialogDescription>
           </div>
         </DialogHeader>
 
         {error && (
-          <div className="my-3 p-3.5 rounded-2xl bg-error/10 border border-error/20 text-error text-xs flex items-center gap-2">
+          <div className="my-2 p-3 rounded-2xl bg-error/10 border border-error/20 text-error text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-error" />
             <span className="font-medium">{error}</span>
           </div>
         )}
 
-        {/* Real Google GSI Button Container if NEXT_PUBLIC_GOOGLE_CLIENT_ID exists */}
-        {googleClientId && (
-          <div className="my-3 flex flex-col items-center gap-2">
-            <div ref={googleBtnRef} className="w-full flex justify-center" />
-            {demoLoginEnabled && (
-            <div className="flex items-center gap-2 w-full my-1">
-              <div className="flex-1 h-px bg-on-surface/[0.06]" />
-              <span className="text-[11px] uppercase font-semibold text-on-surface-variant">Or continue with email</span>
-              <div className="flex-1 h-px bg-on-surface/[0.06]" />
-            </div>
-            )}
-          </div>
-        )}
+        {/* Tab Navigation */}
+        <div className="grid grid-cols-3 gap-1 p-1 bg-on-surface/[0.04] rounded-2xl my-3 text-xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab("demo")}
+            className={`py-2 px-3 rounded-xl font-medium transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === "demo"
+                ? "bg-surface shadow-xs text-primary font-semibold"
+                : "text-on-surface-variant hover:text-on-surface"
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span>1-Click Demo</span>
+          </button>
 
-        {!googleClientId && !demoLoginEnabled && (
-          <div className="my-3 p-3.5 rounded-2xl bg-warning-container text-on-warning-container text-xs">
-            Google sign-in is not configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID (frontend) and GOOGLE_CLIENT_ID (gateway).
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={() => setActiveTab("password")}
+            className={`py-2 px-3 rounded-xl font-medium transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === "password"
+                ? "bg-surface shadow-xs text-primary font-semibold"
+                : "text-on-surface-variant hover:text-on-surface"
+            }`}
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Email/Pass</span>
+          </button>
 
-        {/* Standard Enterprise Academic Sign-In Form (demo login) */}
-        {demoLoginEnabled && (
-        <form onSubmit={handleEnterpriseSignIn} className="space-y-3.5 mt-2">
-          <div className="space-y-1">
-            <Label htmlFor="auth-email" className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5 text-on-surface-variant" />
-              Institutional / Google Email
-            </Label>
-            <Input
-              id="auth-email"
-              type="email"
-              placeholder="author.research@uts.edu.au or @gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="text-xs rounded-xl border-outline-variant focus-visible:ring-primary"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("google")}
+            className={`py-2 px-3 rounded-xl font-medium transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === "google"
+                ? "bg-surface shadow-xs text-primary font-semibold"
+                : "text-on-surface-variant hover:text-on-surface"
+            }`}
+          >
+            <GoogleLogo className="w-3.5 h-3.5" />
+            <span>Google SSO</span>
+          </button>
+        </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="auth-name" className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-on-surface-variant" />
-              Full Name &amp; Academic Title
-            </Label>
-            <Input
-              id="auth-name"
-              placeholder="e.g. Dr. Alexander Wright, Senior Lecturer"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              className="text-xs rounded-xl border-outline-variant focus-visible:ring-primary"
-            />
-          </div>
+        {/* TAB 1: 1-CLICK INSTANT DEMO ACCOUNTS */}
+        {activeTab === "demo" && (
+          <div className="space-y-2.5 my-2">
+            <p className="text-[11px] text-on-surface-variant font-medium flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              Klik salah satu akun demo untuk masuk secara instan tanpa Google:
+            </p>
 
-          {/* Dynamic Affiliation Resolution Pill */}
-          <div className="p-3 rounded-2xl bg-on-surface/[0.02] border border-outline-variant flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-on-surface-variant shrink-0" />
-              <div className="space-y-0.5">
-                <div className="text-[10px] uppercase font-semibold text-on-surface-variant">Detected Affiliation</div>
-                <div className="font-medium text-on-surface text-xs truncate max-w-[220px]">
-                  {detectedAffiliation}
+            {/* Author Button */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleDemoSignIn("AUTHOR")}
+              className="w-full p-3 rounded-2xl border border-outline-variant bg-on-surface/[0.02] hover:bg-primary/[0.06] hover:border-primary/40 text-left transition-all group flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                  <User className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-semibold text-xs text-on-surface flex items-center gap-1.5">
+                    <span>Dr. Alice Smith</span>
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-primary/10 text-primary border-primary/20">
+                      Author
+                    </Badge>
+                  </div>
+                  <div className="text-[11px] text-on-surface-variant mt-0.5">author@jms.org</div>
                 </div>
               </div>
-            </div>
-            <Badge variant="secondary" className="text-[10px] text-primary bg-primary/10">
-              Auto-detected
-            </Badge>
-          </div>
+              {loading && loadingRole === "AUTHOR" ? (
+                <Loader2 className="w-4 h-4 text-primary animate-spin" />
+              ) : (
+                <span className="text-xs font-semibold text-primary opacity-80 group-hover:opacity-100">
+                  Masuk →
+                </span>
+              )}
+            </button>
 
-          {/* Role Selection */}
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-on-surface">Journal Desk Access Role</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setRole("AUTHOR")}
-                className={`py-2 px-3 rounded-xl border text-left text-xs transition-all ${
-                  role === "AUTHOR"
-                    ? "border-primary bg-primary/5 text-primary font-semibold shadow-2xs"
-                    : "border-outline-variant hover:bg-on-surface/[0.02] text-on-surface-variant"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span>Author</span>
-                  {role === "AUTHOR" && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
+            {/* Editor Button */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleDemoSignIn("EDITOR")}
+              className="w-full p-3 rounded-2xl border border-outline-variant bg-on-surface/[0.02] hover:bg-primary/[0.06] hover:border-primary/40 text-left transition-all group flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center group-hover:bg-secondary group-hover:text-on-secondary transition-colors">
+                  <UserCheck className="w-4 h-4" />
                 </div>
-                <div className="text-[10px] text-on-surface-variant font-normal mt-0.5">Submissions &amp; Audits</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setRole("ADMIN")}
-                className={`py-2 px-3 rounded-xl border text-left text-xs transition-all ${
-                  role === "ADMIN"
-                    ? "border-primary bg-primary/5 text-primary font-semibold shadow-2xs"
-                    : "border-outline-variant hover:bg-on-surface/[0.02] text-on-surface-variant"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span>Managing Editor</span>
-                  {role === "ADMIN" && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
+                <div>
+                  <div className="font-semibold text-xs text-on-surface flex items-center gap-1.5">
+                    <span>Prof. Robert Davis</span>
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-secondary/15 text-secondary border-secondary/20">
+                      Editor
+                    </Badge>
+                  </div>
+                  <div className="text-[11px] text-on-surface-variant mt-0.5">editor@jms.org</div>
                 </div>
-                <div className="text-[10px] text-on-surface-variant font-normal mt-0.5">Desk Review Portal</div>
-              </button>
-            </div>
-            <p className="text-[10px] text-on-surface-variant">
-              Editor access is granted by the server (ADMIN_EMAILS / EDITOR_EMAILS); other accounts sign in as Author.
-            </p>
-          </div>
+              </div>
+              {loading && loadingRole === "EDITOR" ? (
+                <Loader2 className="w-4 h-4 text-primary animate-spin" />
+              ) : (
+                <span className="text-xs font-semibold text-primary opacity-80 group-hover:opacity-100">
+                  Masuk →
+                </span>
+              )}
+            </button>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary hover:bg-primary text-on-primary font-semibold text-xs gap-2 mt-2 rounded-full shadow-xs active:scale-[0.98] h-10"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Authenticating Credentials...</span>
-              </>
-            ) : (
-              <>
-                <GoogleLogo className="w-4 h-4" />
-                <span>Continue with Academic Single Sign-On</span>
-              </>
-            )}
-          </Button>
-        </form>
+            {/* Admin Button */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => handleDemoSignIn("ADMIN")}
+              className="w-full p-3 rounded-2xl border border-outline-variant bg-on-surface/[0.02] hover:bg-primary/[0.06] hover:border-primary/40 text-left transition-all group flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-tertiary/15 text-tertiary flex items-center justify-center group-hover:bg-tertiary group-hover:text-on-tertiary transition-colors">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-semibold text-xs text-on-surface flex items-center gap-1.5">
+                    <span>Sysadmin JMS</span>
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 bg-tertiary/15 text-tertiary border-tertiary/20">
+                      Admin
+                    </Badge>
+                  </div>
+                  <div className="text-[11px] text-on-surface-variant mt-0.5">admin@jms.org</div>
+                </div>
+              </div>
+              {loading && loadingRole === "ADMIN" ? (
+                <Loader2 className="w-4 h-4 text-primary animate-spin" />
+              ) : (
+                <span className="text-xs font-semibold text-primary opacity-80 group-hover:opacity-100">
+                  Masuk →
+                </span>
+              )}
+            </button>
+          </div>
         )}
 
-        {/* Developer Sandbox Options: Strictly sequestered and collapsible, visible in dev only */}
-        {isDevMode && demoLoginEnabled && (
-          <details className="mt-4 pt-3 border-t border-outline-variant text-xs group">
-            <summary className="cursor-pointer text-[11px] font-medium text-on-surface-variant hover:text-on-surface flex items-center justify-between transition-colors">
-              <span>Developer Sandbox Diagnostics (Local Dev Only)</span>
-              <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
-            </summary>
-            <div className="pt-2.5 pb-1 space-y-2">
-              <p className="text-[10px] text-on-surface-variant">
-                Auto-fill standard test identities into the form above to verify multi-role workflows without manual typing:
-              </p>
+        {/* TAB 2: EMAIL & PASSWORD SIGN-IN */}
+        {activeTab === "password" && (
+          <form onSubmit={handlePasswordSignIn} className="space-y-3.5 my-2">
+            <div className="space-y-1">
+              <Label htmlFor="pass-email" className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-on-surface-variant" />
+                Email Address
+              </Label>
+              <Input
+                id="pass-email"
+                type="email"
+                placeholder="author@jms.org"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="text-xs rounded-xl border-outline-variant focus-visible:ring-primary"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="pass-pwd" className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-on-surface-variant" />
+                Password
+              </Label>
+              <Input
+                id="pass-pwd"
+                type="password"
+                placeholder="password123"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="text-xs rounded-xl border-outline-variant focus-visible:ring-primary"
+              />
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-on-surface/[0.03] border border-outline-variant text-[11px] text-on-surface-variant space-y-1">
+              <div className="font-semibold text-on-surface">Default Seed Accounts:</div>
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => applyDevSandboxIdentity("AUTHOR")}
-                  className="flex-1 py-1.5 px-2.5 rounded-lg border border-outline-variant bg-on-surface/[0.02] hover:bg-on-surface/[0.05] text-[11px] font-medium text-on-surface transition"
+                  onClick={() => { setEmail("author@jms.org"); setPassword("password123"); }}
+                  className="text-primary hover:underline"
                 >
-                  Fill Author Identity
+                  author@jms.org
                 </button>
+                <span>•</span>
                 <button
                   type="button"
-                  onClick={() => applyDevSandboxIdentity("ADMIN")}
-                  className="flex-1 py-1.5 px-2.5 rounded-lg border border-outline-variant bg-on-surface/[0.02] hover:bg-on-surface/[0.05] text-[11px] font-medium text-on-surface transition"
+                  onClick={() => { setEmail("editor@jms.org"); setPassword("password123"); }}
+                  className="text-primary hover:underline"
                 >
-                  Fill Editor Identity
+                  editor@jms.org
                 </button>
               </div>
             </div>
-          </details>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary hover:bg-primary text-on-primary font-semibold text-xs gap-2 rounded-full shadow-xs active:scale-[0.98] h-10"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Signing In...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Sign In with Password</span>
+                </>
+              )}
+            </Button>
+          </form>
+        )}
+
+        {/* TAB 3: GOOGLE SINGLE SIGN-ON */}
+        {activeTab === "google" && (
+          <div className="space-y-4 my-3">
+            {googleClientId ? (
+              <div className="flex flex-col items-center gap-2 py-4">
+                <div ref={googleBtnRef} className="w-full flex justify-center" />
+                <p className="text-[11px] text-on-surface-variant text-center">
+                  Gunakan akun Google Workspace kampus atau institusi Anda.
+                </p>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-on-surface space-y-2">
+                <div className="font-semibold flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <AlertCircle className="w-4 h-4" />
+                  Google OAuth Belum Dikonfigurasi
+                </div>
+                <p className="text-on-surface-variant text-[11px] leading-relaxed">
+                  Kredensial <code>NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> belum dipasang di environment server. Silakan gunakan tab <strong>1-Click Demo</strong> atau <strong>Email/Pass</strong> untuk masuk tanpa Google.
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
         <div className="pt-3 mt-2 border-t border-outline-variant flex items-center justify-between text-[11px] text-on-surface-variant">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-success" />
-            <span>OAuth 2.0 / OpenID Connect Enterprise</span>
+            <span>Format Kilat Secure Identity</span>
           </div>
-          <span>University of Technology Sydney</span>
+          <span>JMS Foundation</span>
         </div>
       </DialogContent>
     </Dialog>

@@ -64,9 +64,9 @@ export default function ManuscriptDetailPage({
   if (!user) {
     return (
       <AuthGateCard
-        title="Sign in with Google to View Manuscript"
-        description="Manuscript details and submission files are restricted to authenticated university users."
-        actionText="Sign in with Google"
+        title="Sign In to View Manuscript"
+        description="Manuscript details and submission files are restricted to authenticated users."
+        actionText="Sign In / 1-Click Demo Login"
       />
     );
   }

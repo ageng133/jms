@@ -370,9 +370,9 @@ export default function AdminPortalPage() {
       <div className="relative min-h-screen bg-surface flex flex-col items-center justify-center p-4">
         <ThemeToggle className="absolute right-4 top-4" />
         <AuthGateCard
-          title="Admin Dashboard Authentication Required"
-          description="Access to manuscript triage, peer review queues, Box storage tickets, and live format audits requires an authenticated UTS Google session."
-          actionText="Sign In with Google"
+          title="Editorial Portal Authentication Required"
+          description="Access to manuscript triage, peer review queues, Box storage tickets, and live format audits requires an authenticated session."
+          actionText="Sign In / 1-Click Demo Login"
         />
       </div>
     );

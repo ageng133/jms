@@ -5,6 +5,7 @@ import {
   getCurrentUser,
   getStoredToken,
   loginWithGoogle as apiLoginWithGoogle,
+  loginWithPassword as apiLoginWithPassword,
   logout as apiLogout,
   fetchCurrentUser,
   GoogleLoginPayload,
@@ -28,6 +29,8 @@ interface AuthContextType {
   openGoogleModal: () => void;
   closeGoogleModal: () => void;
   signInWithGoogle: (payload: GoogleLoginPayload) => Promise<{ token: string; user: UserProfile }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ token: string; user: UserProfile }>;
+  signInAsDemo: (role: "AUTHOR" | "EDITOR" | "ADMIN") => Promise<{ token: string; user: UserProfile }>;
   signOut: () => void;
 }
 
@@ -96,6 +99,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return data;
   }, []);
 
+  const signInWithPassword = useCallback(async (email: string, password: string) => {
+    const data = await apiLoginWithPassword(email, password);
+    setUser(data.user);
+    setToken(data.token);
+    setIsGoogleModalOpen(false);
+    return data;
+  }, []);
+
+  const signInAsDemo = useCallback(async (role: "AUTHOR" | "EDITOR" | "ADMIN") => {
+    let email = "author@jms.org";
+    if (role === "EDITOR") email = "editor@jms.org";
+    if (role === "ADMIN") email = "admin@jms.org";
+    return signInWithPassword(email, "password123");
+  }, [signInWithPassword]);
+
   const signOut = useCallback(() => {
     apiLogout();
     setUser(null);
@@ -113,6 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         openGoogleModal,
         closeGoogleModal,
         signInWithGoogle,
+        signInWithPassword,
+        signInAsDemo,
         signOut,
       }}
     >

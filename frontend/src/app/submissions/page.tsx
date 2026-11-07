@@ -57,9 +57,9 @@ export default function SubmissionsPage() {
   if (!user) {
     return (
       <AuthGateCard
-        title="Sign in with Google to View Submissions"
-        description="Your submission records, pre-submission audits, and reviewer logs are tied to your university Google SSO account."
-        actionText="Sign in with Google"
+        title="Sign In to View Submissions"
+        description="Your submission records, pre-submission audits, and reviewer logs are tied to your authenticated session."
+        actionText="Sign In / 1-Click Demo Login"
       />
     );
   }

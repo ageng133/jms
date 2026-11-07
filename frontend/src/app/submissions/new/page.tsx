@@ -160,9 +160,9 @@ export default function NewSubmissionPage() {
   if (!user) {
     return (
       <AuthGateCard
-        title="Sign in with Google to Submit & Audit"
-        description="Automated pre-submission format auditing, Box cloud storage upload, and visual layout checking require an authenticated Google session."
-        actionText="Sign in with Google to Start Submission"
+        title="Sign In to Submit & Audit"
+        description="Automated pre-submission format auditing, Box cloud storage upload, and visual layout checking require an authenticated session."
+        actionText="Sign In / 1-Click Demo Login"
       />
     );
   }
