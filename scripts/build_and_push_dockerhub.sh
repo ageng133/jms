@@ -76,10 +76,12 @@ echo -e "${GREEN}✓ Pushed ${GATEWAY_IMG}${NC}"
 echo -e "\n${BOLD}[5/5] Building & Pushing Frontend (Next.js 15 UI)...${NC}"
 FRONTEND_IMG="${DOCKER_USER}/format-kilat-frontend:${TAG}"
 PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}"
+GOOGLE_CLIENT_ID="${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-${GOOGLE_CLIENT_ID:-848169731628-e0nokifp89osi2kdo1q5hc202aeomn12.apps.googleusercontent.com}}"
 
 docker build \
   --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_API_URL="${PUBLIC_API_URL}" \
+  --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
   -t "${FRONTEND_IMG}" \
   -f frontend/Dockerfile \
   frontend
